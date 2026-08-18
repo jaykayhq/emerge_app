@@ -11,13 +11,15 @@ void main() {
   setUp(() async {
     db = AppDatabase.withExecutor(NativeDatabase.memory());
     dao = TribeMembershipDao(db);
-    await dao.upsertMembership(UserTribeTableCompanion(
-      userId: const Value('user1'),
-      tribeId: const Value('morning_warriors'),
-      membershipType: const Value('archetype'),
-      joinedAt: Value(DateTime.now().toIso8601String()),
-      isActive: const Value(true),
-    ));
+    await dao.upsertMembership(
+      UserTribeTableCompanion(
+        userId: const Value('user1'),
+        tribeId: const Value('morning_warriors'),
+        membershipType: const Value('archetype'),
+        joinedAt: Value(DateTime.now().toIso8601String()),
+        isActive: const Value(true),
+      ),
+    );
   });
 
   tearDown(() => db.close());
@@ -36,13 +38,15 @@ void main() {
   });
 
   test('upsertMembership updates existing row', () async {
-    await dao.upsertMembership(UserTribeTableCompanion(
-      userId: const Value('user1'),
-      tribeId: const Value('morning_warriors'),
-      membershipType: const Value('creator'),
-      joinedAt: Value(DateTime.now().toIso8601String()),
-      isActive: const Value(true),
-    ));
+    await dao.upsertMembership(
+      UserTribeTableCompanion(
+        userId: const Value('user1'),
+        tribeId: const Value('morning_warriors'),
+        membershipType: const Value('creator'),
+        joinedAt: Value(DateTime.now().toIso8601String()),
+        isActive: const Value(true),
+      ),
+    );
     final membership = await dao.watchActiveMembership('user1').first;
     expect(membership!.membershipType, 'creator');
   });

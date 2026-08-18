@@ -41,10 +41,8 @@ void main() {
     final home = Scaffold(
       body: Builder(
         builder: (context) => ElevatedButton(
-          onPressed: () => showPremiumLimitDialog(
-            context,
-            limitType: PremiumLimitType.club,
-          ),
+          onPressed: () =>
+              showPremiumLimitDialog(context, limitType: PremiumLimitType.club),
           child: const Text('Show'),
         ),
       ),

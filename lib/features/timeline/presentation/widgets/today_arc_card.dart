@@ -48,7 +48,9 @@ class TodayArcCard extends StatelessWidget {
                       value: pct,
                       strokeWidth: 6,
                       backgroundColor: Colors.white.withValues(alpha: 0.1),
-                      valueColor: const AlwaysStoppedAnimation(EmergeColors.teal),
+                      valueColor: const AlwaysStoppedAnimation(
+                        EmergeColors.teal,
+                      ),
                     ),
                   ),
                   Text(
@@ -71,8 +73,8 @@ class TodayArcCard extends StatelessWidget {
                     onTrack
                         ? 'All done · $streakDays-day streak'
                         : (total == 0
-                            ? 'Start your streak'
-                            : '$remaining habit${remaining == 1 ? '' : 's'} left today'),
+                              ? 'Start your streak'
+                              : '$remaining habit${remaining == 1 ? '' : 's'} left today'),
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -83,7 +85,9 @@ class TodayArcCard extends StatelessWidget {
                   Text(
                     total == 0
                         ? 'Add your first habit'
-                        : (onTrack ? 'Come back tomorrow' : 'Tap to jump to your next habit'),
+                        : (onTrack
+                              ? 'Come back tomorrow'
+                              : 'Tap to jump to your next habit'),
                     style: TextStyle(
                       fontSize: 11,
                       color: Colors.white.withValues(alpha: 0.5),

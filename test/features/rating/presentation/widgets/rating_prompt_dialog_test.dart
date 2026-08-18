@@ -4,18 +4,20 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets('renders stars and Not now', (tester) async {
-    await tester.pumpWidget(MaterialApp(
-      home: Builder(
-        builder: (context) => ElevatedButton(
-          onPressed: () => showRatingPromptDialog(
-            context,
-            onRating: (_) {},
-            onNotNow: () {},
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => ElevatedButton(
+            onPressed: () => showRatingPromptDialog(
+              context,
+              onRating: (_) {},
+              onNotNow: () {},
+            ),
+            child: const Text('open'),
           ),
-          child: const Text('open'),
         ),
       ),
-    ));
+    );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
@@ -26,18 +28,20 @@ void main() {
 
   testWidgets('tapping a star routes the rating', (tester) async {
     int? selected;
-    await tester.pumpWidget(MaterialApp(
-      home: Builder(
-        builder: (context) => ElevatedButton(
-          onPressed: () => showRatingPromptDialog(
-            context,
-            onRating: (r) => selected = r,
-            onNotNow: () {},
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => ElevatedButton(
+            onPressed: () => showRatingPromptDialog(
+              context,
+              onRating: (r) => selected = r,
+              onNotNow: () {},
+            ),
+            child: const Text('open'),
           ),
-          child: const Text('open'),
         ),
       ),
-    ));
+    );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.star_border).first);
@@ -47,18 +51,20 @@ void main() {
 
   testWidgets('tapping Not now invokes onNotNow', (tester) async {
     var notNow = false;
-    await tester.pumpWidget(MaterialApp(
-      home: Builder(
-        builder: (context) => ElevatedButton(
-          onPressed: () => showRatingPromptDialog(
-            context,
-            onRating: (_) {},
-            onNotNow: () => notNow = true,
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => ElevatedButton(
+            onPressed: () => showRatingPromptDialog(
+              context,
+              onRating: (_) {},
+              onNotNow: () => notNow = true,
+            ),
+            child: const Text('open'),
           ),
-          child: const Text('open'),
         ),
       ),
-    ));
+    );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Not now'));

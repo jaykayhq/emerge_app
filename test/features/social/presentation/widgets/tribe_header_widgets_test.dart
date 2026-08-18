@@ -31,15 +31,15 @@ Future<void> _pumpContributors(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        clubContributorsProvider('tribeA').overrideWith(
-          (ref) => Stream.value(_contributors),
-        ),
-        userOnlineStatusProvider('u1').overrideWith(
-          (ref) => Stream.value(false),
-        ),
-        userOnlineStatusProvider('u2').overrideWith(
-          (ref) => Stream.value(false),
-        ),
+        clubContributorsProvider(
+          'tribeA',
+        ).overrideWith((ref) => Stream.value(_contributors)),
+        userOnlineStatusProvider(
+          'u1',
+        ).overrideWith((ref) => Stream.value(false)),
+        userOnlineStatusProvider(
+          'u2',
+        ).overrideWith((ref) => Stream.value(false)),
       ],
       child: MaterialApp(
         home: Scaffold(
@@ -52,8 +52,9 @@ Future<void> _pumpContributors(
 }
 
 void main() {
-  testWidgets('ContributorsSection hides users not in the members array',
-      (tester) async {
+  testWidgets('ContributorsSection hides users not in the members array', (
+    tester,
+  ) async {
     await _pumpContributors(tester, members: const ['u1']);
 
     // ContributorAvatar renders the initial + rank badge, not the full
@@ -62,8 +63,7 @@ void main() {
     expect(find.text('Top 1'), findsOneWidget);
   });
 
-  testWidgets(
-      'ContributorsSection shows everyone when members is empty '
+  testWidgets('ContributorsSection shows everyone when members is empty '
       '(creator tribes)', (tester) async {
     await _pumpContributors(tester, members: const []);
 

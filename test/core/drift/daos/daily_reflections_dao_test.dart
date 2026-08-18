@@ -28,8 +28,18 @@ void main() {
   });
 
   test('upsert overwrites existing row for the same user + date', () async {
-    await dao.upsert(userId: 'u1', localDate: DateTime(2026, 7, 5), mood: Mood.ok, note: 'a');
-    await dao.upsert(userId: 'u1', localDate: DateTime(2026, 7, 5), mood: Mood.great, note: 'b');
+    await dao.upsert(
+      userId: 'u1',
+      localDate: DateTime(2026, 7, 5),
+      mood: Mood.ok,
+      note: 'a',
+    );
+    await dao.upsert(
+      userId: 'u1',
+      localDate: DateTime(2026, 7, 5),
+      mood: Mood.great,
+      note: 'b',
+    );
     final row = await dao.getByDate('u1', DateTime(2026, 7, 5));
     expect(row, isNotNull);
     expect(row!.mood, Mood.great.value);

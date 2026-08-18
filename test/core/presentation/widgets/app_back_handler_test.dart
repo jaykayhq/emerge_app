@@ -7,9 +7,7 @@ void main() {
   testWidgets('AppBackToHome wraps child', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
-        home: AppBackToHome(
-          child: Scaffold(body: Text('content')),
-        ),
+        home: AppBackToHome(child: Scaffold(body: Text('content'))),
       ),
     );
 
@@ -49,9 +47,7 @@ void main() {
   testWidgets('AppDoubleTapExit renders with default message', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
-        home: AppDoubleTapExit(
-          child: Scaffold(body: const Text('content')),
-        ),
+        home: AppDoubleTapExit(child: Scaffold(body: const Text('content'))),
       ),
     );
 

@@ -58,7 +58,8 @@ void main() {
     testWidgets('long values truncate instead of overflowing', (tester) async {
       const data = ShareableCardData(
         headline: 'A VERY LONG HEADLINE THAT WOULD WRAP ONTO MANY LINES',
-        subheadline: 'A very long subheadline that should never push the footer off the card',
+        subheadline:
+            'A very long subheadline that should never push the footer off the card',
         stats: [
           ShareableStat(
             label: 'Long label',

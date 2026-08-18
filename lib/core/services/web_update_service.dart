@@ -55,11 +55,14 @@ class WebUpdateService extends Notifier<bool> {
     try {
       final cacheBuster = DateTime.now().millisecondsSinceEpoch;
       // Fetch the version file directly from the domain root using a cache buster
-      final response = await http.get(Uri.parse('/version.json?t=$cacheBuster'));
+      final response = await http.get(
+        Uri.parse('/version.json?t=$cacheBuster'),
+      );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         _latestServerVersion = data['version'] as String?;
-        if (_latestServerVersion != null && _latestServerVersion != kAppVersion) {
+        if (_latestServerVersion != null &&
+            _latestServerVersion != kAppVersion) {
           // Check if this version was already dismissed by the user
           final dismissedVersion = _getDismissedVersion();
           if (_latestServerVersion == dismissedVersion) {
@@ -67,7 +70,9 @@ class WebUpdateService extends Notifier<bool> {
             if (state) state = false;
             return;
           }
-          AppLogger.i('WebUpdateService: New version available: $_latestServerVersion (Current: $kAppVersion)');
+          AppLogger.i(
+            'WebUpdateService: New version available: $_latestServerVersion (Current: $kAppVersion)',
+          );
           state = true; // Update available!
         }
       }

@@ -765,9 +765,9 @@ class SettingsScreen extends ConsumerWidget {
       ),
       subtitle: Text(
         'Confirm your email address to secure your account.',
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: AppTheme.textSecondaryDark,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondaryDark),
       ),
       trailing: const Icon(
         Icons.chevron_right,

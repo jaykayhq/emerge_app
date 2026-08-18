@@ -43,9 +43,7 @@ Future<void> _seedBlueprints(
 
 ProviderContainer _makeContainer(BlueprintRepository repo) {
   return ProviderContainer(
-    overrides: [
-      blueprintRepositoryProvider.overrideWithValue(repo),
-    ],
+    overrides: [blueprintRepositoryProvider.overrideWithValue(repo)],
   );
 }
 
@@ -72,17 +70,16 @@ void main() {
           recommendedArchetypes: const ['scholar', 'zealot'],
         ),
         _blueprint(id: 'cb_scholar', creatorArchetype: 'Scholar'),
-        _blueprint(
-          id: 'legacy_fitness_1',
-          category: 'Fitness',
-        ),
+        _blueprint(id: 'legacy_fitness_1', category: 'Fitness'),
       ]);
 
       final container = _makeContainer(BlueprintRepository(firestore));
       addTearDown(container.dispose);
 
-      final blueprints =
-          await _firstEmission(container, tribeBlueprintsProvider('scholar'));
+      final blueprints = await _firstEmission(
+        container,
+        tribeBlueprintsProvider('scholar'),
+      );
 
       final ids = blueprints.map((bp) => bp.id).toList();
       expect(ids, containsAll(['productivity_1', 'cb_scholar']));
@@ -92,10 +89,7 @@ void main() {
     test('legacy doc without the field matches via category', () async {
       final firestore = FakeFirebaseFirestore();
       await _seedBlueprints(firestore, [
-        _blueprint(
-          id: 'legacy_fitness_1',
-          category: 'Fitness',
-        ),
+        _blueprint(id: 'legacy_fitness_1', category: 'Fitness'),
         _blueprint(
           id: 'productivity_1',
           category: 'Productivity',
@@ -106,8 +100,10 @@ void main() {
       final container = _makeContainer(BlueprintRepository(firestore));
       addTearDown(container.dispose);
 
-      final blueprints =
-          await _firstEmission(container, tribeBlueprintsProvider('athlete'));
+      final blueprints = await _firstEmission(
+        container,
+        tribeBlueprintsProvider('athlete'),
+      );
 
       final ids = blueprints.map((bp) => bp.id).toList();
       expect(ids, ['legacy_fitness_1']);
@@ -122,8 +118,10 @@ void main() {
       final container = _makeContainer(BlueprintRepository(firestore));
       addTearDown(container.dispose);
 
-      final blueprints =
-          await _firstEmission(container, tribeBlueprintsProvider('stoic'));
+      final blueprints = await _firstEmission(
+        container,
+        tribeBlueprintsProvider('stoic'),
+      );
 
       expect(blueprints, isEmpty);
     });
@@ -165,10 +163,7 @@ void main() {
           recommendedArchetypes: const ['scholar', 'zealot'],
         ),
         _blueprint(id: 'cb_scholar', creatorArchetype: 'Scholar'),
-        _blueprint(
-          id: 'legacy_fitness_1',
-          category: 'Fitness',
-        ),
+        _blueprint(id: 'legacy_fitness_1', category: 'Fitness'),
       ]);
 
       final container = ProviderContainer(
@@ -211,9 +206,11 @@ void main() {
       // Pre-resolve the inner stream providers so their state is cached
       // before the outer provider first builds. Listen first: a bare
       // `container.read(x.future)` does not build an unbuilt provider.
-      final membershipSub = container.listen(activeMembershipProvider, (_, _) {});
-      final clubsSub =
-          container.listen(allArchetypeClubsProvider, (_, _) {});
+      final membershipSub = container.listen(
+        activeMembershipProvider,
+        (_, _) {},
+      );
+      final clubsSub = container.listen(allArchetypeClubsProvider, (_, _) {});
       await container.read(activeMembershipProvider.future);
       await container.read(allArchetypeClubsProvider.future);
 
@@ -221,8 +218,9 @@ void main() {
         tribeBlueprintsForActiveTribeProvider,
         (_, _) {},
       );
-      final blueprints =
-          await container.read(tribeBlueprintsForActiveTribeProvider.future);
+      final blueprints = await container.read(
+        tribeBlueprintsForActiveTribeProvider.future,
+      );
       subscription.close();
       membershipSub.close();
       clubsSub.close();
@@ -232,73 +230,78 @@ void main() {
       expect(ids, isNot(contains('legacy_fitness_1')));
     });
 
-    test('falls back to creator tribe blueprints when archetype is null',
-        () async {
-      final firestore = FakeFirebaseFirestore();
-      await _seedBlueprints(firestore, [
-        _blueprint(id: 'tribe_null_bp', creatorTribeId: 'tribe_null'),
-        _blueprint(id: 'other_tribe_bp', creatorTribeId: 'tribe_other'),
-        _blueprint(
-          id: 'productivity_1',
-          category: 'Productivity',
-          recommendedArchetypes: const ['scholar', 'zealot'],
-        ),
-      ]);
-
-      final container = ProviderContainer(
-        overrides: [
-          blueprintRepositoryProvider.overrideWithValue(
-            BlueprintRepository(firestore),
+    test(
+      'falls back to creator tribe blueprints when archetype is null',
+      () async {
+        final firestore = FakeFirebaseFirestore();
+        await _seedBlueprints(firestore, [
+          _blueprint(id: 'tribe_null_bp', creatorTribeId: 'tribe_null'),
+          _blueprint(id: 'other_tribe_bp', creatorTribeId: 'tribe_other'),
+          _blueprint(
+            id: 'productivity_1',
+            category: 'Productivity',
+            recommendedArchetypes: const ['scholar', 'zealot'],
           ),
-          activeMembershipProvider.overrideWith(
-            (ref) => Stream.value(
-              UserTribeTableData(
-                userId: 'user_1',
-                tribeId: 'tribe_null',
-                membershipType: 'userPublic',
-                joinedAt: '2024-01-01T00:00:00.000',
-                isActive: true,
+        ]);
+
+        final container = ProviderContainer(
+          overrides: [
+            blueprintRepositoryProvider.overrideWithValue(
+              BlueprintRepository(firestore),
+            ),
+            activeMembershipProvider.overrideWith(
+              (ref) => Stream.value(
+                UserTribeTableData(
+                  userId: 'user_1',
+                  tribeId: 'tribe_null',
+                  membershipType: 'userPublic',
+                  joinedAt: '2024-01-01T00:00:00.000',
+                  isActive: true,
+                ),
               ),
             ),
-          ),
-          allArchetypeClubsProvider.overrideWith(
-            (ref) => Stream.value([
-              Tribe(
-                id: 'tribe_null',
-                name: 'Creator Tribe',
-                description: '',
-                imageUrl: '',
-                ownerId: 'creator_1',
-                tags: const [],
-                levelRequirement: 0,
-                rank: 0,
-                totalXp: 0,
-                memberCount: 0,
-              ),
-            ]),
-          ),
-        ],
-      );
-      addTearDown(container.dispose);
+            allArchetypeClubsProvider.overrideWith(
+              (ref) => Stream.value([
+                Tribe(
+                  id: 'tribe_null',
+                  name: 'Creator Tribe',
+                  description: '',
+                  imageUrl: '',
+                  ownerId: 'creator_1',
+                  tags: const [],
+                  levelRequirement: 0,
+                  rank: 0,
+                  totalXp: 0,
+                  memberCount: 0,
+                ),
+              ]),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
 
-      final membershipSub = container.listen(activeMembershipProvider, (_, _) {});
-      final clubsSub =
-          container.listen(allArchetypeClubsProvider, (_, _) {});
-      await container.read(activeMembershipProvider.future);
-      await container.read(allArchetypeClubsProvider.future);
+        final membershipSub = container.listen(
+          activeMembershipProvider,
+          (_, _) {},
+        );
+        final clubsSub = container.listen(allArchetypeClubsProvider, (_, _) {});
+        await container.read(activeMembershipProvider.future);
+        await container.read(allArchetypeClubsProvider.future);
 
-      final subscription = container.listen(
-        tribeBlueprintsForActiveTribeProvider,
-        (_, _) {},
-      );
-      final blueprints =
-          await container.read(tribeBlueprintsForActiveTribeProvider.future);
-      subscription.close();
-      membershipSub.close();
-      clubsSub.close();
+        final subscription = container.listen(
+          tribeBlueprintsForActiveTribeProvider,
+          (_, _) {},
+        );
+        final blueprints = await container.read(
+          tribeBlueprintsForActiveTribeProvider.future,
+        );
+        subscription.close();
+        membershipSub.close();
+        clubsSub.close();
 
-      final ids = blueprints.map((bp) => bp.id).toList();
-      expect(ids, ['tribe_null_bp']);
-    });
+        final ids = blueprints.map((bp) => bp.id).toList();
+        expect(ids, ['tribe_null_bp']);
+      },
+    );
   });
 }

@@ -52,8 +52,9 @@ void main() {
     addTearDown(container.dispose);
     final before = await container.read(coachAskQuotaControllerProvider.future);
 
-    final after =
-        await container.read(coachAskQuotaControllerProvider.notifier).consume();
+    final after = await container
+        .read(coachAskQuotaControllerProvider.notifier)
+        .consume();
 
     expect(after.usedToday, 0);
     expect(before.usedToday, 0);

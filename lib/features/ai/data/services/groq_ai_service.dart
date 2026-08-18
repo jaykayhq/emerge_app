@@ -36,9 +36,10 @@ class GroqAiService {
     required String trigger,
     required Map<String, dynamic> context,
   }) async {
-    final result = await _functions
-        .httpsCallable('fillNarratorSlots')
-        .call({'trigger': trigger, 'context': context});
+    final result = await _functions.httpsCallable('fillNarratorSlots').call({
+      'trigger': trigger,
+      'context': context,
+    });
     final data = result.data as Map<String, dynamic>?;
     final slots = data?['slots'] as Map<String, dynamic>?;
     if (slots == null) return {};
@@ -104,7 +105,7 @@ class GroqAiService {
         'userContext':
             'User archetype: $archetype. Event type: $eventType. '
             'User context: ${jsonEncode(userContext)}'
-                '${conversationHistory != null && conversationHistory.isNotEmpty ? " Recent conversation: ${jsonEncode(conversationHistory)}" : ""}',
+            '${conversationHistory != null && conversationHistory.isNotEmpty ? " Recent conversation: ${jsonEncode(conversationHistory)}" : ""}',
         'userMessage':
             'Generate a short, archetype-aligned companion message for this event.',
       });

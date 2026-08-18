@@ -24,11 +24,7 @@ class CoachAskQuotaController extends _$CoachAskQuotaController {
     } catch (_) {
       used = 0;
     }
-    return CoachAskQuota(
-      dateKey: today,
-      usedToday: used,
-      isPremium: isPremium,
-    );
+    return CoachAskQuota(dateKey: today, usedToday: used, isPremium: isPremium);
   }
 
   /// Records one ask. Free users persist the incremented counter;

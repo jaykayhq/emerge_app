@@ -20,31 +20,31 @@ class AvatarPose {
   });
 
   factory AvatarPose.idle() => const AvatarPose(
-        leftArmAngle: -0.15,
-        rightArmAngle: 0.15,
-        leftLegAngle: 0.1,
-        rightLegAngle: -0.1,
-        spineLean: 0,
-        headTilt: 0,
-      );
+    leftArmAngle: -0.15,
+    rightArmAngle: 0.15,
+    leftLegAngle: 0.1,
+    rightLegAngle: -0.1,
+    spineLean: 0,
+    headTilt: 0,
+  );
 
   factory AvatarPose.wave() => const AvatarPose(
-        leftArmAngle: -1.2,
-        rightArmAngle: 0.15,
-        leftLegAngle: 0.1,
-        rightLegAngle: -0.1,
-        spineLean: 0.05,
-        headTilt: -0.1,
-      );
+    leftArmAngle: -1.2,
+    rightArmAngle: 0.15,
+    leftLegAngle: 0.1,
+    rightLegAngle: -0.1,
+    spineLean: 0.05,
+    headTilt: -0.1,
+  );
 
   factory AvatarPose.attack() => const AvatarPose(
-        leftArmAngle: -1.5,
-        rightArmAngle: -1.0,
-        leftLegAngle: 0.3,
-        rightLegAngle: -0.1,
-        spineLean: 0.2,
-        headTilt: 0,
-      );
+    leftArmAngle: -1.5,
+    rightArmAngle: -1.0,
+    leftLegAngle: 0.3,
+    rightLegAngle: -0.1,
+    spineLean: 0.2,
+    headTilt: 0,
+  );
 
   AvatarPose copyWith({
     double? leftArmAngle,
@@ -53,15 +53,14 @@ class AvatarPose {
     double? rightLegAngle,
     double? spineLean,
     double? headTilt,
-  }) =>
-      AvatarPose(
-        leftArmAngle: leftArmAngle ?? this.leftArmAngle,
-        rightArmAngle: rightArmAngle ?? this.rightArmAngle,
-        leftLegAngle: leftLegAngle ?? this.leftLegAngle,
-        rightLegAngle: rightLegAngle ?? this.rightLegAngle,
-        spineLean: spineLean ?? this.spineLean,
-        headTilt: headTilt ?? this.headTilt,
-      );
+  }) => AvatarPose(
+    leftArmAngle: leftArmAngle ?? this.leftArmAngle,
+    rightArmAngle: rightArmAngle ?? this.rightArmAngle,
+    leftLegAngle: leftLegAngle ?? this.leftLegAngle,
+    rightLegAngle: rightLegAngle ?? this.rightLegAngle,
+    spineLean: spineLean ?? this.spineLean,
+    headTilt: headTilt ?? this.headTilt,
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -75,7 +74,12 @@ class AvatarPose {
           headTilt == other.headTilt;
 
   @override
-  int get hashCode =>
-      Object.hash(leftArmAngle, rightArmAngle, leftLegAngle, rightLegAngle,
-          spineLean, headTilt);
+  int get hashCode => Object.hash(
+    leftArmAngle,
+    rightArmAngle,
+    leftLegAngle,
+    rightLegAngle,
+    spineLean,
+    headTilt,
+  );
 }

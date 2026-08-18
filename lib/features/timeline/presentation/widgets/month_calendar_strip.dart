@@ -135,8 +135,8 @@ class _MonthCalendarStripState extends State<MonthCalendarStrip> {
             color: isSelected
                 ? teal.withValues(alpha: 0.35)
                 : isToday
-                    ? Colors.white.withValues(alpha: 0.15)
-                    : Colors.white.withValues(alpha: 0.08),
+                ? Colors.white.withValues(alpha: 0.15)
+                : Colors.white.withValues(alpha: 0.08),
           ),
           boxShadow: isToday && !isSelected
               ? [
@@ -169,8 +169,8 @@ class _MonthCalendarStripState extends State<MonthCalendarStrip> {
                 color: isSelected
                     ? Colors.white
                     : isToday
-                        ? teal
-                        : Colors.white,
+                    ? teal
+                    : Colors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -187,12 +187,10 @@ class _MonthCalendarStripState extends State<MonthCalendarStrip> {
     );
   }
 
-  Widget _buildCompletionDot(
-      DateTime date, bool isSelected, Color teal) {
+  Widget _buildCompletionDot(DateTime date, bool isSelected, Color teal) {
     final dateKey =
         '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-    final completion =
-        widget.completionStatus?[dateKey] ?? DayCompletion.none;
+    final completion = widget.completionStatus?[dateKey] ?? DayCompletion.none;
 
     if (completion.status == DayCompletionStatus.none) {
       return Container(
@@ -226,12 +224,10 @@ class _MonthCalendarStripState extends State<MonthCalendarStrip> {
     );
   }
 
-  Widget _buildPercentageText(
-      DateTime date, bool isSelected, Color teal) {
+  Widget _buildPercentageText(DateTime date, bool isSelected, Color teal) {
     final dateKey =
         '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-    final completion =
-        widget.completionStatus?[dateKey] ?? DayCompletion.none;
+    final completion = widget.completionStatus?[dateKey] ?? DayCompletion.none;
 
     String text;
     switch (completion.status) {

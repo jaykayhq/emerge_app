@@ -224,7 +224,8 @@ class _PulseRing extends StatefulWidget {
   State<_PulseRing> createState() => _PulseRingState();
 }
 
-class _PulseRingState extends State<_PulseRing> with SingleTickerProviderStateMixin {
+class _PulseRingState extends State<_PulseRing>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override
@@ -331,9 +332,7 @@ class _EmptyActionButton extends StatelessWidget {
               onPressed: onTap,
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                side: BorderSide(
-                  color: Colors.white.withValues(alpha: 0.2),
-                ),
+                side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -393,4 +392,3 @@ class _FeedLoading extends StatelessWidget {
     );
   }
 }
-

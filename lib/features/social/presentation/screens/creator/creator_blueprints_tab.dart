@@ -11,11 +11,13 @@ import 'package:emerge_app/features/auth/presentation/providers/auth_providers.d
 import 'package:emerge_app/features/social/presentation/widgets/blueprint_card.dart';
 
 /// Streams only the blueprints owned by the currently authenticated creator.
-final _myBlueprintsProvider = StreamProvider.autoDispose<List<Blueprint>>((ref) {
+final _myBlueprintsProvider = StreamProvider.autoDispose<List<Blueprint>>((
+  ref,
+) {
   final authUserAsync = ref.watch(authStateChangesProvider);
   final uid = authUserAsync.value?.id;
   if (uid == null) return Stream.value([]);
-  
+
   // Directly use the repo's stream and filter client-side — avoids composite index.
   final repo = ref.watch(blueprintRepositoryProvider);
   return repo.getBlueprints().map(
@@ -58,7 +60,9 @@ class CreatorBlueprintsTab extends ConsumerWidget {
         data: (blueprints) {
           if (blueprints.isEmpty) {
             return _EmptyBlueprintState(
-              onCreateTap: () => context.push('/creator/dashboard/blueprints/blueprint-builder'),
+              onCreateTap: () => context.push(
+                '/creator/dashboard/blueprints/blueprint-builder',
+              ),
             );
           }
           return GridView.builder(
@@ -107,7 +111,9 @@ class _CreatorBlueprintCard extends StatelessWidget {
             ],
           ),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: EmergeColors.neonTeal.withValues(alpha: 0.25)),
+          border: Border.all(
+            color: EmergeColors.neonTeal.withValues(alpha: 0.25),
+          ),
         ),
         padding: const EdgeInsets.all(14),
         child: Column(
@@ -117,7 +123,10 @@ class _CreatorBlueprintCard extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: EmergeColors.neonTeal.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
@@ -133,8 +142,7 @@ class _CreatorBlueprintCard extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                Icon(Icons.more_vert_rounded,
-                    size: 16, color: Colors.white38),
+                Icon(Icons.more_vert_rounded, size: 16, color: Colors.white38),
               ],
             ),
             const Spacer(),
@@ -242,24 +250,33 @@ class _EmptyBlueprintState extends StatelessWidget {
                 shape: BoxShape.circle,
                 color: EmergeColors.neonTeal.withValues(alpha: 0.08),
                 border: Border.all(
-                    color: EmergeColors.neonTeal.withValues(alpha: 0.25)),
+                  color: EmergeColors.neonTeal.withValues(alpha: 0.25),
+                ),
               ),
-              child: const Icon(Icons.widgets_outlined,
-                  size: 48, color: Colors.white24),
+              child: const Icon(
+                Icons.widgets_outlined,
+                size: 48,
+                color: Colors.white24,
+              ),
             ),
             const Gap(24),
             const Text(
               'No blueprints yet',
               style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold),
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const Gap(8),
             const Text(
               'Create your first blueprint to share your habit system with your tribe.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white54, fontSize: 13, height: 1.5),
+              style: TextStyle(
+                color: Colors.white54,
+                fontSize: 13,
+                height: 1.5,
+              ),
             ),
             const Gap(24),
             FilledButton.icon(
@@ -268,9 +285,13 @@ class _EmptyBlueprintState extends StatelessWidget {
               style: FilledButton.styleFrom(
                 backgroundColor: EmergeColors.neonTeal,
                 foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                  vertical: 14,
+                ),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
               onPressed: onCreateTap,
             ),

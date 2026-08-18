@@ -53,51 +53,51 @@ class SynergyStatusCard extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.white.withValues(alpha: 0.08),
-                  Colors.white.withValues(alpha: 0.03),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: accentColor.withValues(alpha: 0.3),
-                width: 1,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white.withValues(alpha: 0.08),
+              Colors.white.withValues(alpha: 0.03),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: accentColor.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
               children: [
-                // Header
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: accentColor.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(Icons.bolt, color: accentColor, size: 18),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'ATTRIBUTE PROGRESS',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.5,
-                        color: accentColor,
-                      ),
-                    ),
-                  ],
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.bolt, color: accentColor, size: 18),
                 ),
-                const SizedBox(height: 20),
-
-                // Content
-                _buildCardContent(context, ref),
+                const SizedBox(width: 12),
+                Text(
+                  'ATTRIBUTE PROGRESS',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.5,
+                    color: accentColor,
+                  ),
+                ),
               ],
+            ),
+            const SizedBox(height: 20),
+
+            // Content
+            _buildCardContent(context, ref),
+          ],
         ),
       ),
     );

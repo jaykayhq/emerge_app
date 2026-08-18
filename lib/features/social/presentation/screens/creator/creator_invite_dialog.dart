@@ -13,7 +13,8 @@ class CreatorInviteDialog extends ConsumerStatefulWidget {
   const CreatorInviteDialog({super.key});
 
   @override
-  ConsumerState<CreatorInviteDialog> createState() => CreatorInviteDialogState();
+  ConsumerState<CreatorInviteDialog> createState() =>
+      CreatorInviteDialogState();
 }
 
 class CreatorInviteDialogState extends ConsumerState<CreatorInviteDialog> {
@@ -97,7 +98,10 @@ class CreatorInviteDialogState extends ConsumerState<CreatorInviteDialog> {
                 icon: const Icon(Icons.copy_rounded, size: 18),
                 label: const Text(
                   'COPY CODE',
-                  style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: EmergeColors.teal,

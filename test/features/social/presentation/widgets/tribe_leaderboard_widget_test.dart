@@ -31,7 +31,12 @@ List<({Tribe tribe, TribeStats stats})> _makeEntries(int count) {
     final xp = (count - i) * 10000;
     return (
       tribe: _tribe('tribe_$i', 'Tribe $i', totalXp: xp),
-      stats: TribeStats(memberCount: 10 + i, totalXp: xp, totalHabitsCompleted: 50, totalChallengesCompleted: 5),
+      stats: TribeStats(
+        memberCount: 10 + i,
+        totalXp: xp,
+        totalHabitsCompleted: 50,
+        totalChallengesCompleted: 5,
+      ),
     );
   });
 }
@@ -40,9 +45,7 @@ void main() {
   testWidgets('renders time toggle', (tester) async {
     await tester.pumpWidget(
       const ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(body: TribeLeaderboardSection()),
-        ),
+        child: MaterialApp(home: Scaffold(body: TribeLeaderboardSection())),
       ),
     );
     expect(find.text('Weekly'), findsOneWidget);
@@ -69,7 +72,9 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          worldLeaderboardProvider.overrideWith((ref) => Stream.value(<({Tribe tribe, TribeStats stats})>[])),
+          worldLeaderboardProvider.overrideWith(
+            (ref) => Stream.value(<({Tribe tribe, TribeStats stats})>[]),
+          ),
         ],
         child: const MaterialApp(
           home: Scaffold(body: TribeLeaderboardSection()),
@@ -80,7 +85,9 @@ void main() {
     expect(find.text('No rankings yet'), findsOneWidget);
   });
 
-  testWidgets('renders leaderboard entries with podium and rows', (tester) async {
+  testWidgets('renders leaderboard entries with podium and rows', (
+    tester,
+  ) async {
     final entries = _makeEntries(5);
     await tester.pumpWidget(
       ProviderScope(
@@ -103,7 +110,9 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          worldLeaderboardProvider.overrideWith((ref) => Stream.error(Exception('Failed to load'))),
+          worldLeaderboardProvider.overrideWith(
+            (ref) => Stream.error(Exception('Failed to load')),
+          ),
         ],
         child: const MaterialApp(
           home: Scaffold(body: TribeLeaderboardSection()),
@@ -117,9 +126,7 @@ void main() {
   testWidgets('renders header and full board link', (tester) async {
     await tester.pumpWidget(
       const ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(body: TribeLeaderboardSection()),
-        ),
+        child: MaterialApp(home: Scaffold(body: TribeLeaderboardSection())),
       ),
     );
     expect(find.text('ELITE RANKINGS'), findsOneWidget);
@@ -142,40 +149,41 @@ void main() {
     expect(find.text('Your Tribe'), findsOneWidget);
   });
 
-  testWidgets('TribeLeaderboardSection hides leavers when members is provided',
-      (tester) async {
-    const u1 = LeaderboardEntry(
-      userId: 'u1',
-      userName: 'U1',
-      xp: 120,
-      level: 3,
-      archetype: UserArchetype.athlete,
-      rank: 1,
-    );
-    const u2 = LeaderboardEntry(
-      userId: 'u2',
-      userName: 'U2',
-      xp: 80,
-      level: 2,
-      archetype: UserArchetype.athlete,
-      rank: 2,
-    );
+  testWidgets(
+    'TribeLeaderboardSection hides leavers when members is provided',
+    (tester) async {
+      const u1 = LeaderboardEntry(
+        userId: 'u1',
+        userName: 'U1',
+        xp: 120,
+        level: 3,
+        archetype: UserArchetype.athlete,
+        rank: 1,
+      );
+      const u2 = LeaderboardEntry(
+        userId: 'u2',
+        userName: 'U2',
+        xp: 80,
+        level: 2,
+        archetype: UserArchetype.athlete,
+        rank: 2,
+      );
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          clubLeaderboardProvider('tribeA').overrideWith(
-            (ref) => Stream.value(const [u1, u2]),
-          ),
-        ],
-        child: const MaterialApp(
-          home: Scaffold(
-            body: members_tab.TribeLeaderboardSection(
-              clubId: 'tribeA',
-              archetypeName: 'athlete',
-              members: ['u1'],
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            clubLeaderboardProvider(
+              'tribeA',
+            ).overrideWith((ref) => Stream.value(const [u1, u2])),
+          ],
+          child: const MaterialApp(
+            home: Scaffold(
+              body: members_tab.TribeLeaderboardSection(
+                clubId: 'tribeA',
+                archetypeName: 'athlete',
+                members: ['u1'],
+              ),
             ),
-          ),
           ),
         ),
       );
@@ -185,5 +193,6 @@ void main() {
 
       expect(find.text('U1'), findsOneWidget);
       expect(find.text('U2'), findsNothing);
-    });
+    },
+  );
 }

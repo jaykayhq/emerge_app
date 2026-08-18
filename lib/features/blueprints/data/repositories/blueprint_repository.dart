@@ -65,11 +65,13 @@ class BlueprintRepository {
   Future<String> createBlueprint(Blueprint blueprint) async {
     try {
       final collectionRef = _firestore.collection('blueprints');
-      final docRef = blueprint.id.isNotEmpty ? collectionRef.doc(blueprint.id) : collectionRef.doc();
-      
+      final docRef = blueprint.id.isNotEmpty
+          ? collectionRef.doc(blueprint.id)
+          : collectionRef.doc();
+
       final blueprintToSave = blueprint.copyWith(id: docRef.id);
       await docRef.set(blueprintToSave.toMap());
-      
+
       AppLogger.i('BlueprintRepository: Created blueprint ${docRef.id}');
       return docRef.id;
     } catch (e) {
@@ -92,17 +94,20 @@ class BlueprintRepository {
           .collection('blueprints')
           .doc('morning_1')
           .get();
-      final hasArtwork = v6Check.exists &&
-          (v6Check.data()?['imageUrl'] as String? ?? '')
-              .startsWith('assets/images/blueprints/');
+      final hasArtwork =
+          v6Check.exists &&
+          (v6Check.data()?['imageUrl'] as String? ?? '').startsWith(
+            'assets/images/blueprints/',
+          );
       final habitMaps = hasArtwork
           ? (v6Check.data()?['habits'] as List<dynamic>? ?? const [])
                 .whereType<Map>()
                 .toList()
           : <Map>[];
-      final hasSlotMetadata = hasArtwork &&
-          habitMaps.any((h) => h['timeOfDay'] != null);
-      final hasDurationMetadata = hasArtwork &&
+      final hasSlotMetadata =
+          hasArtwork && habitMaps.any((h) => h['timeOfDay'] != null);
+      final hasDurationMetadata =
+          hasArtwork &&
           habitMaps.isNotEmpty &&
           habitMaps.every(
             (h) => ((h['timerDurationMinutes'] as num?)?.toInt() ?? 0) > 0,
@@ -131,8 +136,7 @@ class BlueprintRepository {
           category: 'Morning',
           title: 'Sunrise Ritual',
           description: 'Start your day with intention, light, and hydration.',
-          image:
-              'assets/images/blueprints/morning_1.webp',
+          image: 'assets/images/blueprints/morning_1.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: [
             (
@@ -164,8 +168,7 @@ class BlueprintRepository {
           category: 'Morning',
           title: 'Power Morning',
           description: 'An energizing morning routine to dominate your day.',
-          image:
-              'assets/images/blueprints/morning_2.webp',
+          image: 'assets/images/blueprints/morning_2.webp',
           difficulty: BlueprintDifficulty.intermediate,
           habits: [
             (
@@ -197,8 +200,7 @@ class BlueprintRepository {
           category: 'Morning',
           title: 'Mindful Awakening',
           description: 'Ease into the day with calm and clarity.',
-          image:
-              'assets/images/blueprints/morning_3.webp',
+          image: 'assets/images/blueprints/morning_3.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: [
             (
@@ -230,8 +232,7 @@ class BlueprintRepository {
           category: 'Morning',
           title: 'Early Bird Stack',
           description: 'Rise before the world and claim your quiet hours.',
-          image:
-              'assets/images/blueprints/morning_4.webp',
+          image: 'assets/images/blueprints/morning_4.webp',
           difficulty: BlueprintDifficulty.advanced,
           habits: [
             (
@@ -263,8 +264,7 @@ class BlueprintRepository {
           category: 'Morning',
           title: 'Morning Mobility',
           description: 'Loosen up and prepare your body for the day ahead.',
-          image:
-              'assets/images/blueprints/morning_5.webp',
+          image: 'assets/images/blueprints/morning_5.webp',
           difficulty: BlueprintDifficulty.intermediate,
           habits: [
             (
@@ -298,8 +298,7 @@ class BlueprintRepository {
           category: 'Productivity',
           title: 'Deep Work Protocol',
           description: 'Train your focus for uninterrupted deep work sessions.',
-          image:
-              'assets/images/blueprints/productivity_1.webp',
+          image: 'assets/images/blueprints/productivity_1.webp',
           difficulty: BlueprintDifficulty.advanced,
           habits: [
             (
@@ -332,8 +331,7 @@ class BlueprintRepository {
           title: 'The Ivy Lee Method',
           description:
               'A century-old productivity system for daily prioritization.',
-          image:
-              'assets/images/blueprints/productivity_2.webp',
+          image: 'assets/images/blueprints/productivity_2.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: [
             (
@@ -365,8 +363,7 @@ class BlueprintRepository {
           category: 'Productivity',
           title: 'Time Block Master',
           description: 'Schedule every hour of your day with purpose.',
-          image:
-              'assets/images/blueprints/productivity_3.webp',
+          image: 'assets/images/blueprints/productivity_3.webp',
           difficulty: BlueprintDifficulty.intermediate,
           habits: [
             (
@@ -398,8 +395,7 @@ class BlueprintRepository {
           category: 'Productivity',
           title: 'Digital Declutter',
           description: 'Clear digital noise and reclaim your attention.',
-          image:
-              'assets/images/blueprints/productivity_4.webp',
+          image: 'assets/images/blueprints/productivity_4.webp',
           difficulty: BlueprintDifficulty.intermediate,
           habits: [
             (
@@ -431,8 +427,7 @@ class BlueprintRepository {
           category: 'Productivity',
           title: 'Pomodoro Flow',
           description: 'Harness the Pomodoro technique for sustained output.',
-          image:
-              'assets/images/blueprints/productivity_5.webp',
+          image: 'assets/images/blueprints/productivity_5.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: [
             (
@@ -466,8 +461,7 @@ class BlueprintRepository {
           category: 'Fitness',
           title: 'Bodyweight Foundation',
           description: 'Build strength with just your body weight.',
-          image:
-              'assets/images/blueprints/fitness_1.webp',
+          image: 'assets/images/blueprints/fitness_1.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: [
             (
@@ -499,8 +493,7 @@ class BlueprintRepository {
           category: 'Fitness',
           title: 'Cardio Builder',
           description: 'Improve cardiovascular endurance step by step.',
-          image:
-              'assets/images/blueprints/fitness_2.webp',
+          image: 'assets/images/blueprints/fitness_2.webp',
           difficulty: BlueprintDifficulty.intermediate,
           habits: [
             (
@@ -532,8 +525,7 @@ class BlueprintRepository {
           category: 'Fitness',
           title: 'Flexibility & Mobility',
           description: 'Increase range of motion and prevent injury.',
-          image:
-              'assets/images/blueprints/fitness_3.webp',
+          image: 'assets/images/blueprints/fitness_3.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: [
             (
@@ -565,8 +557,7 @@ class BlueprintRepository {
           category: 'Fitness',
           title: 'Iron Will',
           description: 'A progressive strength training blueprint.',
-          image:
-              'assets/images/blueprints/fitness_4.webp',
+          image: 'assets/images/blueprints/fitness_4.webp',
           difficulty: BlueprintDifficulty.advanced,
           habits: [
             (
@@ -598,8 +589,7 @@ class BlueprintRepository {
           category: 'Fitness',
           title: 'Active Recovery',
           description: 'Rest days that keep you moving and healing.',
-          image:
-              'assets/images/blueprints/fitness_5.webp',
+          image: 'assets/images/blueprints/fitness_5.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: [
             (
@@ -633,8 +623,7 @@ class BlueprintRepository {
           category: 'Mindfulness',
           title: 'Daily Meditation',
           description: 'Build a consistent meditation practice from scratch.',
-          image:
-              'assets/images/blueprints/mindfulness_1.webp',
+          image: 'assets/images/blueprints/mindfulness_1.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: [
             (
@@ -666,8 +655,7 @@ class BlueprintRepository {
           category: 'Mindfulness',
           title: 'Digital Sabbath',
           description: 'Weekly disconnection to recharge your mind.',
-          image:
-              'assets/images/blueprints/mindfulness_2.webp',
+          image: 'assets/images/blueprints/mindfulness_2.webp',
           difficulty: BlueprintDifficulty.advanced,
           habits: [
             (
@@ -699,8 +687,7 @@ class BlueprintRepository {
           category: 'Mindfulness',
           title: 'Gratitude Practice',
           description: 'Rewire your brain for appreciation and abundance.',
-          image:
-              'assets/images/blueprints/mindfulness_3.webp',
+          image: 'assets/images/blueprints/mindfulness_3.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: [
             (
@@ -732,8 +719,7 @@ class BlueprintRepository {
           category: 'Mindfulness',
           title: 'Stress Shield',
           description: 'Daily practices to build resilience against stress.',
-          image:
-              'assets/images/blueprints/mindfulness_4.webp',
+          image: 'assets/images/blueprints/mindfulness_4.webp',
           difficulty: BlueprintDifficulty.intermediate,
           habits: [
             (
@@ -766,8 +752,7 @@ class BlueprintRepository {
           title: 'Evening Wind Down',
           description:
               'A calming ritual to signal your body it is time to rest.',
-          image:
-              'assets/images/blueprints/mindfulness_5.webp',
+          image: 'assets/images/blueprints/mindfulness_5.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: [
             (
@@ -801,8 +786,7 @@ class BlueprintRepository {
           category: 'Learning',
           title: 'Daily Reader',
           description: 'Read consistently and compound knowledge.',
-          image:
-              'assets/images/blueprints/learning_1.webp',
+          image: 'assets/images/blueprints/learning_1.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: [
             (
@@ -834,8 +818,7 @@ class BlueprintRepository {
           category: 'Learning',
           title: 'Skill Sprint',
           description: 'Learn a new skill with focused daily practice.',
-          image:
-              'assets/images/blueprints/learning_2.webp',
+          image: 'assets/images/blueprints/learning_2.webp',
           difficulty: BlueprintDifficulty.intermediate,
           habits: [
             (
@@ -867,8 +850,7 @@ class BlueprintRepository {
           category: 'Learning',
           title: 'Curious Mind',
           description: 'Feed your curiosity across diverse topics.',
-          image:
-              'assets/images/blueprints/learning_3.webp',
+          image: 'assets/images/blueprints/learning_3.webp',
           difficulty: BlueprintDifficulty.beginner,
           habits: [
             (
@@ -900,8 +882,7 @@ class BlueprintRepository {
           category: 'Learning',
           title: 'Memory Master',
           description: 'Strengthen recall with spaced repetition.',
-          image:
-              'assets/images/blueprints/learning_4.webp',
+          image: 'assets/images/blueprints/learning_4.webp',
           difficulty: BlueprintDifficulty.intermediate,
           habits: [
             (
@@ -934,8 +915,7 @@ class BlueprintRepository {
           title: 'Course Completer',
           description:
               'Finish online courses with structure and accountability.',
-          image:
-              'assets/images/blueprints/learning_5.webp',
+          image: 'assets/images/blueprints/learning_5.webp',
           difficulty: BlueprintDifficulty.advanced,
           habits: [
             (
@@ -975,9 +955,7 @@ class BlueprintRepository {
         batch.set(docRef, data, SetOptions(merge: true));
       }
       await batch.commit();
-      AppLogger.i(
-        'BlueprintRepository: Seeding complete (v$_seedVersion).',
-      );
+      AppLogger.i('BlueprintRepository: Seeding complete (v$_seedVersion).');
     } catch (e) {
       AppLogger.e('BlueprintRepository: Seeding failed', e);
     }
@@ -1034,21 +1012,23 @@ final blueprintRepositoryProvider = Provider<BlueprintRepository>((ref) {
   return BlueprintRepository(FirebaseFirestore.instance);
 });
 
-final blueprintsStreamProvider =
-    StreamProvider.autoDispose.family<List<Blueprint>, String?>((ref, category) {
+final blueprintsStreamProvider = StreamProvider.autoDispose
+    .family<List<Blueprint>, String?>((ref, category) {
       final repo = ref.watch(blueprintRepositoryProvider);
       return repo.getBlueprints(category: category);
     });
 
-final allBlueprintsStreamProvider = StreamProvider.autoDispose<List<Blueprint>>((ref) {
-  final repo = ref.watch(blueprintRepositoryProvider);
-  return repo.getBlueprints();
-});
+final allBlueprintsStreamProvider = StreamProvider.autoDispose<List<Blueprint>>(
+  (ref) {
+    final repo = ref.watch(blueprintRepositoryProvider);
+    return repo.getBlueprints();
+  },
+);
 
 /// Single-doc fetch for deep-link navigation (notifications, shared URLs).
 /// Returns null when the doc doesn't exist.
-final blueprintByIdProvider =
-    FutureProvider.autoDispose.family<Blueprint?, String>((ref, id) {
-  final repo = ref.watch(blueprintRepositoryProvider);
-  return repo.getBlueprintById(id);
-});
+final blueprintByIdProvider = FutureProvider.autoDispose
+    .family<Blueprint?, String>((ref, id) {
+      final repo = ref.watch(blueprintRepositoryProvider);
+      return repo.getBlueprintById(id);
+    });

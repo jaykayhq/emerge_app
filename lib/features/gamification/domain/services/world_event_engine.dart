@@ -50,35 +50,36 @@ class WorldEventEngine {
     // below, current level at or above), so it can never re-fire for a
     // transition that was already celebrated.
     if (_isBiomeTransition(stats.previousLevel ?? stats.level, stats.level)) {
-      events.add(WorldEvent.biomeTransition(
-        firedAt: now,
-        newLevel: stats.level,
-      ));
+      events.add(
+        WorldEvent.biomeTransition(firedAt: now, newLevel: stats.level),
+      );
     }
 
     // discoveryBurst
     if (stats.currentMomentumScore >= _discoveryBurstMinScore &&
-        !_isOnCooldown(
-            WorldEventType.discoveryBurst, now, recentEvents)) {
-      events.add(WorldEvent.discoveryBurst(
-        firedAt: now,
-        xpBonus: _calculateXpBonus(stats.level),
-      ));
+        !_isOnCooldown(WorldEventType.discoveryBurst, now, recentEvents)) {
+      events.add(
+        WorldEvent.discoveryBurst(
+          firedAt: now,
+          xpBonus: _calculateXpBonus(stats.level),
+        ),
+      );
     }
 
     // travelerVisit
     if (stats.consecutiveActiveDays >= _travelerVisitMinDays &&
-        !_isOnCooldown(
-            WorldEventType.travelerVisit, now, recentEvents)) {
+        !_isOnCooldown(WorldEventType.travelerVisit, now, recentEvents)) {
       events.add(WorldEvent.travelerVisit(firedAt: now));
     }
 
     // weatherShift — one per day, no cooldown beyond that
     if (!_hasWeatherFiredToday(now, recentEvents)) {
-      events.add(WorldEvent.weatherShift(
-        firedAt: now,
-        weatherType: _deterministicWeather(now),
-      ));
+      events.add(
+        WorldEvent.weatherShift(
+          firedAt: now,
+          weatherType: _deterministicWeather(now),
+        ),
+      );
     }
 
     return events;
@@ -116,12 +117,15 @@ class WorldEventEngine {
   /// per threshold, regardless of cooldowns or how often evaluation runs.
   static bool _isBiomeTransition(int previousLevel, int currentLevel) {
     return _biomeTransitionLevels.any(
-        (threshold) => previousLevel < threshold && currentLevel >= threshold);
+      (threshold) => previousLevel < threshold && currentLevel >= threshold,
+    );
   }
 
   /// Checks if a weather shift has already fired today.
   static bool _hasWeatherFiredToday(
-      DateTime now, Map<WorldEventType, DateTime> recentEvents) {
+    DateTime now,
+    Map<WorldEventType, DateTime> recentEvents,
+  ) {
     final lastWeather = recentEvents[WorldEventType.weatherShift];
     if (lastWeather == null) return false;
     return lastWeather.year == now.year &&

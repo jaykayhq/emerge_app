@@ -31,12 +31,11 @@ class CreatorAnalyticsService {
       final tribeName = tribeData['name'] as String? ?? '';
       final memberCount = (tribeData['memberCount'] as num?)?.toInt() ?? 0;
 
-      final contributors =
-          await _firestore
-              .collection('tribes')
-              .doc(tribeId)
-              .collection('contributors')
-              .get();
+      final contributors = await _firestore
+          .collection('tribes')
+          .doc(tribeId)
+          .collection('contributors')
+          .get();
 
       final now = DateTime.now().toUtc();
       final records = <ContributorRecord>[];
@@ -61,18 +60,17 @@ class CreatorAnalyticsService {
         );
 
         if (xp > 0 && data['userName'] != null) {
-          memberRows.add(MemberStat(
-            userId: doc.id,
-            name: data['userName'] as String,
-            xp: xp,
-            habitsCompleted: habits,
-          ));
+          memberRows.add(
+            MemberStat(
+              userId: doc.id,
+              name: data['userName'] as String,
+              xp: xp,
+              habitsCompleted: habits,
+            ),
+          );
         }
       }
-      final agg = aggregateTribeContributors(
-        contributors: records,
-        now: now,
-      );
+      final agg = aggregateTribeContributors(contributors: records, now: now);
       final totalXp = agg.totalXp;
       final totalHabits = agg.totalHabitsCompleted;
       final totalChallenges = agg.totalChallengesCompleted;
@@ -116,20 +114,22 @@ class CreatorAnalyticsService {
 
       final activeRate = memberCount > 0 ? activeMembers / memberCount : 0.0;
 
-      return Right(CreatorAnalytics(
-        tribeId: tribeId,
-        tribeName: tribeName,
-        memberCount: memberCount,
-        totalXp: totalXp,
-        totalHabitsCompleted: totalHabits,
-        totalChallengesCompleted: totalChallenges,
-        newMembersThisWeek: newMembers,
-        activeMembers: activeMembers,
-        activeRate: activeRate,
-        blueprintStats: blueprintStats,
-        topMembers: topMembers,
-        challengeStats: challengeStats,
-      ));
+      return Right(
+        CreatorAnalytics(
+          tribeId: tribeId,
+          tribeName: tribeName,
+          memberCount: memberCount,
+          totalXp: totalXp,
+          totalHabitsCompleted: totalHabits,
+          totalChallengesCompleted: totalChallenges,
+          newMembersThisWeek: newMembers,
+          activeMembers: activeMembers,
+          activeRate: activeRate,
+          blueprintStats: blueprintStats,
+          topMembers: topMembers,
+          challengeStats: challengeStats,
+        ),
+      );
     } catch (e) {
       return Left(ServerFailure('Could not load analytics: $e'));
     }

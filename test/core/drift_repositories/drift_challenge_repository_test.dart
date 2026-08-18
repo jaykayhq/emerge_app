@@ -268,10 +268,10 @@ void main() {
           documentId: userId,
           data: any(
             named: 'data',
-            that: containsPair(
-              'avatarStats.totalXp',
-              {'__type__': 'increment', 'value': 50},
-            ),
+            that: containsPair('avatarStats.totalXp', {
+              '__type__': 'increment',
+              'value': 50,
+            }),
           ),
         ),
       ).called(1);

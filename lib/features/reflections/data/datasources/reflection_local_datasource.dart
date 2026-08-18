@@ -27,7 +27,12 @@ class ReflectionLocalDatasource {
     required Mood mood,
     required String note,
   }) async {
-    await dao.upsert(userId: userId, localDate: localDate, mood: mood, note: note);
+    await dao.upsert(
+      userId: userId,
+      localDate: localDate,
+      mood: mood,
+      note: note,
+    );
     final row = await dao.getByDate(userId, localDate);
     return DailyReflection(
       id: row!.id,

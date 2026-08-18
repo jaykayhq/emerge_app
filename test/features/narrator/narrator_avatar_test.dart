@@ -7,7 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('avatar renders in idle state when no pending line', (tester) async {
+  testWidgets('avatar renders in idle state when no pending line', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -27,9 +29,7 @@ void main() {
           pendingMilestoneProvider.overrideWith(() => _StubNotifier(null)),
         ],
         child: MaterialApp(
-          home: Scaffold(
-            body: NarratorAvatar(onTap: () => tapped = true),
-          ),
+          home: Scaffold(body: NarratorAvatar(onTap: () => tapped = true)),
         ),
       ),
     );
@@ -37,8 +37,9 @@ void main() {
     expect(tapped, isTrue);
   });
 
-  testWidgets('avatar shows pending dot when a milestone line is pending',
-      (tester) async {
+  testWidgets('avatar shows pending dot when a milestone line is pending', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [

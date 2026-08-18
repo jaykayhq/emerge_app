@@ -46,15 +46,9 @@ class CreatorRepository {
         .limit(limit)
         .snapshots()
         .map(
-          (snap) =>
-              snap.docs
-                  .map(
-                    (d) => CreatorProfile.fromMap({
-                      ...d.data(),
-                      'userId': d.id,
-                    }),
-                  )
-                  .toList(),
+          (snap) => snap.docs
+              .map((d) => CreatorProfile.fromMap({...d.data(), 'userId': d.id}))
+              .toList(),
         );
   }
 

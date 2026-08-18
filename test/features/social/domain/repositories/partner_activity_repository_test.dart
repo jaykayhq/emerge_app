@@ -17,28 +17,27 @@ void main() {
         .collection('partner_activity')
         .doc('e1')
         .set({
-      'type': 'habit_complete',
-      'userId': 'partner1',
-      'userName': 'Alex',
-      'data': {'habitTitle': 'Cold Plunge'},
-      'timestamp': '2026-06-20T10:00:00.000Z',
-    });
+          'type': 'habit_complete',
+          'userId': 'partner1',
+          'userName': 'Alex',
+          'data': {'habitTitle': 'Cold Plunge'},
+          'timestamp': '2026-06-20T10:00:00.000Z',
+        });
     await firestore
         .collection('users')
         .doc('me')
         .collection('partner_activity')
         .doc('e2')
         .set({
-      'type': 'streak_milestone',
-      'userId': 'partner2',
-      'userName': 'Sam',
-      'data': {'streakDays': 7},
-      'timestamp': '2026-06-21T08:00:00.000Z',
-    });
+          'type': 'streak_milestone',
+          'userId': 'partner2',
+          'userName': 'Sam',
+          'data': {'streakDays': 7},
+          'timestamp': '2026-06-21T08:00:00.000Z',
+        });
   });
 
-  test('watchPartnerActivity emits events ordered by timestamp desc',
-      () async {
+  test('watchPartnerActivity emits events ordered by timestamp desc', () async {
     final events = await repo.watchPartnerActivity('me').first;
     expect(events.length, 2);
     // Newer timestamp first (e2 < e1 chronologically later means e2 first)

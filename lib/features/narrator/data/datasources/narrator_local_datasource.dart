@@ -11,11 +11,9 @@ class NarratorLocalDatasource {
   final NarratorNotesDao _dao;
   final Uuid _uuid;
 
-  NarratorLocalDatasource({
-    required NarratorNotesDao dao,
-    Uuid? uuid,
-  })  : _dao = dao,
-        _uuid = uuid ?? const Uuid();
+  NarratorLocalDatasource({required NarratorNotesDao dao, Uuid? uuid})
+    : _dao = dao,
+      _uuid = uuid ?? const Uuid();
 
   /// Records a new narrator observation note.
   Future<NarratorNote> recordNote({
@@ -69,9 +67,7 @@ class NarratorLocalDatasource {
     required Duration cooldown,
     required DateTime now,
   }) async {
-    final lastNote = await getLatestNoteOfType(
-      _triggerToNoteType(trigger),
-    );
+    final lastNote = await getLatestNoteOfType(_triggerToNoteType(trigger));
     if (lastNote == null) return false;
     return now.difference(lastNote.recordedAt) < cooldown;
   }

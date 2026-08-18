@@ -58,7 +58,8 @@ class TribeAnalyticsSnapshotService {
       if (latest != null) {
         final latestDate = DateTime.tryParse(latest['date'] as String? ?? '');
         final nowUtc = now.toUtc();
-        final isFresh = latestDate != null &&
+        final isFresh =
+            latestDate != null &&
             // A future-dated doc (bad clock or malicious write) must never
             // suppress today's write — mirror the Node backstop's guard.
             !latestDate.isAfter(nowUtc) &&
@@ -82,12 +83,11 @@ class TribeAnalyticsSnapshotService {
       final tribeData = tribeDoc.data() ?? const <String, dynamic>{};
       final memberCount = (tribeData['memberCount'] as num?)?.toInt() ?? 0;
 
-      final contributors =
-          await _firestore
-              .collection('tribes')
-              .doc(tribeId)
-              .collection('contributors')
-              .get();
+      final contributors = await _firestore
+          .collection('tribes')
+          .doc(tribeId)
+          .collection('contributors')
+          .get();
 
       final records = contributors.docs.map(
         (doc) => ContributorRecord(
@@ -139,16 +139,19 @@ class TribeAnalyticsSnapshotService {
           .orderBy('date', descending: true)
           .limit(days)
           .get();
-      final list = snap.docs
-          .map((d) => DailyTrend(
-            date: d.data()['date'] as String? ?? '',
-            memberCount: (d.data()['memberCount'] as num?)?.toInt() ?? 0,
-            totalXp: (d.data()['totalXp'] as num?)?.toInt() ?? 0,
-            totalHabitsCompleted:
-                (d.data()['totalHabitsCompleted'] as num?)?.toInt() ?? 0,
-          ))
-          .toList()
-        ..sort((a, b) => a.date.compareTo(b.date));
+      final list =
+          snap.docs
+              .map(
+                (d) => DailyTrend(
+                  date: d.data()['date'] as String? ?? '',
+                  memberCount: (d.data()['memberCount'] as num?)?.toInt() ?? 0,
+                  totalXp: (d.data()['totalXp'] as num?)?.toInt() ?? 0,
+                  totalHabitsCompleted:
+                      (d.data()['totalHabitsCompleted'] as num?)?.toInt() ?? 0,
+                ),
+              )
+              .toList()
+            ..sort((a, b) => a.date.compareTo(b.date));
       return Right(list);
     } catch (e) {
       return Left(ServerFailure('Could not load analytics trends: $e'));

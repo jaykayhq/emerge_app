@@ -174,7 +174,11 @@ class _EmergeAppState extends ConsumerState<EmergeApp>
       if (initial != null) _routeDeepLink(initial);
       _deepLinkSub = appLinks.uriLinkStream.listen(_routeDeepLink);
     } catch (e, s) {
-      AppLogger.w('Deep link listener failed to start', error: e, stackTrace: s);
+      AppLogger.w(
+        'Deep link listener failed to start',
+        error: e,
+        stackTrace: s,
+      );
     }
   }
 

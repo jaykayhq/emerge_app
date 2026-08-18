@@ -6,8 +6,14 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('timelineSlotKeyFor', () {
     test('maps 4:00–11:59 to morning', () {
-      expect(timelineSlotKeyFor(const TimeOfDay(hour: 4, minute: 0)), 'morning');
-      expect(timelineSlotKeyFor(const TimeOfDay(hour: 11, minute: 59)), 'morning');
+      expect(
+        timelineSlotKeyFor(const TimeOfDay(hour: 4, minute: 0)),
+        'morning',
+      );
+      expect(
+        timelineSlotKeyFor(const TimeOfDay(hour: 11, minute: 59)),
+        'morning',
+      );
     });
 
     test('maps 12:00–16:59 to afternoon', () {
@@ -22,13 +28,25 @@ void main() {
     });
 
     test('maps 17:00–20:59 to evening', () {
-      expect(timelineSlotKeyFor(const TimeOfDay(hour: 17, minute: 0)), 'evening');
-      expect(timelineSlotKeyFor(const TimeOfDay(hour: 20, minute: 59)), 'evening');
+      expect(
+        timelineSlotKeyFor(const TimeOfDay(hour: 17, minute: 0)),
+        'evening',
+      );
+      expect(
+        timelineSlotKeyFor(const TimeOfDay(hour: 20, minute: 59)),
+        'evening',
+      );
     });
 
     test('maps 21:00–3:59 and no time to anytime (Before Bed)', () {
-      expect(timelineSlotKeyFor(const TimeOfDay(hour: 21, minute: 0)), 'anytime');
-      expect(timelineSlotKeyFor(const TimeOfDay(hour: 3, minute: 59)), 'anytime');
+      expect(
+        timelineSlotKeyFor(const TimeOfDay(hour: 21, minute: 0)),
+        'anytime',
+      );
+      expect(
+        timelineSlotKeyFor(const TimeOfDay(hour: 3, minute: 59)),
+        'anytime',
+      );
       expect(timelineSlotKeyFor(null), 'anytime');
     });
   });
@@ -66,7 +84,10 @@ void main() {
   group('timeOfDayPreferenceFrom', () {
     test('maps each slot key to the persisted enum value', () {
       expect(timeOfDayPreferenceFrom('morning'), TimeOfDayPreference.morning);
-      expect(timeOfDayPreferenceFrom('afternoon'), TimeOfDayPreference.afternoon);
+      expect(
+        timeOfDayPreferenceFrom('afternoon'),
+        TimeOfDayPreference.afternoon,
+      );
       expect(timeOfDayPreferenceFrom('evening'), TimeOfDayPreference.evening);
       expect(timeOfDayPreferenceFrom('anytime'), TimeOfDayPreference.anytime);
       expect(timeOfDayPreferenceFrom(null), TimeOfDayPreference.morning);

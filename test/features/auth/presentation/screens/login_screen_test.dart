@@ -15,15 +15,13 @@ import '../../../../helpers/widget_test_utils.dart';
 import '../../../../helpers/mocks/auth_mocks.dart';
 
 class MockFirebaseAuth extends Mock implements firebase_auth.FirebaseAuth {}
+
 class MockUser extends Mock implements firebase_auth.User {}
 
 late MockFirebaseAuth mockFirebaseAuth;
 late MockUser mockUser;
 
-Widget _buildTest(
-  AuthRepository repo, {
-  List<Override> overrides = const [],
-}) {
+Widget _buildTest(AuthRepository repo, {List<Override> overrides = const []}) {
   return createScreenUnderTest(
     screen: const LoginScreen(),
     overrides: [
@@ -42,7 +40,7 @@ void main() {
     mockAuth = MockAuthRepository();
     mockFirebaseAuth = MockFirebaseAuth();
     mockUser = MockUser();
-    
+
     when(() => mockAuth.user).thenAnswer((_) => const Stream.empty());
     when(() => mockFirebaseAuth.currentUser).thenReturn(mockUser);
     when(() => mockUser.uid).thenReturn('test-uid');
@@ -85,15 +83,20 @@ void main() {
     await setMobileViewport(tester);
 
     final completer = Completer<Either<Failure, AuthUser>>();
-    when(() => mockAuth.signInWithEmailAndPassword(
-      email: any(named: 'email'),
-      password: any(named: 'password'),
-    )).thenAnswer((_) async => completer.future);
+    when(
+      () => mockAuth.signInWithEmailAndPassword(
+        email: any(named: 'email'),
+        password: any(named: 'password'),
+      ),
+    ).thenAnswer((_) async => completer.future);
 
     await tester.pumpWidget(_buildTest(mockAuth));
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextFormField).first, 'test@example.com');
+    await tester.enterText(
+      find.byType(TextFormField).first,
+      'test@example.com',
+    );
     await tester.enterText(find.byType(TextFormField).last, 'password123');
     await tester.pumpAndSettle();
 
@@ -109,15 +112,20 @@ void main() {
   testWidgets('shows error on auth failure', (tester) async {
     await setMobileViewport(tester);
 
-    when(() => mockAuth.signInWithEmailAndPassword(
-      email: any(named: 'email'),
-      password: any(named: 'password'),
-    )).thenAnswer((_) async => left(AuthFailure('Invalid credentials')));
+    when(
+      () => mockAuth.signInWithEmailAndPassword(
+        email: any(named: 'email'),
+        password: any(named: 'password'),
+      ),
+    ).thenAnswer((_) async => left(AuthFailure('Invalid credentials')));
 
     await tester.pumpWidget(_buildTest(mockAuth));
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextFormField).first, 'test@example.com');
+    await tester.enterText(
+      find.byType(TextFormField).first,
+      'test@example.com',
+    );
     await tester.enterText(find.byType(TextFormField).last, 'wrong');
     await tester.pumpAndSettle();
 
@@ -127,60 +135,87 @@ void main() {
     expect(find.byType(SnackBar), findsOneWidget);
   });
 
-  testWidgets('logging in as a creator/non-normal user signs out and shows snackbar', (tester) async {
-    await setMobileViewport(tester);
+  testWidgets(
+    'logging in as a creator/non-normal user signs out and shows snackbar',
+    (tester) async {
+      await setMobileViewport(tester);
 
-    when(() => mockUser.uid).thenReturn('creator-uid');
-    when(() => mockAuth.signInWithEmailAndPassword(
-      email: any(named: 'email'),
-      password: any(named: 'password'),
-    )).thenAnswer((_) async => right(testAuthUser));
-    when(() => mockAuth.signOut()).thenAnswer((_) async {});
+      when(() => mockUser.uid).thenReturn('creator-uid');
+      when(
+        () => mockAuth.signInWithEmailAndPassword(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      ).thenAnswer((_) async => right(testAuthUser));
+      when(() => mockAuth.signOut()).thenAnswer((_) async {});
 
-    await tester.pumpWidget(_buildTest(
-      mockAuth,
-      overrides: [
-        isNormalUserProvider('creator-uid').overrideWith((ref) async {
-          await Future.value();
-          return false;
-        }),
-      ],
-    ));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        _buildTest(
+          mockAuth,
+          overrides: [
+            isNormalUserProvider('creator-uid').overrideWith((ref) async {
+              await Future.value();
+              return false;
+            }),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextFormField).first, 'creator@example.com');
-    await tester.enterText(find.byType(TextFormField).last, 'password123');
-    await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byType(TextFormField).first,
+        'creator@example.com',
+      );
+      await tester.enterText(find.byType(TextFormField).last, 'password123');
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Login').last);
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('Login').last);
+      await tester.pumpAndSettle();
 
-    verify(() => mockAuth.signOut()).called(1);
-    expect(find.text('This is a creator account. Please log in through the Creator Hub or switch accounts.'), findsOneWidget);
-  });
+      verify(() => mockAuth.signOut()).called(1);
+      expect(
+        find.text(
+          'This is a creator account. Please log in through the Creator Hub or switch accounts.',
+        ),
+        findsOneWidget,
+      );
+    },
+  );
 
-  testWidgets('Google Sign-In with a creator account signs out and shows snackbar', (tester) async {
-    await setMobileViewport(tester);
+  testWidgets(
+    'Google Sign-In with a creator account signs out and shows snackbar',
+    (tester) async {
+      await setMobileViewport(tester);
 
-    when(() => mockUser.uid).thenReturn('creator-uid');
-    when(() => mockAuth.signInWithGoogle(isLogin: true)).thenAnswer((_) async => right(testAuthUser));
-    when(() => mockAuth.signOut()).thenAnswer((_) async {});
+      when(() => mockUser.uid).thenReturn('creator-uid');
+      when(
+        () => mockAuth.signInWithGoogle(isLogin: true),
+      ).thenAnswer((_) async => right(testAuthUser));
+      when(() => mockAuth.signOut()).thenAnswer((_) async {});
 
-    await tester.pumpWidget(_buildTest(
-      mockAuth,
-      overrides: [
-        isNormalUserProvider('creator-uid').overrideWith((ref) async {
-          await Future.value();
-          return false;
-        }),
-      ],
-    ));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        _buildTest(
+          mockAuth,
+          overrides: [
+            isNormalUserProvider('creator-uid').overrideWith((ref) async {
+              await Future.value();
+              return false;
+            }),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Sign in with Google'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('Sign in with Google'));
+      await tester.pumpAndSettle();
 
-    verify(() => mockAuth.signOut()).called(1);
-    expect(find.text('This is a creator account. Please log in through the Creator Hub or switch accounts.'), findsOneWidget);
-  });
+      verify(() => mockAuth.signOut()).called(1);
+      expect(
+        find.text(
+          'This is a creator account. Please log in through the Creator Hub or switch accounts.',
+        ),
+        findsOneWidget,
+      );
+    },
+  );
 }

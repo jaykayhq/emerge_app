@@ -6,7 +6,10 @@ class _FakeFunctions implements ManagePremiumCaller {
   bool throwError = false;
 
   @override
-  Future<Map<String, dynamic>> call(String name, Map<String, dynamic> data) async {
+  Future<Map<String, dynamic>> call(
+    String name,
+    Map<String, dynamic> data,
+  ) async {
     if (throwError) throw Exception('boom');
     calls.add({...data, '_fn': name});
     return {'ok': true};

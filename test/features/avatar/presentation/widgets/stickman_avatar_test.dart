@@ -6,14 +6,11 @@ import 'package:emerge_app/features/avatar/presentation/widgets/stickman_avatar.
 
 void main() {
   group('StickmanAvatar', () {
-    testWidgets('renders default avatar without errors',
-        (tester) async {
+    testWidgets('renders default avatar without errors', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: StickmanAvatar(
-              avatarData: AvatarData.defaultAvatar(),
-            ),
+            body: StickmanAvatar(avatarData: AvatarData.defaultAvatar()),
           ),
         ),
       );
@@ -43,9 +40,7 @@ void main() {
       final avatar = AvatarData.defaultAvatar().copyWith(pose: wavePose);
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: StickmanAvatar(avatarData: avatar),
-          ),
+          home: Scaffold(body: StickmanAvatar(avatarData: avatar)),
         ),
       );
       expect(find.byType(StickmanAvatar), findsOneWidget);

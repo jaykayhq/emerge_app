@@ -11,10 +11,12 @@ class TribeLeaderboardSection extends ConsumerStatefulWidget {
   const TribeLeaderboardSection({super.key});
 
   @override
-  ConsumerState<TribeLeaderboardSection> createState() => _TribeLeaderboardSectionState();
+  ConsumerState<TribeLeaderboardSection> createState() =>
+      _TribeLeaderboardSectionState();
 }
 
-class _TribeLeaderboardSectionState extends ConsumerState<TribeLeaderboardSection> {
+class _TribeLeaderboardSectionState
+    extends ConsumerState<TribeLeaderboardSection> {
   int _timeScope = 0;
 
   static const _timeLabels = ['Weekly', 'Monthly', 'All-time'];
@@ -42,7 +44,10 @@ class _TribeLeaderboardSectionState extends ConsumerState<TribeLeaderboardSectio
               onTap: () => context.push('/social/leaderboard'),
               child: const Text(
                 'Full Board →',
-                style: TextStyle(color: EmergeColors.nebulaSecondary, fontSize: 12),
+                style: TextStyle(
+                  color: EmergeColors.nebulaSecondary,
+                  fontSize: 12,
+                ),
               ),
             ),
           ],
@@ -53,13 +58,20 @@ class _TribeLeaderboardSectionState extends ConsumerState<TribeLeaderboardSectio
           onSelectionChanged: (s) => setState(() => _timeScope = s.first),
           showSelectedIcon: false,
           style: SegmentedButton.styleFrom(
-            selectedBackgroundColor: EmergeColors.nebulaSecondary.withValues(alpha: 0.2),
+            selectedBackgroundColor: EmergeColors.nebulaSecondary.withValues(
+              alpha: 0.2,
+            ),
             selectedForegroundColor: EmergeColors.nebulaSecondary,
-            side: BorderSide(color: EmergeColors.nebulaPrimaryContainer.withValues(alpha: 0.3)),
+            side: BorderSide(
+              color: EmergeColors.nebulaPrimaryContainer.withValues(alpha: 0.3),
+            ),
           ),
           segments: List.generate(
             _timeLabels.length,
-            (i) => ButtonSegment(value: i, label: Text(_timeLabels[i], style: const TextStyle(fontSize: 12))),
+            (i) => ButtonSegment(
+              value: i,
+              label: Text(_timeLabels[i], style: const TextStyle(fontSize: 12)),
+            ),
           ),
         ),
         const Gap(24),
@@ -69,7 +81,10 @@ class _TribeLeaderboardSectionState extends ConsumerState<TribeLeaderboardSectio
               return const Padding(
                 padding: EdgeInsets.all(24),
                 child: Center(
-                  child: Text('No rankings yet', style: TextStyle(color: Colors.white38)),
+                  child: Text(
+                    'No rankings yet',
+                    style: TextStyle(color: Colors.white38),
+                  ),
                 ),
               );
             }
@@ -77,7 +92,9 @@ class _TribeLeaderboardSectionState extends ConsumerState<TribeLeaderboardSectio
             final display = entries;
             final top3 = display.take(3).toList();
             final rest = display.skip(3).toList();
-            final maxXp = display.isNotEmpty ? display.first.stats.totalXp.toDouble() : 1.0;
+            final maxXp = display.isNotEmpty
+                ? display.first.stats.totalXp.toDouble()
+                : 1.0;
 
             return Column(
               children: [
@@ -102,7 +119,12 @@ class _TribeLeaderboardSectionState extends ConsumerState<TribeLeaderboardSectio
             );
           },
           loading: () => const EmergeLoadingSkeleton(itemCount: 5),
-          error: (e, _) => const Center(child: Text('Could not load leaderboard', style: TextStyle(color: Colors.white38))),
+          error: (e, _) => const Center(
+            child: Text(
+              'Could not load leaderboard',
+              style: TextStyle(color: Colors.white38),
+            ),
+          ),
         ),
       ],
     );
@@ -122,13 +144,34 @@ class _PodiumLayout extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         if (top3.length > 1)
-          Expanded(child: _PodiumColumn(rank: 2, entry: top3[1], height: 120, color: Colors.blueGrey.shade300)),
+          Expanded(
+            child: _PodiumColumn(
+              rank: 2,
+              entry: top3[1],
+              height: 120,
+              color: Colors.blueGrey.shade300,
+            ),
+          ),
         const Gap(12),
         if (top3.isNotEmpty)
-          Expanded(child: _PodiumColumn(rank: 1, entry: top3[0], height: 160, color: Colors.amber)),
+          Expanded(
+            child: _PodiumColumn(
+              rank: 1,
+              entry: top3[0],
+              height: 160,
+              color: Colors.amber,
+            ),
+          ),
         const Gap(12),
         if (top3.length > 2)
-          Expanded(child: _PodiumColumn(rank: 3, entry: top3[2], height: 100, color: Colors.brown.shade300)),
+          Expanded(
+            child: _PodiumColumn(
+              rank: 3,
+              entry: top3[2],
+              height: 100,
+              color: Colors.brown.shade300,
+            ),
+          ),
       ],
     );
   }
@@ -154,7 +197,11 @@ class _PodiumColumn extends StatelessWidget {
       children: [
         Text(
           entry.tribe.name,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
           overflow: TextOverflow.ellipsis,
         ),
         const Gap(8),
@@ -177,20 +224,28 @@ class _PodiumColumn extends StatelessWidget {
                 color: color.withValues(alpha: 0.3),
                 blurRadius: 20,
                 offset: const Offset(0, -10),
-              )
-            ]
+              ),
+            ],
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 '#$rank',
-                style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white),
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                ),
               ),
               const Gap(8),
               Text(
                 '${(entry.stats.totalXp / 1000).toStringAsFixed(1)}k',
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 12, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.8),
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -228,7 +283,11 @@ class _LeaderboardRow extends StatelessWidget {
               width: 30,
               child: Text(
                 '#$rank',
-                style: const TextStyle(fontSize: 14, color: Colors.white70, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.white70,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             const Gap(12),
@@ -236,7 +295,11 @@ class _LeaderboardRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name, style: const TextStyle(color: Colors.white, fontSize: 14), overflow: TextOverflow.ellipsis),
+                  Text(
+                    name,
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   const Gap(6),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(3),
@@ -251,7 +314,14 @@ class _LeaderboardRow extends StatelessWidget {
               ),
             ),
             const Gap(16),
-            Text('${(xp / 1000).toStringAsFixed(1)}K XP', style: TextStyle(color: EmergeColors.nebulaSecondary, fontWeight: FontWeight.bold, fontSize: 12)),
+            Text(
+              '${(xp / 1000).toStringAsFixed(1)}K XP',
+              style: TextStyle(
+                color: EmergeColors.nebulaSecondary,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
           ],
         ),
       ),
@@ -270,10 +340,25 @@ class _YouPinnedRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: const Row(
         children: [
-          SizedBox(width: 30, child: Text('📍', style: TextStyle(fontSize: 16))),
+          SizedBox(
+            width: 30,
+            child: Text('📍', style: TextStyle(fontSize: 16)),
+          ),
           Gap(12),
-          Expanded(child: Text('Your Tribe', style: TextStyle(color: EmergeColors.nebulaPrimary, fontWeight: FontWeight.bold, fontSize: 14))),
-          Text('Check in to rank up 🔥', style: TextStyle(color: Colors.white70, fontSize: 12)),
+          Expanded(
+            child: Text(
+              'Your Tribe',
+              style: TextStyle(
+                color: EmergeColors.nebulaPrimary,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+          ),
+          Text(
+            'Check in to rank up 🔥',
+            style: TextStyle(color: Colors.white70, fontSize: 12),
+          ),
         ],
       ),
     );

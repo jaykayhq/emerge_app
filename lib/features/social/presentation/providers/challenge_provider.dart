@@ -104,11 +104,14 @@ final tribeChallengesProvider = StreamProvider<List<Challenge>>((ref) {
   final challengesAsync = ref.watch(allChallengesProvider);
   return challengesAsync.when(
     data: (challenges) => Stream.value(
-      challenges.where((c) =>
-        archetypeId == null ||
-        c.archetypeId == null ||
-        c.archetypeId == archetypeId,
-      ).toList(),
+      challenges
+          .where(
+            (c) =>
+                archetypeId == null ||
+                c.archetypeId == null ||
+                c.archetypeId == archetypeId,
+          )
+          .toList(),
     ),
     loading: () => Stream.value([]),
     error: (_, _) => Stream.value([]),
@@ -124,17 +127,17 @@ final tribeChallengesProvider = StreamProvider<List<Challenge>>((ref) {
 /// stream is the read path that makes published challenges visible again.
 /// Firestore rules allow the query: reads on `challenges` are public and the
 /// docs carry the `createdBy` field set at creation time.
-final creatorAuthoredChallengesProvider =
-    StreamProvider.autoDispose.family<List<Challenge>, String>((ref, uid) {
-  if (uid.isEmpty) return Stream.value([]);
-  final firestore = ref.watch(firestoreProvider);
-  return firestore
-      .collection('challenges')
-      .where('createdBy', isEqualTo: uid)
-      .snapshots()
-      .map(
-        (snap) => snap.docs
-            .map((doc) => Challenge.fromMap(doc.data(), id: doc.id))
-            .toList(),
-      );
-});
+final creatorAuthoredChallengesProvider = StreamProvider.autoDispose
+    .family<List<Challenge>, String>((ref, uid) {
+      if (uid.isEmpty) return Stream.value([]);
+      final firestore = ref.watch(firestoreProvider);
+      return firestore
+          .collection('challenges')
+          .where('createdBy', isEqualTo: uid)
+          .snapshots()
+          .map(
+            (snap) => snap.docs
+                .map((doc) => Challenge.fromMap(doc.data(), id: doc.id))
+                .toList(),
+          );
+    });

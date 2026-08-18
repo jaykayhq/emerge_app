@@ -9,8 +9,8 @@ class DeletionAudit {
   DeletionAudit({
     SyncMetrics? metrics,
     void Function(Map<String, dynamic>)? onEvent,
-  })  : _metrics = metrics ?? SyncMetrics(),
-        _onEvent = onEvent;
+  }) : _metrics = metrics ?? SyncMetrics(),
+       _onEvent = onEvent;
 
   SyncMetrics get metrics => _metrics;
 

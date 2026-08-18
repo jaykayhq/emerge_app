@@ -44,10 +44,7 @@ void main() {
         userOnboardingCompletedAt: null,
         creatorOnboarding: null,
       );
-      expect(
-        decideRedirect(currentPath: '/creator/signup', ctx: ctx),
-        isNull,
-      );
+      expect(decideRedirect(currentPath: '/creator/signup', ctx: ctx), isNull);
     });
 
     test('unauthenticated, on /login -> stays', () {
@@ -63,42 +60,46 @@ void main() {
     });
 
     test(
-        'unauthenticated, on /reset-password?oobCode=... -> stays (oobCode preserved)',
-        () {
-      final ctx = const RedirectContext(
-        isLoggedIn: false,
-        role: null,
-        isFirstLaunch: false,
-        userOnboardingProgress: null,
-        userOnboardingCompletedAt: null,
-        creatorOnboarding: null,
-      );
-      expect(
-        decideRedirect(currentPath: '/reset-password?oobCode=abc', ctx: ctx),
-        isNull,
-        reason: 'signed-out users must reach the password-reset screen so '
-            'the oobCode query param is not discarded',
-      );
-    });
+      'unauthenticated, on /reset-password?oobCode=... -> stays (oobCode preserved)',
+      () {
+        final ctx = const RedirectContext(
+          isLoggedIn: false,
+          role: null,
+          isFirstLaunch: false,
+          userOnboardingProgress: null,
+          userOnboardingCompletedAt: null,
+          creatorOnboarding: null,
+        );
+        expect(
+          decideRedirect(currentPath: '/reset-password?oobCode=abc', ctx: ctx),
+          isNull,
+          reason:
+              'signed-out users must reach the password-reset screen so '
+              'the oobCode query param is not discarded',
+        );
+      },
+    );
 
     test(
-        'unauthenticated, on /verify-email?oobCode=... -> stays (oobCode preserved)',
-        () {
-      final ctx = const RedirectContext(
-        isLoggedIn: false,
-        role: null,
-        isFirstLaunch: false,
-        userOnboardingProgress: null,
-        userOnboardingCompletedAt: null,
-        creatorOnboarding: null,
-      );
-      expect(
-        decideRedirect(currentPath: '/verify-email?oobCode=abc', ctx: ctx),
-        isNull,
-        reason: 'signed-out users must reach the email-verification screen so '
-            'the oobCode query param is not discarded',
-      );
-    });
+      'unauthenticated, on /verify-email?oobCode=... -> stays (oobCode preserved)',
+      () {
+        final ctx = const RedirectContext(
+          isLoggedIn: false,
+          role: null,
+          isFirstLaunch: false,
+          userOnboardingProgress: null,
+          userOnboardingCompletedAt: null,
+          creatorOnboarding: null,
+        );
+        expect(
+          decideRedirect(currentPath: '/verify-email?oobCode=abc', ctx: ctx),
+          isNull,
+          reason:
+              'signed-out users must reach the email-verification screen so '
+              'the oobCode query param is not discarded',
+        );
+      },
+    );
 
     // 2. Splash screen is always allowed.
     test('/splash is always allowed', () {
@@ -123,97 +124,102 @@ void main() {
         userOnboardingCompletedAt: null,
         creatorOnboarding: null,
       );
-      expect(
-        decideRedirect(currentPath: '/creator/signup', ctx: ctx),
-        isNull,
-      );
+      expect(decideRedirect(currentPath: '/creator/signup', ctx: ctx), isNull);
     });
 
     test(
-        'creator mid-signup (role=unknown, on /onboarding/creator/*) is held',
-        () {
-      final ctx = const RedirectContext(
-        isLoggedIn: true,
-        role: UserRole.unknown,
-        isFirstLaunch: false,
-        userOnboardingProgress: null,
-        userOnboardingCompletedAt: null,
-        creatorOnboarding: null,
-      );
-      expect(
-        decideRedirect(
-            currentPath: '/onboarding/creator/archetype', ctx: ctx),
-        isNull,
-      );
-    });
+      'creator mid-signup (role=unknown, on /onboarding/creator/*) is held',
+      () {
+        final ctx = const RedirectContext(
+          isLoggedIn: true,
+          role: UserRole.unknown,
+          isFirstLaunch: false,
+          userOnboardingProgress: null,
+          userOnboardingCompletedAt: null,
+          creatorOnboarding: null,
+        );
+        expect(
+          decideRedirect(
+            currentPath: '/onboarding/creator/archetype',
+            ctx: ctx,
+          ),
+          isNull,
+        );
+      },
+    );
 
     test(
-        'logged in but role still unknown, on /welcome -> /onboarding/identity-studio',
-        () {
-      final ctx = const RedirectContext(
-        isLoggedIn: true,
-        role: UserRole.unknown,
-        isFirstLaunch: false,
-        userOnboardingProgress: null,
-        userOnboardingCompletedAt: null,
-        creatorOnboarding: null,
-      );
-      expect(
-        decideRedirect(currentPath: '/welcome', ctx: ctx),
-        '/onboarding/identity-studio',
-      );
-    });
+      'logged in but role still unknown, on /welcome -> /onboarding/identity-studio',
+      () {
+        final ctx = const RedirectContext(
+          isLoggedIn: true,
+          role: UserRole.unknown,
+          isFirstLaunch: false,
+          userOnboardingProgress: null,
+          userOnboardingCompletedAt: null,
+          creatorOnboarding: null,
+        );
+        expect(
+          decideRedirect(currentPath: '/welcome', ctx: ctx),
+          '/onboarding/identity-studio',
+        );
+      },
+    );
 
     // 4. Creator branch must never regress to normal-user onboarding.
     test(
-        'role=creator, on /onboarding/identity-studio -> /onboarding/creator/archetype',
-        () {
-      final ctx = RedirectContext(
-        isLoggedIn: true,
-        role: UserRole.creator,
-        isFirstLaunch: false,
-        userOnboardingProgress: null,
-        userOnboardingCompletedAt: null,
-        creatorOnboarding: CreatorOnboardingState.empty,
-      );
-      expect(
-        decideRedirect(currentPath: '/onboarding/identity-studio', ctx: ctx),
-        '/onboarding/creator/archetype',
-      );
-    });
-
-    test('role=creator, on / -> /onboarding/creator/archetype if onboarding incomplete',
-        () {
-      final ctx = RedirectContext(
-        isLoggedIn: true,
-        role: UserRole.creator,
-        isFirstLaunch: false,
-        userOnboardingProgress: null,
-        userOnboardingCompletedAt: null,
-        creatorOnboarding: CreatorOnboardingState.empty,
-      );
-      expect(
-        decideRedirect(currentPath: '/world-map', ctx: ctx),
-        '/onboarding/creator/archetype',
-      );
-    });
+      'role=creator, on /onboarding/identity-studio -> /onboarding/creator/archetype',
+      () {
+        final ctx = RedirectContext(
+          isLoggedIn: true,
+          role: UserRole.creator,
+          isFirstLaunch: false,
+          userOnboardingProgress: null,
+          userOnboardingCompletedAt: null,
+          creatorOnboarding: CreatorOnboardingState.empty,
+        );
+        expect(
+          decideRedirect(currentPath: '/onboarding/identity-studio', ctx: ctx),
+          '/onboarding/creator/archetype',
+        );
+      },
+    );
 
     test(
-        'role=creator, email verified, no onboarding -> /onboarding/creator/archetype',
-        () {
-      final ctx = RedirectContext(
-        isLoggedIn: true,
-        role: UserRole.creator,
-        isFirstLaunch: false,
-        userOnboardingProgress: null,
-        userOnboardingCompletedAt: null,
-        creatorOnboarding: CreatorOnboardingState.empty,
-      );
-      expect(
-        decideRedirect(currentPath: '/world-map', ctx: ctx),
-        '/onboarding/creator/archetype',
-      );
-    });
+      'role=creator, on / -> /onboarding/creator/archetype if onboarding incomplete',
+      () {
+        final ctx = RedirectContext(
+          isLoggedIn: true,
+          role: UserRole.creator,
+          isFirstLaunch: false,
+          userOnboardingProgress: null,
+          userOnboardingCompletedAt: null,
+          creatorOnboarding: CreatorOnboardingState.empty,
+        );
+        expect(
+          decideRedirect(currentPath: '/world-map', ctx: ctx),
+          '/onboarding/creator/archetype',
+        );
+      },
+    );
+
+    test(
+      'role=creator, email verified, no onboarding -> /onboarding/creator/archetype',
+      () {
+        final ctx = RedirectContext(
+          isLoggedIn: true,
+          role: UserRole.creator,
+          isFirstLaunch: false,
+          userOnboardingProgress: null,
+          userOnboardingCompletedAt: null,
+          creatorOnboarding: CreatorOnboardingState.empty,
+        );
+        expect(
+          decideRedirect(currentPath: '/world-map', ctx: ctx),
+          '/onboarding/creator/archetype',
+        );
+      },
+    );
 
     test('role=creator, onboarding step 1 -> /onboarding/creator/profile', () {
       final ctx = RedirectContext(
@@ -270,62 +276,66 @@ void main() {
       );
     });
 
-    test('role=creator, on /welcome -> /creator/dashboard (already complete)',
-        () {
-      final ctx = RedirectContext(
-        isLoggedIn: true,
-        role: UserRole.creator,
-        isFirstLaunch: false,
-        userOnboardingProgress: null,
-        userOnboardingCompletedAt: null,
-        creatorOnboarding: CreatorOnboardingState(
-          progress: 3,
-          isComplete: true,
-        ),
-      );
-      expect(
-        decideRedirect(currentPath: '/welcome', ctx: ctx),
-        '/creator/dashboard',
-      );
-    });
+    test(
+      'role=creator, on /welcome -> /creator/dashboard (already complete)',
+      () {
+        final ctx = RedirectContext(
+          isLoggedIn: true,
+          role: UserRole.creator,
+          isFirstLaunch: false,
+          userOnboardingProgress: null,
+          userOnboardingCompletedAt: null,
+          creatorOnboarding: CreatorOnboardingState(
+            progress: 3,
+            isComplete: true,
+          ),
+        );
+        expect(
+          decideRedirect(currentPath: '/welcome', ctx: ctx),
+          '/creator/dashboard',
+        );
+      },
+    );
 
     test(
-        'role=creator, on /onboarding/identity-studio when complete -> /creator/dashboard',
-        () {
-      final ctx = RedirectContext(
-        isLoggedIn: true,
-        role: UserRole.creator,
-        isFirstLaunch: false,
-        userOnboardingProgress: null,
-        userOnboardingCompletedAt: null,
-        creatorOnboarding: CreatorOnboardingState(
-          progress: 3,
-          isComplete: true,
-        ),
-      );
-      expect(
-        decideRedirect(currentPath: '/onboarding/identity-studio', ctx: ctx),
-        '/creator/dashboard',
-      );
-    });
+      'role=creator, on /onboarding/identity-studio when complete -> /creator/dashboard',
+      () {
+        final ctx = RedirectContext(
+          isLoggedIn: true,
+          role: UserRole.creator,
+          isFirstLaunch: false,
+          userOnboardingProgress: null,
+          userOnboardingCompletedAt: null,
+          creatorOnboarding: CreatorOnboardingState(
+            progress: 3,
+            isComplete: true,
+          ),
+        );
+        expect(
+          decideRedirect(currentPath: '/onboarding/identity-studio', ctx: ctx),
+          '/creator/dashboard',
+        );
+      },
+    );
 
     // 5. Normal-user flow still works as before.
     test(
-        'role=user, no user_stats yet, on / -> /onboarding/identity-studio',
-        () {
-      final ctx = const RedirectContext(
-        isLoggedIn: true,
-        role: UserRole.user,
-        isFirstLaunch: false,
-        userOnboardingProgress: null,
-        userOnboardingCompletedAt: null,
-        creatorOnboarding: null,
-      );
-      expect(
-        decideRedirect(currentPath: '/world-map', ctx: ctx),
-        '/onboarding/identity-studio',
-      );
-    });
+      'role=user, no user_stats yet, on / -> /onboarding/identity-studio',
+      () {
+        final ctx = const RedirectContext(
+          isLoggedIn: true,
+          role: UserRole.user,
+          isFirstLaunch: false,
+          userOnboardingProgress: null,
+          userOnboardingCompletedAt: null,
+          creatorOnboarding: null,
+        );
+        expect(
+          decideRedirect(currentPath: '/world-map', ctx: ctx),
+          '/onboarding/identity-studio',
+        );
+      },
+    );
 
     test('role=user, progress=2, on / -> /onboarding/club', () {
       final ctx = const RedirectContext(
@@ -358,18 +368,19 @@ void main() {
     });
 
     test(
-        'role=user, completed onboarding (timestamp), on /login -> /timeline (kick off auth surface)',
-        () {
-      final ctx = RedirectContext(
-        isLoggedIn: true,
-        role: UserRole.user,
-        isFirstLaunch: false,
-        userOnboardingProgress: 4,
-        userOnboardingCompletedAt: DateTime(2026, 1, 1),
-        creatorOnboarding: null,
-      );
-      expect(decideRedirect(currentPath: '/login', ctx: ctx), '/timeline');
-    });
+      'role=user, completed onboarding (timestamp), on /login -> /timeline (kick off auth surface)',
+      () {
+        final ctx = RedirectContext(
+          isLoggedIn: true,
+          role: UserRole.user,
+          isFirstLaunch: false,
+          userOnboardingProgress: 4,
+          userOnboardingCompletedAt: DateTime(2026, 1, 1),
+          creatorOnboarding: null,
+        );
+        expect(decideRedirect(currentPath: '/login', ctx: ctx), '/timeline');
+      },
+    );
 
     test('role=user, on /creator/dashboard -> /onboarding/identity-studio '
         '(not a creator)', () {
@@ -398,8 +409,7 @@ void main() {
         creatorOnboarding: null,
       );
       expect(
-        decideRedirect(
-            currentPath: '/onboarding/creator/archetype', ctx: ctx),
+        decideRedirect(currentPath: '/onboarding/creator/archetype', ctx: ctx),
         '/onboarding/identity-studio',
       );
     });
@@ -412,53 +422,41 @@ void main() {
         role: UserRole.user,
         isFirstLaunch: false,
         userOnboardingProgress: progress,
-        userOnboardingCompletedAt: progress >= 4
-            ? DateTime(2026, 1, 1)
-            : null,
+        userOnboardingCompletedAt: progress >= 4 ? DateTime(2026, 1, 1) : null,
         creatorOnboarding: null,
       );
     }
 
     test('progress=0 routes to /onboarding/identity-studio', () {
       expect(
-        decideRedirect(
-            currentPath: '/world-map', ctx: ctxAt(0)),
+        decideRedirect(currentPath: '/world-map', ctx: ctxAt(0)),
         '/onboarding/identity-studio',
       );
     });
 
     test('progress=1 routes to /onboarding/interests', () {
       expect(
-        decideRedirect(
-            currentPath: '/world-map', ctx: ctxAt(1)),
+        decideRedirect(currentPath: '/world-map', ctx: ctxAt(1)),
         '/onboarding/interests',
       );
     });
 
     test('progress=2 routes to /onboarding/club', () {
       expect(
-        decideRedirect(
-            currentPath: '/world-map', ctx: ctxAt(2)),
+        decideRedirect(currentPath: '/world-map', ctx: ctxAt(2)),
         '/onboarding/club',
       );
     });
 
     test('progress=3 routes to /onboarding/first-habits', () {
       expect(
-        decideRedirect(
-            currentPath: '/world-map', ctx: ctxAt(3)),
+        decideRedirect(currentPath: '/world-map', ctx: ctxAt(3)),
         '/onboarding/first-habits',
       );
     });
 
     test('progress=4 is treated as complete, stays on /world-map', () {
-      expect(
-        decideRedirect(
-          currentPath: '/world-map',
-          ctx: ctxAt(4),
-        ),
-        isNull,
-      );
+      expect(decideRedirect(currentPath: '/world-map', ctx: ctxAt(4)), isNull);
     });
 
     test('stale /onboarding/first-habit still resolves to new '
@@ -466,10 +464,7 @@ void main() {
         'that legacy path with progress=3 lands on /first-habits', () {
       // Directly verify the new path.
       expect(
-        decideRedirect(
-          currentPath: '/world-map',
-          ctx: ctxAt(3),
-        ),
+        decideRedirect(currentPath: '/world-map', ctx: ctxAt(3)),
         '/onboarding/first-habits',
       );
     });
@@ -489,12 +484,15 @@ void main() {
       );
     }
 
-    test('unverified within grace on a shell path -> stays (banner nudges)', () {
-      expect(
-        decideRedirect(currentPath: '/timeline', ctx: unverifiedCtx()),
-        isNull,
-      );
-    });
+    test(
+      'unverified within grace on a shell path -> stays (banner nudges)',
+      () {
+        expect(
+          decideRedirect(currentPath: '/timeline', ctx: unverifiedCtx()),
+          isNull,
+        );
+      },
+    );
 
     test('locked (past grace) user on a shell path -> /verify-email', () {
       expect(
@@ -579,10 +577,7 @@ void main() {
         emailVerified: false,
         emailLockedAt: DateTime(2026, 1, 8),
       );
-      expect(
-        decideRedirect(currentPath: '/login', ctx: ctx),
-        '/verify-email',
-      );
+      expect(decideRedirect(currentPath: '/login', ctx: ctx), '/verify-email');
     });
 
     test('creator is never gated by email verification', () {
@@ -625,20 +620,21 @@ void main() {
           ctx: verifiedCtx(),
         ),
         isNull,
-        reason: 'a signed-in user following a reset link must reach the reset '
+        reason:
+            'a signed-in user following a reset link must reach the reset '
             'screen so confirmPasswordReset can consume the one-shot oobCode',
       );
     });
 
-    test('signed-in verified user on /verify-email?oobCode=abc -> stays',
-        () {
+    test('signed-in verified user on /verify-email?oobCode=abc -> stays', () {
       expect(
         decideRedirect(
           currentPath: '/verify-email?oobCode=abc',
           ctx: verifiedCtx(),
         ),
         isNull,
-        reason: 'the verify screen must render for signed-in users so '
+        reason:
+            'the verify screen must render for signed-in users so '
             'applyActionCode can consume the one-shot oobCode',
       );
     });
@@ -664,10 +660,7 @@ void main() {
         emailLockedAt: null,
       );
       expect(
-        decideRedirect(
-          currentPath: '/reset-password?oobCode=abc',
-          ctx: ctx,
-        ),
+        decideRedirect(currentPath: '/reset-password?oobCode=abc', ctx: ctx),
         isNull,
       );
     });
@@ -685,12 +678,10 @@ void main() {
         emailLockedAt: DateTime(2026, 1, 8),
       );
       expect(
-        decideRedirect(
-          currentPath: '/reset-password?oobCode=abc',
-          ctx: ctx,
-        ),
+        decideRedirect(currentPath: '/reset-password?oobCode=abc', ctx: ctx),
         '/verify-email',
-        reason: 'the locked gate still forces verification before any other '
+        reason:
+            'the locked gate still forces verification before any other '
             'action; the redirect must not consume the reset oobCode',
       );
     });
@@ -711,10 +702,7 @@ void main() {
         emailLockedAt: null,
       );
       expect(
-        decideRedirect(
-          currentPath: '/reset-password?oobCode=abc',
-          ctx: ctx,
-        ),
+        decideRedirect(currentPath: '/reset-password?oobCode=abc', ctx: ctx),
         '/creator/dashboard',
       );
     });

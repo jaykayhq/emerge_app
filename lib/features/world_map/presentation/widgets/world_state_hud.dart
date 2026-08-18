@@ -80,8 +80,9 @@ class _HudShell extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color:
-                    Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.1),
                 blurRadius: 10,
                 spreadRadius: 1,
               ),

@@ -13,9 +13,10 @@ void main() {
     });
 
     test('action IDs are distinct', () {
-      expect(NotificationActionIds.complete, isNot(
-        equals(NotificationActionIds.snooze1h),
-      ));
+      expect(
+        NotificationActionIds.complete,
+        isNot(equals(NotificationActionIds.snooze1h)),
+      );
     });
   });
 

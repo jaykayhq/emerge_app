@@ -106,8 +106,10 @@ Future<HabitActivityData> habitActivityData(Ref ref, String habitId) async {
     }
   }
 
-  final heatmapData =
-      List<bool>.generate(cellCount, (i) => completedDays.contains(i));
+  final heatmapData = List<bool>.generate(
+    cellCount,
+    (i) => completedDays.contains(i),
+  );
 
   // ── Reflections ──
   final reflectionRows = await db.habitReflectionsDao
@@ -115,11 +117,10 @@ Future<HabitActivityData> habitActivityData(Ref ref, String habitId) async {
       .first;
   final reflections = reflectionRows
       .where((r) => r.note.isNotEmpty)
-      .map((r) => HabitReflection(
-            text: r.note,
-            createdAt: r.localDate,
-            mood: r.mood,
-          ))
+      .map(
+        (r) =>
+            HabitReflection(text: r.note, createdAt: r.localDate, mood: r.mood),
+      )
       .toList();
 
   return HabitActivityData(

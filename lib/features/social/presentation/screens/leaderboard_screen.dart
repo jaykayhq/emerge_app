@@ -189,9 +189,11 @@ class _TribeLeaderboardTab extends ConsumerWidget {
         // or before the members stream has emitted.
         List<String>? tribeMemberIds;
         if (membership != null) {
-          tribeMemberIds =
-              ref.watch(userTribesProvider(profile.uid)).value?.firstOrNull
-                  ?.members;
+          tribeMemberIds = ref
+              .watch(userTribesProvider(profile.uid))
+              .value
+              ?.firstOrNull
+              ?.members;
         }
 
         return Column(
@@ -366,10 +368,7 @@ class _FriendLeaderboardItem extends StatelessWidget {
   final FriendRankEntry friend;
   final int rank;
 
-  const _FriendLeaderboardItem({
-    required this.friend,
-    required this.rank,
-  });
+  const _FriendLeaderboardItem({required this.friend, required this.rank});
 
   @override
   Widget build(BuildContext context) {
@@ -392,7 +391,9 @@ class _FriendLeaderboardItem extends StatelessWidget {
             child: Text(
               '$rank',
               style: TextStyle(
-                color: rank <= 3 ? AppTheme.primary : AppTheme.textSecondaryDark,
+                color: rank <= 3
+                    ? AppTheme.primary
+                    : AppTheme.textSecondaryDark,
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
@@ -407,9 +408,7 @@ class _FriendLeaderboardItem extends StatelessWidget {
             child: friend.isYou
                 ? const Icon(Icons.person, color: AppTheme.primary, size: 22)
                 : Text(
-                    friend.name.isNotEmpty
-                        ? friend.name[0].toUpperCase()
-                        : '?',
+                    friend.name.isNotEmpty ? friend.name[0].toUpperCase() : '?',
                     style: const TextStyle(
                       color: AppTheme.primary,
                       fontWeight: FontWeight.bold,

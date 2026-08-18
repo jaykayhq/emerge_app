@@ -62,9 +62,10 @@ class TribeStatsService {
 
           if (avatarStats != null) {
             // Try totalXp first, then currentXp, then sum of attributes as fallback
-            userXp = (avatarStats['totalXp'] as int?) ??
-                     (avatarStats['currentXp'] as int?) ??
-                     0;
+            userXp =
+                (avatarStats['totalXp'] as int?) ??
+                (avatarStats['currentXp'] as int?) ??
+                0;
 
             if (userXp == 0) {
               userXp += avatarStats['strengthXp'] as int? ?? 0;
@@ -84,9 +85,8 @@ class TribeStatsService {
               }
             }
           } else {
-            userXp = (data['totalXp'] as int?) ??
-                     (data['currentXp'] as int?) ??
-                     0;
+            userXp =
+                (data['totalXp'] as int?) ?? (data['currentXp'] as int?) ?? 0;
           }
 
           totalXp += userXp;

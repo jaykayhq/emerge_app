@@ -25,15 +25,14 @@ Blueprint _buildBlueprint({
 
 Widget _wrap(Widget child) {
   return MaterialApp(
-    home: Scaffold(
-      body: SizedBox(width: 300, height: 400, child: child),
-    ),
+    home: Scaffold(body: SizedBox(width: 300, height: 400, child: child)),
   );
 }
 
 void main() {
-  testWidgets('renders fallback icon (not a blank area) for a dead image URL',
-      (tester) async {
+  testWidgets('renders fallback icon (not a blank area) for a dead image URL', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _wrap(BlueprintCard(blueprint: _buildBlueprint(imageUrl: _deadUrl))),
     );
@@ -53,35 +52,37 @@ void main() {
     expect(find.text('Test Blueprint'), findsOneWidget);
   });
 
-  testWidgets('renders time-of-day and attribute badges when habit data present',
-      (tester) async {
-    final blueprint = _buildBlueprint(
-      habits: const [
-        BlueprintHabit(
-          title: 'Wake Up at 6 AM',
-          timeOfDay: 'Morning',
-          attribute: HabitAttribute.focus,
-        ),
-        BlueprintHabit(
-          title: 'Read',
-          timeOfDay: 'Evening',
-          attribute: HabitAttribute.focus,
-        ),
-        BlueprintHabit(
-          title: 'Reflect',
-          timeOfDay: 'Evening',
-          attribute: HabitAttribute.intellect,
-        ),
-      ],
-    );
+  testWidgets(
+    'renders time-of-day and attribute badges when habit data present',
+    (tester) async {
+      final blueprint = _buildBlueprint(
+        habits: const [
+          BlueprintHabit(
+            title: 'Wake Up at 6 AM',
+            timeOfDay: 'Morning',
+            attribute: HabitAttribute.focus,
+          ),
+          BlueprintHabit(
+            title: 'Read',
+            timeOfDay: 'Evening',
+            attribute: HabitAttribute.focus,
+          ),
+          BlueprintHabit(
+            title: 'Reflect',
+            timeOfDay: 'Evening',
+            attribute: HabitAttribute.intellect,
+          ),
+        ],
+      );
 
-    await tester.pumpWidget(_wrap(BlueprintCard(blueprint: blueprint)));
-    await tester.pump();
+      await tester.pumpWidget(_wrap(BlueprintCard(blueprint: blueprint)));
+      await tester.pump();
 
-    expect(find.byIcon(Icons.wb_sunny), findsOneWidget);
-    expect(find.text('Evening'), findsOneWidget);
-    expect(find.text('FOCUS'), findsOneWidget);
-  });
+      expect(find.byIcon(Icons.wb_sunny), findsOneWidget);
+      expect(find.text('Evening'), findsOneWidget);
+      expect(find.text('FOCUS'), findsOneWidget);
+    },
+  );
 
   testWidgets('renders no badges when blueprint has no habits', (tester) async {
     final blueprint = _buildBlueprint(habits: const []);
@@ -94,8 +95,9 @@ void main() {
     expect(find.text('VITALITY'), findsNothing);
   });
 
-  testWidgets('shows the dominant time-of-day when the stack varies',
-      (tester) async {
+  testWidgets('shows the dominant time-of-day when the stack varies', (
+    tester,
+  ) async {
     final blueprint = _buildBlueprint(
       habits: const [
         BlueprintHabit(title: 'A', timeOfDay: 'Morning'),

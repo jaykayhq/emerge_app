@@ -5,9 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 ProviderContainer _makeContainer(DashboardState state) {
   return ProviderContainer(
-    overrides: [
-      dashboardStateProvider.overrideWithValue(state),
-    ],
+    overrides: [dashboardStateProvider.overrideWithValue(state)],
   );
 }
 
@@ -40,8 +38,20 @@ void main() {
     test('returns 1.0 when all habits completed today', () {
       final now = DateTime.now();
       final habits = [
-        Habit(id: '1', userId: 'u1', title: 'Habit 1', createdAt: now, lastCompletedDate: now),
-        Habit(id: '2', userId: 'u1', title: 'Habit 2', createdAt: now, lastCompletedDate: now),
+        Habit(
+          id: '1',
+          userId: 'u1',
+          title: 'Habit 1',
+          createdAt: now,
+          lastCompletedDate: now,
+        ),
+        Habit(
+          id: '2',
+          userId: 'u1',
+          title: 'Habit 2',
+          createdAt: now,
+          lastCompletedDate: now,
+        ),
       ];
       final container = _makeContainer(DashboardState(habits: habits));
       expect(container.read(todayCompletionRateProvider), 1.0);

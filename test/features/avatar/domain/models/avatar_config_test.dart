@@ -29,21 +29,24 @@ void main() {
       expect(config.evolvedState, EvolutionPhase.phantom);
     });
 
-    test('fromUserStats factory creates config with correct phase based on level', () {
-      final config = AvatarConfig.fromUserStats(
-        archetype: UserArchetype.stoic,
-        level: 10,
-      );
+    test(
+      'fromUserStats factory creates config with correct phase based on level',
+      () {
+        final config = AvatarConfig.fromUserStats(
+          archetype: UserArchetype.stoic,
+          level: 10,
+        );
 
-      expect(config.archetype, UserArchetype.stoic);
-      expect(config.evolvedState, EvolutionPhase.construct);
+        expect(config.archetype, UserArchetype.stoic);
+        expect(config.evolvedState, EvolutionPhase.construct);
 
-      final highLevel = AvatarConfig.fromUserStats(
-        archetype: UserArchetype.zealot,
-        level: 60,
-      );
-      expect(highLevel.evolvedState, EvolutionPhase.ascended);
-    });
+        final highLevel = AvatarConfig.fromUserStats(
+          archetype: UserArchetype.zealot,
+          level: 60,
+        );
+        expect(highLevel.evolvedState, EvolutionPhase.ascended);
+      },
+    );
 
     test('showEvolvedOverlay is false for phantom, true for other phases', () {
       const phantom = AvatarConfig(
@@ -80,20 +83,36 @@ void main() {
         evolvedState: EvolutionPhase.phantom,
       );
 
-      final changedArchetype = original.copyWith(archetype: UserArchetype.creator);
+      final changedArchetype = original.copyWith(
+        archetype: UserArchetype.creator,
+      );
       expect(changedArchetype.archetype, UserArchetype.creator);
       expect(changedArchetype.evolvedState, EvolutionPhase.phantom);
 
-      final changedPhase = original.copyWith(evolvedState: EvolutionPhase.radiant);
+      final changedPhase = original.copyWith(
+        evolvedState: EvolutionPhase.radiant,
+      );
       expect(changedPhase.archetype, UserArchetype.athlete);
       expect(changedPhase.evolvedState, EvolutionPhase.radiant);
     });
 
     test('Equality operator and hashCode', () {
-      const a = AvatarConfig(archetype: UserArchetype.scholar, evolvedState: EvolutionPhase.construct);
-      const b = AvatarConfig(archetype: UserArchetype.scholar, evolvedState: EvolutionPhase.construct);
-      const c = AvatarConfig(archetype: UserArchetype.scholar, evolvedState: EvolutionPhase.phantom);
-      const d = AvatarConfig(archetype: UserArchetype.stoic, evolvedState: EvolutionPhase.construct);
+      const a = AvatarConfig(
+        archetype: UserArchetype.scholar,
+        evolvedState: EvolutionPhase.construct,
+      );
+      const b = AvatarConfig(
+        archetype: UserArchetype.scholar,
+        evolvedState: EvolutionPhase.construct,
+      );
+      const c = AvatarConfig(
+        archetype: UserArchetype.scholar,
+        evolvedState: EvolutionPhase.phantom,
+      );
+      const d = AvatarConfig(
+        archetype: UserArchetype.stoic,
+        evolvedState: EvolutionPhase.construct,
+      );
 
       expect(a, equals(b));
       expect(a, isNot(equals(c)));

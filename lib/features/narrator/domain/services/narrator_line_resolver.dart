@@ -65,14 +65,13 @@ class LlmNarratorLineResolver extends NarratorLineResolver {
   @override
   final bool isPro;
   final Future<PersonalLine> Function(NarratorTrigger, NarratorUserStats)
-      llmGeneratePersonal;
+  llmGeneratePersonal;
 
   @override
   Future<PersonalLine> generatePersonal({
     required NarratorTrigger trigger,
     required NarratorUserStats stats,
-  }) =>
-      llmGeneratePersonal(trigger, stats);
+  }) => llmGeneratePersonal(trigger, stats);
 
   @override
   GenericLine pickGeneric(NarratorTrigger trigger) {
@@ -80,19 +79,15 @@ class LlmNarratorLineResolver extends NarratorLineResolver {
   }
 
   String _fallbackFor(NarratorTrigger trigger) => switch (trigger) {
-        NarratorTrigger.streakBreakFirstMiss =>
-          'One miss is a slip. Two is a pattern. What got in the way?',
-        NarratorTrigger.onFireState =>
-          "You're on fire this week.",
-        NarratorTrigger.levelUp => 'You leveled up.',
-        NarratorTrigger.longAbsence =>
-          'Welcome back. Pick one small habit today.',
-        NarratorTrigger.eveningReflection => 'How did today go?',
-        NarratorTrigger.morningBriefEarlyDays =>
-          'Small start, big difference.',
-        NarratorTrigger.onboardingPostArchetype => 'A path begins.',
-        NarratorTrigger.weeklyRecap => 'Your week, in numbers.',
-        NarratorTrigger.askNarrator =>
-          "You called — what's on your mind?",
-      };
+    NarratorTrigger.streakBreakFirstMiss =>
+      'One miss is a slip. Two is a pattern. What got in the way?',
+    NarratorTrigger.onFireState => "You're on fire this week.",
+    NarratorTrigger.levelUp => 'You leveled up.',
+    NarratorTrigger.longAbsence => 'Welcome back. Pick one small habit today.',
+    NarratorTrigger.eveningReflection => 'How did today go?',
+    NarratorTrigger.morningBriefEarlyDays => 'Small start, big difference.',
+    NarratorTrigger.onboardingPostArchetype => 'A path begins.',
+    NarratorTrigger.weeklyRecap => 'Your week, in numbers.',
+    NarratorTrigger.askNarrator => "You called — what's on your mind?",
+  };
 }

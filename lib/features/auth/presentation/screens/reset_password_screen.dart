@@ -17,7 +17,8 @@ class ResetPasswordScreen extends ConsumerStatefulWidget {
   const ResetPasswordScreen({super.key});
 
   @override
-  ConsumerState<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
+  ConsumerState<ResetPasswordScreen> createState() =>
+      _ResetPasswordScreenState();
 }
 
 class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
@@ -36,11 +37,13 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     // harnesses have no GoRouter ancestor.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       try {
-        final oobCode =
-            GoRouterState.of(context).uri.queryParameters['oobCode'];
+        final oobCode = GoRouterState.of(
+          context,
+        ).uri.queryParameters['oobCode'];
         if (oobCode == null || oobCode.isEmpty) {
           setState(() {
-            _error = 'This reset link is missing its code. '
+            _error =
+                'This reset link is missing its code. '
                 'Please request a new one.';
           });
         }
@@ -62,7 +65,8 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     final oobCode = _extractOobCode();
     if (oobCode == null || oobCode.isEmpty) {
       setState(() {
-        _error = 'This reset link is missing its code. '
+        _error =
+            'This reset link is missing its code. '
             'Please request a new one.';
       });
       return;
@@ -164,25 +168,24 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Gap(16),
-          Icon(Icons.lock_reset_outlined,
-              size: 72, color: EmergeColors.teal),
+          Icon(Icons.lock_reset_outlined, size: 72, color: EmergeColors.teal),
           const Gap(16),
           Text(
             'Choose a new password',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: AppTheme.textMainDark,
-                  fontWeight: FontWeight.bold,
-                ),
+              color: AppTheme.textMainDark,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const Gap(8),
           Text(
             'Your reset link is valid — set a strong new password to '
             'continue.',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.textSecondaryDark,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondaryDark),
           ),
           const Gap(24),
           if (_error != null)
@@ -201,8 +204,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             decoration: InputDecoration(
               labelText: 'New Password',
               labelStyle: const TextStyle(color: AppTheme.textSecondaryDark),
-              prefixIcon:
-                  const Icon(Icons.lock_outline, color: EmergeColors.teal),
+              prefixIcon: const Icon(
+                Icons.lock_outline,
+                color: EmergeColors.teal,
+              ),
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscurePassword
@@ -230,9 +235,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               ),
             ),
           ),
-          PasswordRequirementChecklist(
-            passwordController: _passwordController,
-          ),
+          PasswordRequirementChecklist(passwordController: _passwordController),
           const Gap(16),
           TextField(
             controller: _confirmController,
@@ -241,8 +244,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             decoration: InputDecoration(
               labelText: 'Confirm New Password',
               labelStyle: const TextStyle(color: AppTheme.textSecondaryDark),
-              prefixIcon:
-                  const Icon(Icons.lock_outline, color: EmergeColors.teal),
+              prefixIcon: const Icon(
+                Icons.lock_outline,
+                color: EmergeColors.teal,
+              ),
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscureConfirm
@@ -282,11 +287,16 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                     height: 20,
                     width: 20,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.black))
+                      strokeWidth: 2,
+                      color: Colors.black,
+                    ),
+                  )
                 : const Text(
                     'Update password',
                     style: TextStyle(
-                        fontWeight: FontWeight.bold, color: Colors.black),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
                   ),
           ),
         ],

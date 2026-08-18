@@ -3,12 +3,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/ambient_particles.dart';
 
 void main() {
-  testWidgets('AmbientParticles creates a CustomPaint and animates', (WidgetTester tester) async {
+  testWidgets('AmbientParticles creates a CustomPaint and animates', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       const MaterialApp(
-        home: Scaffold(
-          body: AmbientParticles(particleCount: 50),
-        ),
+        home: Scaffold(body: AmbientParticles(particleCount: 50)),
       ),
     );
 

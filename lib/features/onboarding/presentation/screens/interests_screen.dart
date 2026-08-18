@@ -57,17 +57,15 @@ class _InterestsScreenState extends ConsumerState<InterestsScreen> {
       await ref
           .read(enhancedOnboardingProvider.notifier)
           .setInterests(_selected.toList());
-      await ref
-          .read(enhancedOnboardingProvider.notifier)
-          .completeMilestone(1);
+      await ref.read(enhancedOnboardingProvider.notifier).completeMilestone(1);
       if (!mounted) return;
       context.push('/onboarding/club');
     } catch (e, s) {
       AppLogger.e('InterestsScreen: failed to save', e, s);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to save: $e')));
       setState(() => _isSaving = false);
     }
   }
@@ -76,9 +74,7 @@ class _InterestsScreenState extends ConsumerState<InterestsScreen> {
     if (_isSaving) return;
     setState(() => _isSaving = true);
     try {
-      await ref
-          .read(enhancedOnboardingProvider.notifier)
-          .skipMilestone(1);
+      await ref.read(enhancedOnboardingProvider.notifier).skipMilestone(1);
       if (!mounted) return;
       context.push('/onboarding/club');
     } catch (e, s) {
@@ -112,9 +108,8 @@ class _InterestsScreenState extends ConsumerState<InterestsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final archetype = ref
-            .watch(enhancedOnboardingProvider)
-            .selectedArchetype ??
+    final archetype =
+        ref.watch(enhancedOnboardingProvider).selectedArchetype ??
         UserArchetype.none;
     final theme = ArchetypeTheme.forArchetype(archetype);
 
@@ -124,11 +119,7 @@ class _InterestsScreenState extends ConsumerState<InterestsScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF0A0A1A),
-              Color(0xFF1A0A2A),
-              Color(0xFF2A1A3A),
-            ],
+            colors: [Color(0xFF0A0A1A), Color(0xFF1A0A2A), Color(0xFF2A1A3A)],
           ),
         ),
         child: SafeArea(
@@ -141,10 +132,7 @@ class _InterestsScreenState extends ConsumerState<InterestsScreen> {
                     ? ArchetypeColors.all[archetype.name]?.accent
                     : null,
               ),
-              _Header(
-                onBack: () => context.pop(),
-                onSkip: _onSkip,
-              ),
+              _Header(onBack: () => context.pop(), onSkip: _onSkip),
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -155,19 +143,20 @@ class _InterestsScreenState extends ConsumerState<InterestsScreen> {
                       const Gap(20),
                       Text(
                         'What lights you up?',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: -0.5,
-                        ),
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: -0.5,
+                            ),
                       ).animate().fadeIn().moveY(begin: 10, end: 0),
                       const Gap(8),
                       Text(
                         'Pick $_minPicks to $_maxPicks to personalize '
                         '${theme.archetypeName}.',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.white54,
-                        ),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodyLarge?.copyWith(color: Colors.white54),
                       ).animate().fadeIn(delay: 100.ms),
                       const Gap(24),
                       Wrap(
@@ -207,10 +196,7 @@ class _Header extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback onSkip;
 
-  const _Header({
-    required this.onBack,
-    required this.onSkip,
-  });
+  const _Header({required this.onBack, required this.onSkip});
 
   @override
   Widget build(BuildContext context) {
@@ -284,10 +270,7 @@ class _InterestChip extends StatelessWidget {
             Container(
               width: 6,
               height: 6,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: color,
-              ),
+              decoration: BoxDecoration(shape: BoxShape.circle, color: color),
             ),
             const SizedBox(width: 6),
             Icon(
@@ -344,9 +327,7 @@ class _BottomBar extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
             ),
             child: Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -373,9 +354,9 @@ class _BottomBar extends StatelessWidget {
                   const SizedBox(width: 12),
                   Text(
                     'min $minPicks',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Colors.white38,
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.copyWith(color: Colors.white38),
                   ),
                 ],
               ),

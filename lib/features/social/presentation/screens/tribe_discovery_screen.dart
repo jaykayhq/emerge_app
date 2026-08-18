@@ -15,7 +15,11 @@ class TribeEmptyState extends StatelessWidget {
   final String message;
   final IconData icon;
 
-  const TribeEmptyState({super.key, required this.message, this.icon = Icons.info_outline});
+  const TribeEmptyState({
+    super.key,
+    required this.message,
+    this.icon = Icons.info_outline,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +102,8 @@ class TribeDiscoveryScreen extends ConsumerStatefulWidget {
   const TribeDiscoveryScreen({super.key});
 
   @override
-  ConsumerState<TribeDiscoveryScreen> createState() => _TribeDiscoveryScreenState();
+  ConsumerState<TribeDiscoveryScreen> createState() =>
+      _TribeDiscoveryScreenState();
 }
 
 class _TribeDiscoveryScreenState extends ConsumerState<TribeDiscoveryScreen> {
@@ -108,7 +113,8 @@ class _TribeDiscoveryScreenState extends ConsumerState<TribeDiscoveryScreen> {
   List<Tribe> _filterClubs(List<Tribe> clubs) {
     final query = _searchQuery.trim().toLowerCase();
     return clubs.where((club) {
-      final matchesQuery = query.isEmpty ||
+      final matchesQuery =
+          query.isEmpty ||
           club.name.toLowerCase().contains(query) ||
           club.description.toLowerCase().contains(query);
       if (!matchesQuery) return false;
@@ -145,8 +151,10 @@ class _TribeDiscoveryScreenState extends ConsumerState<TribeDiscoveryScreen> {
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
           ),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
         ),
         onChanged: (val) => setState(() => _searchQuery = val),
       ),
@@ -213,9 +221,9 @@ class _TribeDiscoveryScreenState extends ConsumerState<TribeDiscoveryScreen> {
     final userId = authUser?.id;
     if (userId == null || userId.isEmpty) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sign in to join a club')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Sign in to join a club')));
       return;
     }
     if (!mounted) return;
@@ -242,9 +250,9 @@ class _TribeDiscoveryScreenState extends ConsumerState<TribeDiscoveryScreen> {
     } catch (e, s) {
       AppLogger.e('TribeDiscoveryScreen: joinClub failed', e, s);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to join: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to join: $e')));
     }
   }
 
@@ -280,35 +288,31 @@ class _TribeDiscoveryScreenState extends ConsumerState<TribeDiscoveryScreen> {
                     mainAxisSpacing: 8,
                     childAspectRatio: 0.75,
                   ),
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final club = filtered[index];
-                      return ClubBoxCard(
-                        title: club.name,
-                        imageUrl: clubEmblemImageUrl(
-                          existingImageUrl: club.imageUrl,
-                          archetypeId: club.archetypeId,
-                          clubId: club.id,
-                        ),
-                        memberCount: club.memberCount,
-                        activityStatus:
-                            club.memberCount >= 10 ? '🔥 Active' : '🌙 Quiet',
-                        typeTag: _typeTagFor(club),
-                        onTap: () => _showPreviewSheet(context, club),
-                      );
-                    },
-                    childCount: filtered.length,
-                  ),
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final club = filtered[index];
+                    return ClubBoxCard(
+                      title: club.name,
+                      imageUrl: clubEmblemImageUrl(
+                        existingImageUrl: club.imageUrl,
+                        archetypeId: club.archetypeId,
+                        clubId: club.id,
+                      ),
+                      memberCount: club.memberCount,
+                      activityStatus: club.memberCount >= 10
+                          ? '🔥 Active'
+                          : '🌙 Quiet',
+                      typeTag: _typeTagFor(club),
+                      onTap: () => _showPreviewSheet(context, club),
+                    );
+                  }, childCount: filtered.length),
                 ),
               ),
           ],
         );
       },
       loading: () => const EmergeLoadingSkeleton(itemCount: 6),
-      error: (err, _) => TribeEmptyState(
-        message: 'Could not load clubs',
-        icon: Icons.groups,
-      ),
+      error: (err, _) =>
+          TribeEmptyState(message: 'Could not load clubs', icon: Icons.groups),
     );
   }
 }

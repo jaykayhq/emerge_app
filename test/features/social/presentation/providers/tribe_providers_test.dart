@@ -9,9 +9,7 @@ class MockTribeRepository extends Mock implements TribeRepository {}
 
 ProviderContainer _makeContainer(TribeRepository tribeRepo) {
   return ProviderContainer(
-    overrides: [
-      tribeRepositoryProvider.overrideWithValue(tribeRepo),
-    ],
+    overrides: [tribeRepositoryProvider.overrideWithValue(tribeRepo)],
   );
 }
 
@@ -32,7 +30,9 @@ void main() {
 
   group('userClubProvider', () {
     test('returns club by archetype ID', () async {
-      when(() => mockRepo.getArchetypeClub('club-1')).thenAnswer((_) async => null);
+      when(
+        () => mockRepo.getArchetypeClub('club-1'),
+      ).thenAnswer((_) async => null);
       final container = _makeContainer(mockRepo);
       final result = await container.read(userClubProvider('club-1').future);
       expect(result, isNull);
@@ -42,7 +42,9 @@ void main() {
 
   group('allArchetypeClubsProvider', () {
     test('returns clubs stream', () async {
-      when(() => mockRepo.watchArchetypeClubs()).thenAnswer((_) => const Stream.empty());
+      when(
+        () => mockRepo.watchArchetypeClubs(),
+      ).thenAnswer((_) => const Stream.empty());
       final container = _makeContainer(mockRepo);
       final result = container.read(allArchetypeClubsProvider);
       expect(result, isNotNull);
@@ -52,7 +54,9 @@ void main() {
 
   group('globalActivityProvider', () {
     test('returns activity stream', () async {
-      when(() => mockRepo.watchGlobalActivity()).thenAnswer((_) => const Stream.empty());
+      when(
+        () => mockRepo.watchGlobalActivity(),
+      ).thenAnswer((_) => const Stream.empty());
       final container = _makeContainer(mockRepo);
       final result = container.read(globalActivityProvider);
       expect(result, isNotNull);
@@ -62,7 +66,9 @@ void main() {
 
   group('realTimeTribeStatsProvider', () {
     test('returns stats stream', () async {
-      when(() => mockRepo.watchArchetypeClubs()).thenAnswer((_) => const Stream.empty());
+      when(
+        () => mockRepo.watchArchetypeClubs(),
+      ).thenAnswer((_) => const Stream.empty());
       final container = _makeContainer(mockRepo);
       final result = container.read(realTimeTribeStatsProvider('tribe-1'));
       expect(result, isNotNull);
@@ -72,7 +78,9 @@ void main() {
 
   group('globalAggregateStatsProvider', () {
     test('returns aggregate stats stream', () async {
-      when(() => mockRepo.watchArchetypeClubs()).thenAnswer((_) => const Stream.empty());
+      when(
+        () => mockRepo.watchArchetypeClubs(),
+      ).thenAnswer((_) => const Stream.empty());
       final container = _makeContainer(mockRepo);
       final result = container.read(globalAggregateStatsProvider);
       expect(result, isNotNull);

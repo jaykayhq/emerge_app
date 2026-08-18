@@ -4,7 +4,8 @@ import 'package:emerge_app/core/utils/validators.dart';
 import 'package:emerge_app/features/auth/domain/entities/auth_user.dart';
 import 'package:emerge_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:fpdart/fpdart.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -24,11 +25,7 @@ class FirebaseAuthRepository implements AuthRepository {
   final FirebaseFirestore _firestore;
   final FirebaseFunctions _functions;
 
-  FirebaseAuthRepository(
-    this._firebaseAuth,
-    this._firestore,
-    this._functions,
-  ) {
+  FirebaseAuthRepository(this._firebaseAuth, this._firestore, this._functions) {
     if (!kIsWeb) {
       GoogleSignIn.instance.initialize();
     }
@@ -72,9 +69,13 @@ class FirebaseAuthRepository implements AuthRepository {
       case 'invalid-argument':
         return AuthFailure(e.message ?? 'Invalid input. Please try again.');
       case 'internal':
-        return ServerFailure(e.message ?? 'Something went wrong. Please try again.');
+        return ServerFailure(
+          e.message ?? 'Something went wrong. Please try again.',
+        );
       default:
-        return ServerFailure(e.message ?? 'Something went wrong. Please try again.');
+        return ServerFailure(
+          e.message ?? 'Something went wrong. Please try again.',
+        );
     }
   }
 
@@ -130,7 +131,8 @@ class FirebaseAuthRepository implements AuthRepository {
       AppLogger.e('Sign in failed', e);
       String message = e.message ?? 'Authentication failed';
       if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
-        message = 'Invalid email or password. Please make sure you have an account.';
+        message =
+            'Invalid email or password. Please make sure you have an account.';
       }
       return Left(AuthFailure(message));
     } catch (e, s) {
@@ -241,7 +243,9 @@ class FirebaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, AuthUser>> signInWithGoogle({bool isLogin = false}) async {
+  Future<Either<Failure, AuthUser>> signInWithGoogle({
+    bool isLogin = false,
+  }) async {
     try {
       UserCredential userCredential;
 
@@ -281,14 +285,18 @@ class FirebaseAuthRepository implements AuthRepository {
 
       // Check if user exists in Firestore
       final userDoc = await _firestore.collection('users').doc(user.uid).get();
-      
+
       // If logging in and user doesn't exist, fail and clean up
       if (isLogin && !userDoc.exists) {
         await user.delete();
         if (!kIsWeb) {
           await GoogleSignIn.instance.signOut();
         }
-        return const Left(AuthFailure('No account found for this Google account. Please sign up first.'));
+        return const Left(
+          AuthFailure(
+            'No account found for this Google account. Please sign up first.',
+          ),
+        );
       }
 
       // If signing up and user doesn't exist, create profile
@@ -394,9 +402,7 @@ class FirebaseAuthRepository implements AuthRepository {
       return const Right(null);
     } on FirebaseAuthException catch (e) {
       AppLogger.e('Reset password with code failed', e);
-      return Left(
-        AuthFailure(e.message ?? 'Invalid or expired reset link.'),
-      );
+      return Left(AuthFailure(e.message ?? 'Invalid or expired reset link.'));
     } catch (e, s) {
       AppLogger.e('Reset password with code failed', e, s);
       return Left(ServerFailure(e.toString()));
@@ -492,12 +498,9 @@ class FirebaseAuthRepository implements AuthRepository {
       // request marker triggers the worker's verify task, which emails a
       // branded link back to the app's /verify-email route with the oobCode.
       // The worker owns emailVerificationSentAt (the 7-day grace anchor).
-      await _firestore.collection('users').doc(user.uid).set(
-            {
-              'verificationRequestedAt': FieldValue.serverTimestamp(),
-            },
-            SetOptions(merge: true),
-          );
+      await _firestore.collection('users').doc(user.uid).set({
+        'verificationRequestedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
       return const Right(null);
     } catch (e) {
       AppLogger.w('sendVerificationEmail (request marker) failed', error: e);
@@ -529,15 +532,19 @@ class FirebaseAuthRepository implements AuthRepository {
       return Left(AuthFailure(usernameError));
     }
     try {
-      await _functions
-          .httpsCallable('claimUsername')
-          .call(<String, dynamic>{'username': username.trim()});
+      await _functions.httpsCallable('claimUsername').call(<String, dynamic>{
+        'username': username.trim(),
+      });
       // Force a token refresh so the server-side username claim propagates to
       // the idTokenChanges()-backed user stream immediately.
       try {
         await _firebaseAuth.currentUser?.getIdToken(true);
       } catch (e, s) {
-        AppLogger.w('token refresh after username claim failed', error: e, stackTrace: s);
+        AppLogger.w(
+          'token refresh after username claim failed',
+          error: e,
+          stackTrace: s,
+        );
       }
       return const Right(null);
     } on FirebaseFunctionsException catch (e) {

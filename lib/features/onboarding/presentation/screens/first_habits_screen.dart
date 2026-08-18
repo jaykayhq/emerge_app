@@ -25,8 +25,7 @@ class FirstHabitsScreen extends ConsumerStatefulWidget {
   const FirstHabitsScreen({super.key});
 
   @override
-  ConsumerState<FirstHabitsScreen> createState() =>
-      _FirstHabitsScreenState();
+  ConsumerState<FirstHabitsScreen> createState() => _FirstHabitsScreenState();
 }
 
 class _FirstHabitsScreenState extends ConsumerState<FirstHabitsScreen> {
@@ -56,28 +55,24 @@ class _FirstHabitsScreenState extends ConsumerState<FirstHabitsScreen> {
     final state = ref.read(enhancedOnboardingProvider);
     final archetype = state.selectedArchetype;
     if (archetype == null || archetype == UserArchetype.none) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Pick an archetype first.'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Pick an archetype first.')));
       return;
     }
 
     final selected = StarterHabitBlueprint.forPersonalization(
       archetype: archetype,
       interestIds: state.interests,
-      clubTags: state.joinedClubId != null
-          ? [state.joinedClubId!]
-          : const [],
+      clubTags: state.joinedClubId != null ? [state.joinedClubId!] : const [],
     ).where((b) => _selectedIds.contains(b.id)).toList();
-    final blueprints = selected.map(_applyCustomizations).toList(growable: false);
+    final blueprints = selected
+        .map(_applyCustomizations)
+        .toList(growable: false);
 
     if (blueprints.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Pick at least one starter habit.'),
-        ),
+        const SnackBar(content: Text('Pick at least one starter habit.')),
       );
       return;
     }
@@ -97,12 +92,9 @@ class _FirstHabitsScreenState extends ConsumerState<FirstHabitsScreen> {
         interestIds: state.interests,
         clubId: state.joinedClubId,
       );
-      result.fold(
-        (failure) => throw Exception(failure.message),
-        (_) {
-          notifier.removeHabitStack('first_habits_screen');
-        },
-      );
+      result.fold((failure) => throw Exception(failure.message), (_) {
+        notifier.removeHabitStack('first_habits_screen');
+      });
       await notifier.completeMilestone(3);
       if (!mounted) return;
       // Reset the saving flag BEFORE navigating: with `push` this screen
@@ -121,9 +113,7 @@ class _FirstHabitsScreenState extends ConsumerState<FirstHabitsScreen> {
   }
 
   void _onSkip() {
-    ref
-        .read(enhancedOnboardingProvider.notifier)
-        .completeMilestone(3);
+    ref.read(enhancedOnboardingProvider.notifier).completeMilestone(3);
     context.push('/onboarding/world-reveal');
   }
 
@@ -136,12 +126,17 @@ class _FirstHabitsScreenState extends ConsumerState<FirstHabitsScreen> {
       builder: (context) => _HabitDetailSheet(
         blueprint: _applyCustomizations(blueprint),
         index: index,
-        archetype: ref.read(enhancedOnboardingProvider).selectedArchetype ?? UserArchetype.none,
+        archetype:
+            ref.read(enhancedOnboardingProvider).selectedArchetype ??
+            UserArchetype.none,
         onSave: (customTitle, customCue) {
           setState(() {
             _selectedIds.add(blueprint.id);
             if (customTitle != null || customCue != null) {
-              _customizations[blueprint.id] = (title: customTitle, cue: customCue);
+              _customizations[blueprint.id] = (
+                title: customTitle,
+                cue: customCue,
+              );
             }
           });
         },
@@ -151,18 +146,15 @@ class _FirstHabitsScreenState extends ConsumerState<FirstHabitsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final archetype = ref
-            .watch(enhancedOnboardingProvider)
-            .selectedArchetype ??
+    final archetype =
+        ref.watch(enhancedOnboardingProvider).selectedArchetype ??
         UserArchetype.none;
     final state = ref.watch(enhancedOnboardingProvider);
     final theme = ArchetypeTheme.forArchetype(archetype);
     final blueprints = StarterHabitBlueprint.forPersonalization(
       archetype: archetype,
       interestIds: state.interests,
-      clubTags: state.joinedClubId != null
-          ? [state.joinedClubId!]
-          : const [],
+      clubTags: state.joinedClubId != null ? [state.joinedClubId!] : const [],
       limit: 3,
     );
 
@@ -172,11 +164,7 @@ class _FirstHabitsScreenState extends ConsumerState<FirstHabitsScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF0A0A1A),
-              Color(0xFF1A0A2A),
-              Color(0xFF2A1A3A),
-            ],
+            colors: [Color(0xFF0A0A1A), Color(0xFF1A0A2A), Color(0xFF2A1A3A)],
           ),
         ),
         child: SafeArea(
@@ -189,10 +177,7 @@ class _FirstHabitsScreenState extends ConsumerState<FirstHabitsScreen> {
                     ? ArchetypeColors.all[archetype.name]?.accent
                     : null,
               ),
-              _Header(
-                onBack: () => context.pop(),
-                onSkip: _onSkip,
-              ),
+              _Header(onBack: () => context.pop(), onSkip: _onSkip),
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -228,7 +213,8 @@ class _FirstHabitsScreenState extends ConsumerState<FirstHabitsScreen> {
                             index: i,
                             blueprint: blueprints[i],
                             isSelected: _selectedIds.contains(blueprints[i].id),
-                            customTitle: _customizations[blueprints[i].id]?.title,
+                            customTitle:
+                                _customizations[blueprints[i].id]?.title,
                             customCue: _customizations[blueprints[i].id]?.cue,
                             onTap: () {
                               setState(() {
@@ -247,7 +233,8 @@ class _FirstHabitsScreenState extends ConsumerState<FirstHabitsScreen> {
                 ),
               ),
               _BottomBar(
-                canContinue: blueprints.isNotEmpty &&
+                canContinue:
+                    blueprints.isNotEmpty &&
                     !_isSaving &&
                     _selectedIds.isNotEmpty,
                 isSaving: _isSaving,
@@ -265,10 +252,7 @@ class _Header extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback onSkip;
 
-  const _Header({
-    required this.onBack,
-    required this.onSkip,
-  });
+  const _Header({required this.onBack, required this.onSkip});
 
   @override
   Widget build(BuildContext context) {
@@ -283,9 +267,7 @@ class _Header extends StatelessWidget {
           const Spacer(),
           TextButton(
             onPressed: onSkip,
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.white54,
-            ),
+            style: TextButton.styleFrom(foregroundColor: Colors.white54),
             child: Text(
               'Skip',
               style: GoogleFonts.splineSans(
@@ -383,11 +365,7 @@ class _BlueprintCard extends StatelessWidget {
             const Gap(12),
             Row(
               children: [
-                const Icon(
-                  Icons.bolt,
-                  color: Color(0xFF2BEE79),
-                  size: 16,
-                ),
+                const Icon(Icons.bolt, color: Color(0xFF2BEE79), size: 16),
                 const Gap(6),
                 Expanded(
                   child: Text(
@@ -531,7 +509,9 @@ class _HabitDetailSheetState extends ConsumerState<_HabitDetailSheet> {
     if (!mounted) return;
     Navigator.pop(context);
     widget.onSave(
-      _titleController.text.trim().isEmpty ? null : _titleController.text.trim(),
+      _titleController.text.trim().isEmpty
+          ? null
+          : _titleController.text.trim(),
       _cueController.text.trim().isEmpty ? null : _cueController.text.trim(),
     );
   }
@@ -628,7 +608,10 @@ class _HabitDetailSheetState extends ConsumerState<_HabitDetailSheet> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(color: Color(0xFF2BEE79), width: 2),
+                borderSide: const BorderSide(
+                  color: Color(0xFF2BEE79),
+                  width: 2,
+                ),
               ),
             ),
           ),
@@ -653,7 +636,10 @@ class _HabitDetailSheetState extends ConsumerState<_HabitDetailSheet> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(color: Color(0xFF2BEE79), width: 2),
+                borderSide: const BorderSide(
+                  color: Color(0xFF2BEE79),
+                  width: 2,
+                ),
               ),
               prefixIcon: Icon(Icons.bolt, color: Colors.white38),
             ),

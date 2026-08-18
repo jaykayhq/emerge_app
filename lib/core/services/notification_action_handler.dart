@@ -41,9 +41,7 @@ abstract final class NotificationActionHandler {
       case NotificationActionIds.snooze1h:
         await _handleSnooze(payload, container);
       default:
-        debugPrint(
-          'NotificationActionHandler: unknown action "$actionId"',
-        );
+        debugPrint('NotificationActionHandler: unknown action "$actionId"');
     }
   }
 
@@ -75,9 +73,7 @@ abstract final class NotificationActionHandler {
     try {
       final service = container.read(notificationServiceProvider);
       await service.snoozeHabit(habitId);
-      debugPrint(
-        'NotificationActionHandler: habit $habitId snoozed 1h',
-      );
+      debugPrint('NotificationActionHandler: habit $habitId snoozed 1h');
     } catch (e, stack) {
       debugPrint(
         'NotificationActionHandler: failed to snooze habit $habitId: $e',

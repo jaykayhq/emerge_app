@@ -339,27 +339,30 @@ void main() {
       expect(firstCount, secondCount);
     });
 
-    test('getUserTribes() returns empty list when user has no tribes', () async {
-      await db.tribeStatsDao.upsertStats(
-        TribeStatsTableCompanion(
-          tribeId: Value(tribeId),
-          tribeName: Value('Athletes'),
-          archetypeId: Value('athlete'),
-          memberCount: Value(0),
-          totalXp: Value(0),
-          totalHabitsCompleted: Value(0),
-          totalChallengesCompleted: Value(0),
-          userContributionXp: Value(0),
-          userHabitsCompleted: Value(0),
-          userChallengesCompleted: Value(0),
-          updatedAt: Value(DateTime.now().toIso8601String()),
-        ),
-      );
+    test(
+      'getUserTribes() returns empty list when user has no tribes',
+      () async {
+        await db.tribeStatsDao.upsertStats(
+          TribeStatsTableCompanion(
+            tribeId: Value(tribeId),
+            tribeName: Value('Athletes'),
+            archetypeId: Value('athlete'),
+            memberCount: Value(0),
+            totalXp: Value(0),
+            totalHabitsCompleted: Value(0),
+            totalChallengesCompleted: Value(0),
+            userContributionXp: Value(0),
+            userHabitsCompleted: Value(0),
+            userChallengesCompleted: Value(0),
+            updatedAt: Value(DateTime.now().toIso8601String()),
+          ),
+        );
 
-      final tribes = await repository.getUserTribes(userId);
+        final tribes = await repository.getUserTribes(userId);
 
-      expect(tribes, isEmpty);
-    });
+        expect(tribes, isEmpty);
+      },
+    );
 
     test('getUserTribes() returns empty list on Firestore error', () async {
       final tribes = await repository.getUserTribes(userId);
@@ -378,54 +381,54 @@ void main() {
       // surface it instead of dropping it to '' (which caused the
       // onboarding vs All-Tribes image mismatch).
       final withImages = clubs.where((c) => c.imageUrl.isNotEmpty).toList();
-      expect(withImages, isNotEmpty,
-          reason: 'seeded clubs should expose an imageUrl');
+      expect(
+        withImages,
+        isNotEmpty,
+        reason: 'seeded clubs should expose an imageUrl',
+      );
     });
 
-    test(
-      'watchArchetypeClubs() excludes local rows without an archetypeId '
-      'so creator tribes never pollute the official-clubs UI',
-      () async {
-        await db.tribeStatsDao.upsertStats(
-          TribeStatsTableCompanion(
-            tribeId: Value(tribeId),
-            tribeName: Value('Athletes'),
-            archetypeId: Value('athlete'),
-            memberCount: Value(0),
-            totalXp: Value(0),
-            totalHabitsCompleted: Value(0),
-            totalChallengesCompleted: Value(0),
-            userContributionXp: Value(0),
-            userHabitsCompleted: Value(0),
-            userChallengesCompleted: Value(0),
-            updatedAt: Value(DateTime.now().toIso8601String()),
-          ),
-        );
-        // Creator tribe row — archetypeId omitted (null). Created locally by
-        // join/completion credit once the DAO creates rows on demand.
-        await db.tribeStatsDao.upsertStats(
-          TribeStatsTableCompanion(
-            tribeId: Value('creator_tribe_1'),
-            tribeName: Value('Midnight Wolves'),
-            memberCount: Value(1),
-            totalXp: Value(20),
-            totalHabitsCompleted: Value(1),
-            totalChallengesCompleted: Value(0),
-            userContributionXp: Value(20),
-            userHabitsCompleted: Value(1),
-            userChallengesCompleted: Value(0),
-            updatedAt: Value(DateTime.now().toIso8601String()),
-          ),
-        );
+    test('watchArchetypeClubs() excludes local rows without an archetypeId '
+        'so creator tribes never pollute the official-clubs UI', () async {
+      await db.tribeStatsDao.upsertStats(
+        TribeStatsTableCompanion(
+          tribeId: Value(tribeId),
+          tribeName: Value('Athletes'),
+          archetypeId: Value('athlete'),
+          memberCount: Value(0),
+          totalXp: Value(0),
+          totalHabitsCompleted: Value(0),
+          totalChallengesCompleted: Value(0),
+          userContributionXp: Value(0),
+          userHabitsCompleted: Value(0),
+          userChallengesCompleted: Value(0),
+          updatedAt: Value(DateTime.now().toIso8601String()),
+        ),
+      );
+      // Creator tribe row — archetypeId omitted (null). Created locally by
+      // join/completion credit once the DAO creates rows on demand.
+      await db.tribeStatsDao.upsertStats(
+        TribeStatsTableCompanion(
+          tribeId: Value('creator_tribe_1'),
+          tribeName: Value('Midnight Wolves'),
+          memberCount: Value(1),
+          totalXp: Value(20),
+          totalHabitsCompleted: Value(1),
+          totalChallengesCompleted: Value(0),
+          userContributionXp: Value(20),
+          userHabitsCompleted: Value(1),
+          userChallengesCompleted: Value(0),
+          updatedAt: Value(DateTime.now().toIso8601String()),
+        ),
+      );
 
-        final stream = repository.watchArchetypeClubs().asBroadcastStream();
-        final first = await stream.first;
+      final stream = repository.watchArchetypeClubs().asBroadcastStream();
+      final first = await stream.first;
 
-        final ids = first.map((t) => t.id).toList();
-        expect(ids, contains(tribeId));
-        expect(ids, isNot(contains('creator_tribe_1')));
-      },
-    );
+      final ids = first.map((t) => t.id).toList();
+      expect(ids, contains(tribeId));
+      expect(ids, isNot(contains('creator_tribe_1')));
+    });
   });
 
   group('joinClub guard', () {
@@ -463,30 +466,37 @@ void main() {
       );
     }
 
-    test('early-returns when a Firestore membership doc already exists',
-        () async {
-      await seedStats(tribeId: 'tribeA', memberCount: 0);
+    test(
+      'early-returns when a Firestore membership doc already exists',
+      () async {
+        await seedStats(tribeId: 'tribeA', memberCount: 0);
 
-      await fakeFirestore
-          .collection('users').doc('user1').collection('tribes').doc('tribeA')
-          .set({'tribeId': 'tribeA', 'joinedAt': Timestamp.now()});
+        await fakeFirestore
+            .collection('users')
+            .doc('user1')
+            .collection('tribes')
+            .doc('tribeA')
+            .set({'tribeId': 'tribeA', 'joinedAt': Timestamp.now()});
 
-      await guardRepository.joinClub('user1', 'tribeA');
+        await guardRepository.joinClub('user1', 'tribeA');
 
-      final stats = await db.tribeStatsDao.getStats('tribeA');
-      expect(stats?.memberCount, 0); // no local increment
-      final queue = await db.mutationQueueDao.getAllPending();
-      expect(queue, isEmpty);        // nothing enqueued
-    });
+        final stats = await db.tribeStatsDao.getStats('tribeA');
+        expect(stats?.memberCount, 0); // no local increment
+        final queue = await db.mutationQueueDao.getAllPending();
+        expect(queue, isEmpty); // nothing enqueued
+      },
+    );
 
     test('early-returns when a Drift membership is active', () async {
-      await db.tribeMembershipDao.upsertMembership(UserTribeTableCompanion(
-        userId: const Value('user1'),
-        tribeId: const Value('tribeA'),
-        membershipType: const Value('archetype'),
-        joinedAt: Value(DateTime.now().toIso8601String()),
-        isActive: const Value(true),
-      ));
+      await db.tribeMembershipDao.upsertMembership(
+        UserTribeTableCompanion(
+          userId: const Value('user1'),
+          tribeId: const Value('tribeA'),
+          membershipType: const Value('archetype'),
+          joinedAt: Value(DateTime.now().toIso8601String()),
+          isActive: const Value(true),
+        ),
+      );
 
       await guardRepository.joinClub('user1', 'tribeA');
 
@@ -502,20 +512,24 @@ void main() {
       expect(queue.length, 2);
     });
 
-    test('joinClub contributor payload omits zero totals (preserves on rejoin)',
-        () async {
-      await guardRepository.joinClub('user1', 'tribeA');
-      final queue = await db.mutationQueueDao.getAllPending();
-      final contributorOp = queue.singleWhere(
-          (m) => m.collectionPath == 'tribes/tribeA/contributors');
-      final data = Map<String, dynamic>.from(
+    test(
+      'joinClub contributor payload omits zero totals (preserves on rejoin)',
+      () async {
+        await guardRepository.joinClub('user1', 'tribeA');
+        final queue = await db.mutationQueueDao.getAllPending();
+        final contributorOp = queue.singleWhere(
+          (m) => m.collectionPath == 'tribes/tribeA/contributors',
+        );
+        final data = Map<String, dynamic>.from(
           (contributorOp.dataJson != null
                   ? jsonDecode(contributorOp.dataJson!)
                   : {})
-              as Map);
-      expect(data.containsKey('totalXpContributed'), false);
-      expect(data.containsKey('contributionCount'), false);
-    });
+              as Map,
+        );
+        expect(data.containsKey('totalXpContributed'), false);
+        expect(data.containsKey('contributionCount'), false);
+      },
+    );
   });
 
   group('_mergeTribeData D4 remote-preferred merge (via watchUserTribes)', () {
@@ -544,13 +558,15 @@ void main() {
           updatedAt: Value(DateTime.now().toIso8601String()),
         ),
       );
-      await db.tribeMembershipDao.upsertMembership(UserTribeTableCompanion(
-        userId: const Value('mergeUser'),
-        tribeId: Value(tribeId),
-        membershipType: const Value('archetype'),
-        joinedAt: Value(DateTime.now().toIso8601String()),
-        isActive: const Value(true),
-      ));
+      await db.tribeMembershipDao.upsertMembership(
+        UserTribeTableCompanion(
+          userId: const Value('mergeUser'),
+          tribeId: Value(tribeId),
+          membershipType: const Value('archetype'),
+          joinedAt: Value(DateTime.now().toIso8601String()),
+          isActive: const Value(true),
+        ),
+      );
     }
 
     /// Waits until the merged stream emits a tribe matching [predicate];
@@ -578,60 +594,68 @@ void main() {
       return completer.future.timeout(const Duration(seconds: 5));
     }
 
-    test('remote totalXp wins over inflated local (recalc-only totals)',
-        () async {
-      await seedLocalStats(
-        tribeId: 'mergeTribe',
-        totalXp: 5000,
-        memberCount: 3,
-        habits: 40,
-        challenges: 4,
-      );
+    test(
+      'remote totalXp wins over inflated local (recalc-only totals)',
+      () async {
+        await seedLocalStats(
+          tribeId: 'mergeTribe',
+          totalXp: 5000,
+          memberCount: 3,
+          habits: 40,
+          challenges: 4,
+        );
 
-      // Broadcast so both phases below can listen without re-subscribing
-      // the single-subscription stream.
-      final stream = repository.watchUserTribes('mergeUser').asBroadcastStream();
+        // Broadcast so both phases below can listen without re-subscribing
+        // the single-subscription stream.
+        final stream = repository
+            .watchUserTribes('mergeUser')
+            .asBroadcastStream();
 
-      // Phase 1: local-only merge must be observed (remote not yet present),
-      // so the remote doc below can never win by arriving first.
-      final localSeen = Completer<void>();
-      final localSub = stream.listen((tribes) {
-        for (final t in tribes) {
-          if (t.totalXp == 5000 && !localSeen.isCompleted) localSeen.complete();
-        }
-      });
-      await localSeen.future.timeout(const Duration(seconds: 5));
-
-      // Phase 2: after the remote doc lands, the merged tribe must carry the
-      // remote (recalc'd, server-authoritative) totals.
-      final remoteSeen = Completer<Tribe>();
-      final remoteSub = stream.listen((tribes) {
-        for (final t in tribes) {
-          if (t.totalXp == 100 && !remoteSeen.isCompleted) {
-            remoteSeen.complete(t);
+        // Phase 1: local-only merge must be observed (remote not yet present),
+        // so the remote doc below can never win by arriving first.
+        final localSeen = Completer<void>();
+        final localSub = stream.listen((tribes) {
+          for (final t in tribes) {
+            if (t.totalXp == 5000 && !localSeen.isCompleted) {
+              localSeen.complete();
+            }
           }
-        }
-      });
+        });
+        await localSeen.future.timeout(const Duration(seconds: 5));
 
-      await fakeFirestore.collection('tribes').doc('mergeTribe').set({
-        'name': 'Merge Tribe',
-        'type': 'official',
-        'members': ['mergeUser'],
-        'totalXp': 100,
-        'memberCount': 1,
-        'totalHabitsCompleted': 5,
-        'totalChallengesCompleted': 1,
-      });
+        // Phase 2: after the remote doc lands, the merged tribe must carry the
+        // remote (recalc'd, server-authoritative) totals.
+        final remoteSeen = Completer<Tribe>();
+        final remoteSub = stream.listen((tribes) {
+          for (final t in tribes) {
+            if (t.totalXp == 100 && !remoteSeen.isCompleted) {
+              remoteSeen.complete(t);
+            }
+          }
+        });
 
-      final tribe = await remoteSeen.future.timeout(const Duration(seconds: 5));
-      await localSub.cancel();
-      await remoteSub.cancel();
+        await fakeFirestore.collection('tribes').doc('mergeTribe').set({
+          'name': 'Merge Tribe',
+          'type': 'official',
+          'members': ['mergeUser'],
+          'totalXp': 100,
+          'memberCount': 1,
+          'totalHabitsCompleted': 5,
+          'totalChallengesCompleted': 1,
+        });
 
-      expect(tribe.totalXp, 100);
-      expect(tribe.memberCount, 1);
-      expect(tribe.totalHabitsCompleted, 5);
-      expect(tribe.totalChallengesCompleted, 1);
-    });
+        final tribe = await remoteSeen.future.timeout(
+          const Duration(seconds: 5),
+        );
+        await localSub.cancel();
+        await remoteSub.cancel();
+
+        expect(tribe.totalXp, 100);
+        expect(tribe.memberCount, 1);
+        expect(tribe.totalHabitsCompleted, 5);
+        expect(tribe.totalChallengesCompleted, 1);
+      },
+    );
 
     test('local totalXp survives when remote doc is absent', () async {
       await seedLocalStats(

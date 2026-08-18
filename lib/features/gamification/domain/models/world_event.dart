@@ -120,7 +120,11 @@ class UserStats {
 
   @override
   int get hashCode => Object.hash(
-      consecutiveActiveDays, currentMomentumScore, level, previousLevel);
+    consecutiveActiveDays,
+    currentMomentumScore,
+    level,
+    previousLevel,
+  );
 
   @override
   String toString() =>

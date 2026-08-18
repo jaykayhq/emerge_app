@@ -15,10 +15,12 @@ void main() {
   setUp(() {
     mockAuth = MockAuthRepository();
     when(() => mockAuth.user).thenAnswer((_) => const Stream.empty());
-    when(() => mockAuth.resetPasswordWithCode(
-      oobCode: any(named: 'oobCode'),
-      newPassword: any(named: 'newPassword'),
-    )).thenAnswer((_) async => const Right<Failure, void>(null));
+    when(
+      () => mockAuth.resetPasswordWithCode(
+        oobCode: any(named: 'oobCode'),
+        newPassword: any(named: 'newPassword'),
+      ),
+    ).thenAnswer((_) async => const Right<Failure, void>(null));
   });
 
   Widget buildWithRouter({String path = '/reset-password?oobCode=abc123'}) {
@@ -42,8 +44,9 @@ void main() {
     );
   }
 
-  testWidgets('renders the branded reset form with password fields',
-      (tester) async {
+  testWidgets('renders the branded reset form with password fields', (
+    tester,
+  ) async {
     await tester.pumpWidget(buildWithRouter());
     await tester.pumpAndSettle();
 
@@ -53,16 +56,19 @@ void main() {
     expect(find.text('Update password'), findsOneWidget);
   });
 
-  testWidgets('shows an error when the reset link has no oobCode',
-      (tester) async {
+  testWidgets('shows an error when the reset link has no oobCode', (
+    tester,
+  ) async {
     await tester.pumpWidget(buildWithRouter(path: '/reset-password'));
     await tester.pumpAndSettle();
 
     expect(find.textContaining('missing its code'), findsOneWidget);
-    verifyNever(() => mockAuth.resetPasswordWithCode(
-      oobCode: any(named: 'oobCode'),
-      newPassword: any(named: 'newPassword'),
-    ));
+    verifyNever(
+      () => mockAuth.resetPasswordWithCode(
+        oobCode: any(named: 'oobCode'),
+        newPassword: any(named: 'newPassword'),
+      ),
+    );
   });
 
   testWidgets('validates passwords before submitting', (tester) async {
@@ -70,59 +76,79 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.enterText(
-        find.widgetWithText(TextField, 'New Password'), 'short');
+      find.widgetWithText(TextField, 'New Password'),
+      'short',
+    );
     await tester.enterText(
-        find.widgetWithText(TextField, 'Confirm New Password'), 'short');
+      find.widgetWithText(TextField, 'Confirm New Password'),
+      'short',
+    );
     await tester.ensureVisible(find.text('Update password'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Update password'));
     await tester.pumpAndSettle();
 
-    verifyNever(() => mockAuth.resetPasswordWithCode(
-      oobCode: any(named: 'oobCode'),
-      newPassword: any(named: 'newPassword'),
-    ));
+    verifyNever(
+      () => mockAuth.resetPasswordWithCode(
+        oobCode: any(named: 'oobCode'),
+        newPassword: any(named: 'newPassword'),
+      ),
+    );
     expect(find.textContaining('at least'), findsOneWidget);
   });
 
-  testWidgets('applies the oobCode and navigates to login on success',
-      (tester) async {
+  testWidgets('applies the oobCode and navigates to login on success', (
+    tester,
+  ) async {
     await tester.pumpWidget(buildWithRouter());
     await tester.pumpAndSettle();
 
     await tester.enterText(
-        find.widgetWithText(TextField, 'New Password'), 'Str0ngP@sswd!');
+      find.widgetWithText(TextField, 'New Password'),
+      'Str0ngP@sswd!',
+    );
     await tester.enterText(
-        find.widgetWithText(TextField, 'Confirm New Password'),
-        'Str0ngP@sswd!');
+      find.widgetWithText(TextField, 'Confirm New Password'),
+      'Str0ngP@sswd!',
+    );
     await tester.ensureVisible(find.text('Update password'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Update password'));
     await tester.pumpAndSettle();
 
-    verify(() => mockAuth.resetPasswordWithCode(
-      oobCode: 'abc123',
-      newPassword: 'Str0ngP@sswd!',
-    )).called(1);
+    verify(
+      () => mockAuth.resetPasswordWithCode(
+        oobCode: 'abc123',
+        newPassword: 'Str0ngP@sswd!',
+      ),
+    ).called(1);
     expect(find.text('LOGIN'), findsOneWidget);
   });
 
-  testWidgets('surfaces the failure message from the repository',
-      (tester) async {
-    when(() => mockAuth.resetPasswordWithCode(
-      oobCode: any(named: 'oobCode'),
-      newPassword: any(named: 'newPassword'),
-    )).thenAnswer((_) async =>
-        Left<Failure, void>(AuthFailure('Invalid or expired reset link.')));
+  testWidgets('surfaces the failure message from the repository', (
+    tester,
+  ) async {
+    when(
+      () => mockAuth.resetPasswordWithCode(
+        oobCode: any(named: 'oobCode'),
+        newPassword: any(named: 'newPassword'),
+      ),
+    ).thenAnswer(
+      (_) async =>
+          Left<Failure, void>(AuthFailure('Invalid or expired reset link.')),
+    );
 
     await tester.pumpWidget(buildWithRouter());
     await tester.pumpAndSettle();
 
     await tester.enterText(
-        find.widgetWithText(TextField, 'New Password'), 'Str0ngP@sswd!');
+      find.widgetWithText(TextField, 'New Password'),
+      'Str0ngP@sswd!',
+    );
     await tester.enterText(
-        find.widgetWithText(TextField, 'Confirm New Password'),
-        'Str0ngP@sswd!');
+      find.widgetWithText(TextField, 'Confirm New Password'),
+      'Str0ngP@sswd!',
+    );
     await tester.ensureVisible(find.text('Update password'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Update password'));

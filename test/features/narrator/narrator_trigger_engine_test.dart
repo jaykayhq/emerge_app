@@ -245,45 +245,50 @@ void main() {
       expect(result, NarratorTrigger.weeklyRecap);
     });
 
-    test('eveningReflection wins only when no higher-priority trigger matches',
-        () {
-      // No streaks, no level-up, no absence, day 2 (not a weekly-recap day),
-      // hour 19 (>= 18). archetypeSelected=false so morning brief does NOT
-      // pre-empt evening reflection.
-      final result = NarratorTriggerEngine.shouldTrigger(
-        context: _ctx(
-          daysSinceInstall: 2,
-          daysSinceLastOpen: 0,
-          now: DateTime(2026, 7, 5, 19),
-        ),
-        stats: _stats(
-          momentumScore: 0.1,
-          consecutiveActiveDays: 1,
-          hasCompletedOnboarding: true,
-          archetypeSelected: false,
-        ),
-        recentTriggers: const {},
-      );
-      expect(result, NarratorTrigger.eveningReflection);
-    });
+    test(
+      'eveningReflection wins only when no higher-priority trigger matches',
+      () {
+        // No streaks, no level-up, no absence, day 2 (not a weekly-recap day),
+        // hour 19 (>= 18). archetypeSelected=false so morning brief does NOT
+        // pre-empt evening reflection.
+        final result = NarratorTriggerEngine.shouldTrigger(
+          context: _ctx(
+            daysSinceInstall: 2,
+            daysSinceLastOpen: 0,
+            now: DateTime(2026, 7, 5, 19),
+          ),
+          stats: _stats(
+            momentumScore: 0.1,
+            consecutiveActiveDays: 1,
+            hasCompletedOnboarding: true,
+            archetypeSelected: false,
+          ),
+          recentTriggers: const {},
+        );
+        expect(result, NarratorTrigger.eveningReflection);
+      },
+    );
   });
 
   group('NarratorTriggerEngine — individual trigger conditions', () {
-    test('streakBreakFirstMiss fires when consecutiveMisses > 0 and not cooled',
-        () {
-      final result = NarratorTriggerEngine.shouldTrigger(
-        context: _ctx(daysSinceLastOpen: 0),
-        stats: _stats(consecutiveMisses: 1),
-        recentTriggers: const {},
-      );
-      expect(result, NarratorTrigger.streakBreakFirstMiss);
-    });
+    test(
+      'streakBreakFirstMiss fires when consecutiveMisses > 0 and not cooled',
+      () {
+        final result = NarratorTriggerEngine.shouldTrigger(
+          context: _ctx(daysSinceLastOpen: 0),
+          stats: _stats(consecutiveMisses: 1),
+          recentTriggers: const {},
+        );
+        expect(result, NarratorTrigger.streakBreakFirstMiss);
+      },
+    );
 
     test('streakBreakFirstMiss suppressed while on cooldown', () {
       final now = DateTime(2026, 7, 5, 12);
       final recent = <NarratorTrigger, DateTime>{
-        NarratorTrigger.streakBreakFirstMiss:
-            now.subtract(const Duration(hours: 1)),
+        NarratorTrigger.streakBreakFirstMiss: now.subtract(
+          const Duration(hours: 1),
+        ),
       };
       final result = NarratorTriggerEngine.shouldTrigger(
         context: _ctx(daysSinceLastOpen: 0, now: now),
@@ -320,15 +325,17 @@ void main() {
       expect(result, NarratorTrigger.eveningReflection);
     });
 
-    test('eveningReflection does NOT fire when reflection already completed',
-        () {
-      final result = NarratorTriggerEngine.shouldTrigger(
-        context: _ctx(now: DateTime(2026, 7, 5, 19)),
-        stats: _stats(hasCompletedEveningReflectionToday: true),
-        recentTriggers: const {},
-      );
-      expect(result, isNull);
-    });
+    test(
+      'eveningReflection does NOT fire when reflection already completed',
+      () {
+        final result = NarratorTriggerEngine.shouldTrigger(
+          context: _ctx(now: DateTime(2026, 7, 5, 19)),
+          stats: _stats(hasCompletedEveningReflectionToday: true),
+          recentTriggers: const {},
+        );
+        expect(result, isNull);
+      },
+    );
 
     test('eveningReflection does NOT fire before 6 PM', () {
       final result = NarratorTriggerEngine.shouldTrigger(

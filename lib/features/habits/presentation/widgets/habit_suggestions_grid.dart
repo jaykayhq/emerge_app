@@ -21,8 +21,8 @@ class HabitSuggestionsGrid extends StatelessWidget {
     final filtered = query.isEmpty
         ? suggestions
         : suggestions
-            .where((s) => s.toLowerCase().contains(query.toLowerCase()))
-            .toList();
+              .where((s) => s.toLowerCase().contains(query.toLowerCase()))
+              .toList();
 
     if (filtered.isEmpty) return const SizedBox.shrink();
 
@@ -38,14 +38,16 @@ class HabitSuggestionsGrid extends StatelessWidget {
         child: Column(
           children: filtered
               .take(5)
-              .map((s) => ListTile(
-                    dense: true,
-                    title: Text(
-                      s,
-                      style: const TextStyle(color: Colors.white, fontSize: 14),
-                    ),
-                    onTap: () => onSelected(s),
-                  ))
+              .map(
+                (s) => ListTile(
+                  dense: true,
+                  title: Text(
+                    s,
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                  ),
+                  onTap: () => onSelected(s),
+                ),
+              )
               .toList(),
         ),
       );

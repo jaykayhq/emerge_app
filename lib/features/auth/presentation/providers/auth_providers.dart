@@ -119,8 +119,9 @@ Future<void> signUpCreator(
   // in functions/src/creator_invites.ts), so this client-side claim is what
   // keeps creator usernames unique. On collision the freshly-created account
   // is deleted — no half-registered creator lingers.
-  final claim =
-      await ref.read(authRepositoryProvider).claimUsername(username.trim());
+  final claim = await ref
+      .read(authRepositoryProvider)
+      .claimUsername(username.trim());
   final claimFailure = claim.fold<Failure?>((f) => f, (_) => null);
   if (claimFailure != null) {
     try {
@@ -157,7 +158,10 @@ Future<void> signUpCreatorWithGoogle(
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('pending_creator_signup', true);
     // Stashed for the post-redirect redemption in init_app.dart.
-    await prefs.setString('pending_creator_invite_code', inviteCode.trim().toUpperCase());
+    await prefs.setString(
+      'pending_creator_invite_code',
+      inviteCode.trim().toUpperCase(),
+    );
     // The typed username too — the redirect return path must not silently
     // swap it for the Google display name (which would discard the name the
     // user explicitly chose and validated in the form).
@@ -188,7 +192,9 @@ Future<void> signUpCreatorWithGoogle(
     if (!kIsWeb) {
       await GoogleSignIn.instance.signOut();
     }
-    throw Exception('This Google account is already registered as a normal user.');
+    throw Exception(
+      'This Google account is already registered as a normal user.',
+    );
   }
 
   // Claim the username the UI collected (falls back to a normalized Google
@@ -205,8 +211,9 @@ Future<void> signUpCreatorWithGoogle(
     effectiveUsername = deriveUsernameCandidate(user.displayName, user.email);
   }
   if (effectiveUsername != null) {
-    final claim =
-        await ref.read(authRepositoryProvider).claimUsername(effectiveUsername);
+    final claim = await ref
+        .read(authRepositoryProvider)
+        .claimUsername(effectiveUsername);
     final claimFailure = claim.fold<Failure?>((f) => f, (_) => null);
     if (claimFailure != null) {
       if (typedUsername.isNotEmpty) {
@@ -228,7 +235,8 @@ Future<void> signUpCreatorWithGoogle(
     );
   }
 
-  final redeemName = effectiveUsername ??
+  final redeemName =
+      effectiveUsername ??
       (user.displayName?.trim().isNotEmpty == true
           ? user.displayName!
           : user.email?.split('@').first ?? 'Creator');

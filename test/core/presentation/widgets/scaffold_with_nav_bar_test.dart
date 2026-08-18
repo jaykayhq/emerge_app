@@ -6,7 +6,8 @@ import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/presentation/widgets/scaffold_with_nav_bar.dart';
 import 'package:emerge_app/features/habits/presentation/providers/cue_providers.dart';
 
-class MockStatefulNavigationShell extends Mock implements StatefulNavigationShell {
+class MockStatefulNavigationShell extends Mock
+    implements StatefulNavigationShell {
   @override
   StatefulElement createElement() => StatefulElement(this);
 
@@ -19,7 +20,8 @@ class MockStatefulNavigationShell extends Mock implements StatefulNavigationShel
   }
 }
 
-class _MockStatefulNavigationShellState extends State<MockStatefulNavigationShell> {
+class _MockStatefulNavigationShellState
+    extends State<MockStatefulNavigationShell> {
   @override
   Widget build(BuildContext context) {
     return const SizedBox.shrink();

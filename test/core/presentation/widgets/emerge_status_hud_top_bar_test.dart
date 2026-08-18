@@ -30,15 +30,13 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            userStatsStreamProvider.overrideWithValue(AsyncValue.data(mockProfile)),
+            userStatsStreamProvider.overrideWithValue(
+              AsyncValue.data(mockProfile),
+            ),
           ],
           child: const MaterialApp(
             home: Scaffold(
-              body: CustomScrollView(
-                slivers: [
-                  EmergeStatusHudTopBar(),
-                ],
-              ),
+              body: CustomScrollView(slivers: [EmergeStatusHudTopBar()]),
             ),
           ),
         ),
@@ -55,15 +53,13 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            userStatsStreamProvider.overrideWithValue(const AsyncValue.loading()),
+            userStatsStreamProvider.overrideWithValue(
+              const AsyncValue.loading(),
+            ),
           ],
           child: const MaterialApp(
             home: Scaffold(
-              body: CustomScrollView(
-                slivers: [
-                  EmergeStatusHudTopBar(),
-                ],
-              ),
+              body: CustomScrollView(slivers: [EmergeStatusHudTopBar()]),
             ),
           ),
         ),
@@ -72,7 +68,10 @@ void main() {
       await tester.pump();
 
       // Should render nothing or empty box
-      expect(find.byType(EmergeStatusHudTopBar, skipOffstage: false), findsOneWidget);
+      expect(
+        find.byType(EmergeStatusHudTopBar, skipOffstage: false),
+        findsOneWidget,
+      );
       expect(find.text('LVL 12'), findsNothing);
     });
   });

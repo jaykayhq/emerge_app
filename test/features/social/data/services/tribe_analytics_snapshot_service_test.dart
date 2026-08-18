@@ -20,13 +20,17 @@ void main() {
       'type': 'creator',
     });
     final contributors = firestore
-        .collection('tribes').doc('t1').collection('contributors');
+        .collection('tribes')
+        .doc('t1')
+        .collection('contributors');
     await contributors.doc('u1').set({
       'userName': 'Ada',
       'totalXpContributed': 3000,
       'totalHabitsCompleted': 40,
       'totalChallengesCompleted': 2,
-      'joinedAt': DateTime.now().subtract(const Duration(days: 30)).toIso8601String(),
+      'joinedAt': DateTime.now()
+          .subtract(const Duration(days: 30))
+          .toIso8601String(),
       'lastActivity': DateTime.now().toIso8601String(),
     });
     await contributors.doc('u2').set({
@@ -34,20 +38,28 @@ void main() {
       'totalXpContributed': 2000,
       'totalHabitsCompleted': 20,
       'totalChallengesCompleted': 1,
-      'joinedAt': DateTime.now().subtract(const Duration(days: 2)).toIso8601String(),
+      'joinedAt': DateTime.now()
+          .subtract(const Duration(days: 2))
+          .toIso8601String(),
       'lastActivity': DateTime.now().toIso8601String(),
     });
   }
 
   test('writes a snapshot when none exists', () async {
     await seedTribe();
-    final result = await service.ensureTodaySnapshot(uid: 'creator1', tribeId: 't1');
+    final result = await service.ensureTodaySnapshot(
+      uid: 'creator1',
+      tribeId: 't1',
+    );
     expect(result.isRight(), isTrue);
 
     final today = _dateKey(DateTime.now());
     final snap = await firestore
-        .collection('tribe_analytics').doc('t1')
-        .collection('daily').doc(today).get();
+        .collection('tribe_analytics')
+        .doc('t1')
+        .collection('daily')
+        .doc(today)
+        .get();
     expect(snap.exists, isTrue);
     final data = snap.data()!;
     expect(data['memberCount'], 3);
@@ -65,8 +77,11 @@ void main() {
 
     final today = _dateKey(DateTime.now());
     final snap = await firestore
-        .collection('tribe_analytics').doc('t1')
-        .collection('daily').doc(today).get();
+        .collection('tribe_analytics')
+        .doc('t1')
+        .collection('daily')
+        .doc(today)
+        .get();
     expect(snap.data()!['memberCount'], 3); // unchanged
   });
 
@@ -82,7 +97,10 @@ void main() {
   });
 
   test('returns Left on invalid tribe', () async {
-    final result = await service.ensureTodaySnapshot(uid: 'creator1', tribeId: '');
+    final result = await service.ensureTodaySnapshot(
+      uid: 'creator1',
+      tribeId: '',
+    );
     expect(result.isLeft(), isTrue);
   });
 
@@ -97,17 +115,25 @@ void main() {
     );
     await seedTribe();
     await firestore
-        .collection('tribe_analytics').doc('t1')
-        .collection('daily').doc('2026-09-19')
+        .collection('tribe_analytics')
+        .doc('t1')
+        .collection('daily')
+        .doc('2026-09-19')
         .set({'date': '2026-09-19'});
 
-    final result = await service.ensureTodaySnapshot(uid: 'creator1', tribeId: 't1');
+    final result = await service.ensureTodaySnapshot(
+      uid: 'creator1',
+      tribeId: 't1',
+    );
     expect(result.isRight(), isTrue);
 
     final today = _dateKey(now);
     final snap = await firestore
-        .collection('tribe_analytics').doc('t1')
-        .collection('daily').doc(today).get();
+        .collection('tribe_analytics')
+        .doc('t1')
+        .collection('daily')
+        .doc(today)
+        .get();
     expect(snap.exists, isTrue);
   });
 

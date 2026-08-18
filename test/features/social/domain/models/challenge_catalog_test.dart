@@ -13,30 +13,41 @@ void main() {
       }
     });
 
-    test('getDailyQuest returns a single-day challenge with correct archetype', () {
-      final daily = ChallengeCatalog.getDailyQuest('athlete');
+    test(
+      'getDailyQuest returns a single-day challenge with correct archetype',
+      () {
+        final daily = ChallengeCatalog.getDailyQuest('athlete');
 
-      expect(daily.id, contains('athlete'));
-      expect(daily.totalDays, 1);
-      expect(daily.steps, hasLength(1));
-      expect(daily.archetypeId, 'athlete');
-    });
+        expect(daily.id, contains('athlete'));
+        expect(daily.totalDays, 1);
+        expect(daily.steps, hasLength(1));
+        expect(daily.archetypeId, 'athlete');
+      },
+    );
 
-    test('getWeeklySpotlight returns a challenge with matching archetypeId', () {
-      final spotlight = ChallengeCatalog.getWeeklySpotlight('scholar');
+    test(
+      'getWeeklySpotlight returns a challenge with matching archetypeId',
+      () {
+        final spotlight = ChallengeCatalog.getWeeklySpotlight('scholar');
 
-      expect(spotlight.archetypeId, 'scholar');
-    });
+        expect(spotlight.archetypeId, 'scholar');
+      },
+    );
 
-    test('getWeeklySpotlight returns deterministic result for same archetype', () {
-      final first = ChallengeCatalog.getWeeklySpotlight('scholar');
-      final second = ChallengeCatalog.getWeeklySpotlight('scholar');
+    test(
+      'getWeeklySpotlight returns deterministic result for same archetype',
+      () {
+        final first = ChallengeCatalog.getWeeklySpotlight('scholar');
+        final second = ChallengeCatalog.getWeeklySpotlight('scholar');
 
-      expect(first.id, second.id);
-    });
+        expect(first.id, second.id);
+      },
+    );
 
     test('getChallengeById returns correct challenge', () {
-      final challenge = ChallengeCatalog.getChallengeById('quest_deep_work_protocol');
+      final challenge = ChallengeCatalog.getChallengeById(
+        'quest_deep_work_protocol',
+      );
 
       expect(challenge, isNotNull);
       expect(challenge!.title, 'The Deep Work Protocol');
@@ -53,7 +64,10 @@ void main() {
 
       expect(challenges.length, greaterThanOrEqualTo(2));
       expect(challenges.where((c) => c.id.startsWith('daily_')), hasLength(1));
-      expect(challenges.where((c) => c.archetypeId == 'creator'), hasLength(greaterThanOrEqualTo(1)));
+      expect(
+        challenges.where((c) => c.archetypeId == 'creator'),
+        hasLength(greaterThanOrEqualTo(1)),
+      );
     });
   });
 }

@@ -11,26 +11,29 @@ void main() {
     ds = FirestoreHabitReflectionRemoteDatasource(firestore: firestore);
   });
 
-  test('write creates doc under users/{uid}/habit_reflections/{dateKey}', () async {
-    await ds.write({
-      'userId': 'u1',
-      'habitId': 'h1',
-      'localDate': DateTime(2026, 7, 10),
-      'mood': 4,
-      'note': 'felt strong',
-      'updatedAt': DateTime(2026, 7, 10, 12),
-    });
-    final snap = await firestore
-        .collection('users')
-        .doc('u1')
-        .collection('habit_reflections')
-        .doc('2026-07-10')
-        .get();
-    expect(snap.exists, isTrue);
-    expect(snap.data()!['mood'], 4);
-    expect(snap.data()!['note'], 'felt strong');
-    expect(snap.data()!['habitId'], 'h1');
-  });
+  test(
+    'write creates doc under users/{uid}/habit_reflections/{dateKey}',
+    () async {
+      await ds.write({
+        'userId': 'u1',
+        'habitId': 'h1',
+        'localDate': DateTime(2026, 7, 10),
+        'mood': 4,
+        'note': 'felt strong',
+        'updatedAt': DateTime(2026, 7, 10, 12),
+      });
+      final snap = await firestore
+          .collection('users')
+          .doc('u1')
+          .collection('habit_reflections')
+          .doc('2026-07-10')
+          .get();
+      expect(snap.exists, isTrue);
+      expect(snap.data()!['mood'], 4);
+      expect(snap.data()!['note'], 'felt strong');
+      expect(snap.data()!['habitId'], 'h1');
+    },
+  );
 
   test('write with merge=true does not overwrite unrelated fields', () async {
     final col = firestore

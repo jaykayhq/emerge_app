@@ -76,14 +76,14 @@ class _HabitActivityScreenState extends ConsumerState<HabitActivityScreen> {
               const Gap(24),
               Row(
                 children: [
-                  _StatChip(
-                      label: '🔥 Streak', value: '${data.currentStreak}'),
+                  _StatChip(label: '🔥 Streak', value: '${data.currentStreak}'),
                   const SizedBox(width: 12),
                   _StatChip(label: '🏆 Best', value: '${data.bestStreak}'),
                   const SizedBox(width: 12),
                   _StatChip(
-                      label: '📊 Total',
-                      value: '${data.totalCompletions}'),
+                    label: '📊 Total',
+                    value: '${data.totalCompletions}',
+                  ),
                 ],
               ),
               const Gap(24),
@@ -115,14 +115,14 @@ class _HabitActivityScreenState extends ConsumerState<HabitActivityScreen> {
   }
 
   Widget _sectionLabel(String text) => Text(
-        text,
-        style: TextStyle(
-          color: EmergeColors.teal.withValues(alpha: 0.7),
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1,
-        ),
-      );
+    text,
+    style: TextStyle(
+      color: EmergeColors.teal.withValues(alpha: 0.7),
+      fontSize: 12,
+      fontWeight: FontWeight.bold,
+      letterSpacing: 1,
+    ),
+  );
 
   Widget _buildReflectionInput() {
     return Row(
@@ -134,25 +134,27 @@ class _HabitActivityScreenState extends ConsumerState<HabitActivityScreen> {
             maxLength: 140,
             decoration: InputDecoration(
               hintText: 'Write a reflection...',
-              hintStyle: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.38)),
+              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.38)),
               counterText: '',
               filled: true,
               fillColor: Colors.white.withValues(alpha: 0.06),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.08)),
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.08)),
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(
-                    color: EmergeColors.teal.withValues(alpha: 0.5)),
+                  color: EmergeColors.teal.withValues(alpha: 0.5),
+                ),
               ),
             ),
           ),
@@ -177,9 +179,7 @@ class _HabitActivityScreenState extends ConsumerState<HabitActivityScreen> {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,8 +222,7 @@ class _HabitActivityScreenState extends ConsumerState<HabitActivityScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text("Couldn't save reflection. Try again.")),
+          const SnackBar(content: Text("Couldn't save reflection. Try again.")),
         );
       }
     } finally {
@@ -270,9 +269,7 @@ class _StatChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.08),
-          ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         ),
         child: Column(
           children: [

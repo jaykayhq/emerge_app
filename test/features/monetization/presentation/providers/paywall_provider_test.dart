@@ -127,12 +127,14 @@ void main() {
     test('startWebCheckout calls initializeTransaction with plan amount '
         '+ callback and redirects', () async {
       final repo = MockPaystackPaymentRepository();
-      when(() => repo.initializeTransaction(
-            amount: any(named: 'amount'),
-            email: any(named: 'email'),
-            identityType: any(named: 'identityType'),
-            callbackUrl: any(named: 'callbackUrl'),
-          )).thenAnswer((_) async => 'https://checkout.paystack.com/abc');
+      when(
+        () => repo.initializeTransaction(
+          amount: any(named: 'amount'),
+          email: any(named: 'email'),
+          identityType: any(named: 'identityType'),
+          callbackUrl: any(named: 'callbackUrl'),
+        ),
+      ).thenAnswer((_) async => 'https://checkout.paystack.com/abc');
 
       String? redirectedUrl;
       final container = ProviderContainer(
@@ -150,12 +152,14 @@ void main() {
 
       await notifier.startWebCheckout(planKey: 'yearly');
 
-      verify(() => repo.initializeTransaction(
-            amount: 15000.0,
-            email: 'a@b.com',
-            identityType: 'yearly',
-            callbackUrl: any(named: 'callbackUrl'),
-          )).called(1);
+      verify(
+        () => repo.initializeTransaction(
+          amount: 15000.0,
+          email: 'a@b.com',
+          identityType: 'yearly',
+          callbackUrl: any(named: 'callbackUrl'),
+        ),
+      ).called(1);
       expect(redirectedUrl, 'https://checkout.paystack.com/abc');
     });
 
@@ -175,129 +179,155 @@ void main() {
 
       await notifier.startWebCheckout(planKey: 'yearly');
 
-      verifyNever(() => repo.initializeTransaction(
-            amount: any(named: 'amount'),
-            email: any(named: 'email'),
-            identityType: any(named: 'identityType'),
-          ));
+      verifyNever(
+        () => repo.initializeTransaction(
+          amount: any(named: 'amount'),
+          email: any(named: 'email'),
+          identityType: any(named: 'identityType'),
+        ),
+      );
     });
 
-    test('startWebCheckout sets error state when the repository throws',
-        () async {
-      final repo = MockPaystackPaymentRepository();
-      when(() => repo.initializeTransaction(
+    test(
+      'startWebCheckout sets error state when the repository throws',
+      () async {
+        final repo = MockPaystackPaymentRepository();
+        when(
+          () => repo.initializeTransaction(
             amount: any(named: 'amount'),
             email: any(named: 'email'),
             identityType: any(named: 'identityType'),
             callbackUrl: any(named: 'callbackUrl'),
-          )).thenThrow(Exception('network down'));
-
-      final container = ProviderContainer(
-        overrides: [
-          paystackPaymentRepositoryProvider.overrideWithValue(repo),
-          authStateChangesProvider.overrideWithValue(
-            const AsyncValue.data(AuthUser(id: 'u1', email: 'a@b.com')),
           ),
-          paywallControllerProvider.overrideWith(() => _WebPaywallController()),
-        ],
-      );
-      addTearDown(container.dispose);
-      final notifier = container.read(paywallControllerProvider.notifier);
+        ).thenThrow(Exception('network down'));
 
-      await notifier.startWebCheckout(planKey: 'yearly');
+        final container = ProviderContainer(
+          overrides: [
+            paystackPaymentRepositoryProvider.overrideWithValue(repo),
+            authStateChangesProvider.overrideWithValue(
+              const AsyncValue.data(AuthUser(id: 'u1', email: 'a@b.com')),
+            ),
+            paywallControllerProvider.overrideWith(
+              () => _WebPaywallController(),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+        final notifier = container.read(paywallControllerProvider.notifier);
 
-      final state = container.read(paywallControllerProvider);
-      expect(state.isLoading, false);
-      expect(state.error, 'Checkout failed. Please try again.');
-    });
+        await notifier.startWebCheckout(planKey: 'yearly');
 
-    test('startWebCheckout returns sign-in error when no user is signed in',
-        () async {
-      final repo = MockPaystackPaymentRepository();
+        final state = container.read(paywallControllerProvider);
+        expect(state.isLoading, false);
+        expect(state.error, 'Checkout failed. Please try again.');
+      },
+    );
 
-      final container = ProviderContainer(
-        overrides: [
-          paystackPaymentRepositoryProvider.overrideWithValue(repo),
-          // authStateChanges is a non-nullable StreamProvider<AuthUser>, so a
-          // "no user" state can't be `AsyncValue.data(null)`; a pending
-          // AsyncValue models it (`.value` is null until the stream emits).
-          authStateChangesProvider.overrideWithValue(AsyncValue.loading()),
-          paywallControllerProvider.overrideWith(() => _WebPaywallController()),
-        ],
-      );
-      addTearDown(container.dispose);
-      final notifier = container.read(paywallControllerProvider.notifier);
+    test(
+      'startWebCheckout returns sign-in error when no user is signed in',
+      () async {
+        final repo = MockPaystackPaymentRepository();
 
-      await notifier.startWebCheckout(planKey: 'yearly');
+        final container = ProviderContainer(
+          overrides: [
+            paystackPaymentRepositoryProvider.overrideWithValue(repo),
+            // authStateChanges is a non-nullable StreamProvider<AuthUser>, so a
+            // "no user" state can't be `AsyncValue.data(null)`; a pending
+            // AsyncValue models it (`.value` is null until the stream emits).
+            authStateChangesProvider.overrideWithValue(AsyncValue.loading()),
+            paywallControllerProvider.overrideWith(
+              () => _WebPaywallController(),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+        final notifier = container.read(paywallControllerProvider.notifier);
 
-      final state = container.read(paywallControllerProvider);
-      expect(state.isLoading, false);
-      expect(state.error, 'Please sign in before upgrading.');
-      verifyNever(() => repo.initializeTransaction(
+        await notifier.startWebCheckout(planKey: 'yearly');
+
+        final state = container.read(paywallControllerProvider);
+        expect(state.isLoading, false);
+        expect(state.error, 'Please sign in before upgrading.');
+        verifyNever(
+          () => repo.initializeTransaction(
             amount: any(named: 'amount'),
             email: any(named: 'email'),
             identityType: any(named: 'identityType'),
             callbackUrl: any(named: 'callbackUrl'),
-          ));
-    });
-
-    test('startWebCheckout returns sign-in error when the user has no email',
-        () async {
-      final repo = MockPaystackPaymentRepository();
-
-      final container = ProviderContainer(
-        overrides: [
-          paystackPaymentRepositoryProvider.overrideWithValue(repo),
-          authStateChangesProvider.overrideWithValue(
-            const AsyncValue.data(AuthUser(id: 'u1', email: '')),
           ),
-          paywallControllerProvider.overrideWith(() => _WebPaywallController()),
-        ],
-      );
-      addTearDown(container.dispose);
-      final notifier = container.read(paywallControllerProvider.notifier);
+        );
+      },
+    );
 
-      await notifier.startWebCheckout(planKey: 'yearly');
+    test(
+      'startWebCheckout returns sign-in error when the user has no email',
+      () async {
+        final repo = MockPaystackPaymentRepository();
 
-      final state = container.read(paywallControllerProvider);
-      expect(state.isLoading, false);
-      expect(state.error, 'Please sign in before upgrading.');
-      verifyNever(() => repo.initializeTransaction(
+        final container = ProviderContainer(
+          overrides: [
+            paystackPaymentRepositoryProvider.overrideWithValue(repo),
+            authStateChangesProvider.overrideWithValue(
+              const AsyncValue.data(AuthUser(id: 'u1', email: '')),
+            ),
+            paywallControllerProvider.overrideWith(
+              () => _WebPaywallController(),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+        final notifier = container.read(paywallControllerProvider.notifier);
+
+        await notifier.startWebCheckout(planKey: 'yearly');
+
+        final state = container.read(paywallControllerProvider);
+        expect(state.isLoading, false);
+        expect(state.error, 'Please sign in before upgrading.');
+        verifyNever(
+          () => repo.initializeTransaction(
             amount: any(named: 'amount'),
             email: any(named: 'email'),
             identityType: any(named: 'identityType'),
             callbackUrl: any(named: 'callbackUrl'),
-          ));
-    });
-
-    test('startWebCheckout rejects an unknown plan without calling the repo',
-        () async {
-      final repo = MockPaystackPaymentRepository();
-
-      final container = ProviderContainer(
-        overrides: [
-          paystackPaymentRepositoryProvider.overrideWithValue(repo),
-          authStateChangesProvider.overrideWithValue(
-            const AsyncValue.data(AuthUser(id: 'u1', email: 'a@b.com')),
           ),
-          paywallControllerProvider.overrideWith(() => _WebPaywallController()),
-        ],
-      );
-      addTearDown(container.dispose);
-      final notifier = container.read(paywallControllerProvider.notifier);
+        );
+      },
+    );
 
-      await notifier.startWebCheckout(planKey: 'bogus');
+    test(
+      'startWebCheckout rejects an unknown plan without calling the repo',
+      () async {
+        final repo = MockPaystackPaymentRepository();
 
-      final state = container.read(paywallControllerProvider);
-      expect(state.isLoading, false);
-      expect(state.error, 'Unknown plan.');
-      verifyNever(() => repo.initializeTransaction(
+        final container = ProviderContainer(
+          overrides: [
+            paystackPaymentRepositoryProvider.overrideWithValue(repo),
+            authStateChangesProvider.overrideWithValue(
+              const AsyncValue.data(AuthUser(id: 'u1', email: 'a@b.com')),
+            ),
+            paywallControllerProvider.overrideWith(
+              () => _WebPaywallController(),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+        final notifier = container.read(paywallControllerProvider.notifier);
+
+        await notifier.startWebCheckout(planKey: 'bogus');
+
+        final state = container.read(paywallControllerProvider);
+        expect(state.isLoading, false);
+        expect(state.error, 'Unknown plan.');
+        verifyNever(
+          () => repo.initializeTransaction(
             amount: any(named: 'amount'),
             email: any(named: 'email'),
             identityType: any(named: 'identityType'),
             callbackUrl: any(named: 'callbackUrl'),
-          ));
-    });
+          ),
+        );
+      },
+    );
   });
 
   group('PaywallState', () {

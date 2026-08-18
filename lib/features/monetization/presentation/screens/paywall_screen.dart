@@ -186,7 +186,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                             if (!kIsWeb) const Gap(16),
                             TextButton(
                               onPressed: () => launchUrl(
-                                Uri.parse('https://docs.google.com/document/d/e/2PACX-1vRt5cCpFS7PLmh_nwhxq3ec9YtRWQZk7mrOqbVN7aThrclpjgYL3q5r-nAqlftQJVkOSWzxnG_FDfjo/pub'),
+                                Uri.parse(
+                                  'https://docs.google.com/document/d/e/2PACX-1vRt5cCpFS7PLmh_nwhxq3ec9YtRWQZk7mrOqbVN7aThrclpjgYL3q5r-nAqlftQJVkOSWzxnG_FDfjo/pub',
+                                ),
                               ),
                               child: Text(
                                 'Terms',
@@ -198,7 +200,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                             const Gap(16),
                             TextButton(
                               onPressed: () => launchUrl(
-                                Uri.parse('https://docs.google.com/document/d/e/2PACX-1vQX-5ydyuD3ZYp_-8b_2rVyyuKW9zF2NaMm1CBxxwE5s1LXASy1P7Plxf8axNGc_TFJw-OnZrULmjgP/pub'),
+                                Uri.parse(
+                                  'https://docs.google.com/document/d/e/2PACX-1vQX-5ydyuD3ZYp_-8b_2rVyyuKW9zF2NaMm1CBxxwE5s1LXASy1P7Plxf8axNGc_TFJw-OnZrULmjgP/pub',
+                                ),
                               ),
                               child: Text(
                                 'Privacy',
@@ -295,14 +299,17 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
           onPressed: busy
               ? () {}
               : () => ref
-                  .read(paywallControllerProvider.notifier)
-                  .startWebCheckout(planKey: 'yearly'),
+                    .read(paywallControllerProvider.notifier)
+                    .startWebCheckout(planKey: 'yearly'),
           child: busy
               ? const SizedBox(
                   width: 24,
                   height: 24,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: Colors.black87))
+                    strokeWidth: 2,
+                    color: Colors.black87,
+                  ),
+                )
               : const _CtaLabel(price: 'Best Value — ₦15,000/yr'),
         ),
         const Gap(12),
@@ -311,8 +318,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
           onTap: busy
               ? null
               : () => ref
-                  .read(paywallControllerProvider.notifier)
-                  .startWebCheckout(planKey: 'monthly'),
+                    .read(paywallControllerProvider.notifier)
+                    .startWebCheckout(planKey: 'monthly'),
           borderRadius: BorderRadius.circular(16),
           child: Container(
             width: double.infinity,
@@ -608,6 +615,5 @@ class _CosmicPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _CosmicPainter old) =>
-      old.progress != progress;
+  bool shouldRepaint(covariant _CosmicPainter old) => old.progress != progress;
 }

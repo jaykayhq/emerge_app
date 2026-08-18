@@ -653,12 +653,13 @@ class _HabitCreateScreenState extends ConsumerState<HabitCreateScreen> {
     var selected = form.integrationType;
     var targetError = '';
     final targetController = TextEditingController(
-      text: form.integrationTarget?.toString() ??
+      text:
+          form.integrationTarget?.toString() ??
           (selected == HabitIntegrationType.healthSteps
               ? '10000'
               : selected == HabitIntegrationType.screenTimeLimit
-                  ? '30'
-                  : ''),
+              ? '30'
+              : ''),
     );
     showModalBottomSheet<void>(
       context: context,
@@ -679,7 +680,8 @@ class _HabitCreateScreenState extends ConsumerState<HabitCreateScreen> {
                       ? form.integrationTarget!.toString()
                       : '10000',
                 HabitIntegrationType.screenTimeLimit =>
-                  form.integrationType == HabitIntegrationType.screenTimeLimit &&
+                  form.integrationType ==
+                              HabitIntegrationType.screenTimeLimit &&
                           form.integrationTarget != null
                       ? form.integrationTarget!.toString()
                       : '30',
@@ -919,11 +921,7 @@ class _IntegrationOption extends StatelessWidget {
           ),
         ),
         trailing: isSelected
-            ? const Icon(
-                Icons.check_circle,
-                color: EmergeColors.teal,
-                size: 20,
-              )
+            ? const Icon(Icons.check_circle, color: EmergeColors.teal, size: 20)
             : null,
         onTap: onTap,
       ),

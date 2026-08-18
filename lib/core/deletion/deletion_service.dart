@@ -19,9 +19,9 @@ class DeletionService {
     required AppDatabase db,
     required EnhancedSyncEngine syncEngine,
     required DeletionAudit audit,
-  })  : _db = db,
-        _syncEngine = syncEngine,
-        _audit = audit;
+  }) : _db = db,
+       _syncEngine = syncEngine,
+       _audit = audit;
 
   Future<Either<Failure, Unit>> deleteHabit({
     required String userId,

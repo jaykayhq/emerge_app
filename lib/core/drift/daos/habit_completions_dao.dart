@@ -79,19 +79,21 @@ class HabitCompletionsDao extends DatabaseAccessor<AppDatabase>
 
   Future<HabitCompletionsTableData?> getLastCompletion(String userId) async {
     return (select(habitCompletionsTable)
-      ..where((t) => t.userId.equals(userId))
-      ..orderBy(
-        [(t) => OrderingTerm(expression: t.completedAt, mode: OrderingMode.desc)],
-      )
-      ..limit(1))
+          ..where((t) => t.userId.equals(userId))
+          ..orderBy([
+            (t) => OrderingTerm(
+              expression: t.completedAt,
+              mode: OrderingMode.desc,
+            ),
+          ])
+          ..limit(1))
         .getSingleOrNull();
   }
 
   /// Cascade-delete local completions for a habit.
-  Future<int> deleteByHabitId(String habitId, String userId) =>
-      (delete(habitCompletionsTable)
-            ..where((t) => t.habitId.equals(habitId) & t.userId.equals(userId)))
-          .go();
+  Future<int> deleteByHabitId(String habitId, String userId) => (delete(
+    habitCompletionsTable,
+  )..where((t) => t.habitId.equals(habitId) & t.userId.equals(userId))).go();
 
   /// All completions for a habit — used by deletion to mirror a habit delete
   /// to the remote `users/{userId}/habit_completions` subcollection.
@@ -99,15 +101,13 @@ class HabitCompletionsDao extends DatabaseAccessor<AppDatabase>
     String habitId,
     String userId,
   ) {
-    return (select(habitCompletionsTable)..where(
-          (t) => t.habitId.equals(habitId) & t.userId.equals(userId),
-        ))
-        .get();
+    return (select(
+      habitCompletionsTable,
+    )..where((t) => t.habitId.equals(habitId) & t.userId.equals(userId))).get();
   }
 
   /// Delete a single completion row by id (used to undo today's completion).
-  Future<int> deleteById(String id, String userId) =>
-      (delete(habitCompletionsTable)
-            ..where((t) => t.id.equals(id) & t.userId.equals(userId)))
-          .go();
+  Future<int> deleteById(String id, String userId) => (delete(
+    habitCompletionsTable,
+  )..where((t) => t.id.equals(id) & t.userId.equals(userId))).go();
 }

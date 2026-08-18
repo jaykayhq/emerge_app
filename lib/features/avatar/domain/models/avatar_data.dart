@@ -34,13 +34,13 @@ class AvatarData {
       equipment.values.whereType<ShopItem>().toList();
 
   factory AvatarData.defaultAvatar() => AvatarData(
-        archetype: 'hero',
-        level: 1,
-        colors: AvatarColors.hero(),
-        proportions: AvatarProportions.hero(),
-        pose: AvatarPose.idle(),
-        equipment: _emptyEquipment,
-      );
+    archetype: 'hero',
+    level: 1,
+    colors: AvatarColors.hero(),
+    proportions: AvatarProportions.hero(),
+    pose: AvatarPose.idle(),
+    equipment: _emptyEquipment,
+  );
 
   AvatarData copyWith({
     String? archetype,
@@ -49,15 +49,14 @@ class AvatarData {
     AvatarProportions? proportions,
     AvatarPose? pose,
     EquipmentMap? equipment,
-  }) =>
-      AvatarData(
-        archetype: archetype ?? this.archetype,
-        level: level ?? this.level,
-        colors: colors ?? this.colors,
-        proportions: proportions ?? this.proportions,
-        pose: pose ?? this.pose,
-        equipment: equipment ?? this.equipment,
-      );
+  }) => AvatarData(
+    archetype: archetype ?? this.archetype,
+    level: level ?? this.level,
+    colors: colors ?? this.colors,
+    proportions: proportions ?? this.proportions,
+    pose: pose ?? this.pose,
+    equipment: equipment ?? this.equipment,
+  );
 
   AvatarData equipItem(ShopItem item) {
     final updated = Map<EquipmentSlot, ShopItem?>.from(equipment)
@@ -66,8 +65,7 @@ class AvatarData {
   }
 
   AvatarData unequipSlot(EquipmentSlot slot) {
-    final updated = Map<EquipmentSlot, ShopItem?>.from(equipment)
-      ..remove(slot);
+    final updated = Map<EquipmentSlot, ShopItem?>.from(equipment)..remove(slot);
     return copyWith(equipment: updated);
   }
 
@@ -83,6 +81,6 @@ class AvatarData {
           equipment == other.equipment;
 
   @override
-  int get hashCode => Object.hash(
-      archetype, level, colors, proportions, pose, equipment);
+  int get hashCode =>
+      Object.hash(archetype, level, colors, proportions, pose, equipment);
 }

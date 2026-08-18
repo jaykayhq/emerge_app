@@ -6,10 +6,12 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('LimitsCatalog', () {
     test('lists exactly the four enforced limits', () {
-      expect(
-        LimitsCatalog.all.map((l) => l.featureKey).toList(),
-        ['habits', 'clubs', 'coachAsk', 'themes'],
-      );
+      expect(LimitsCatalog.all.map((l) => l.featureKey).toList(), [
+        'habits',
+        'clubs',
+        'coachAsk',
+        'themes',
+      ]);
     });
 
     test('every entry is fully copy-able', () {

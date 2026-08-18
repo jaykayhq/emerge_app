@@ -5,10 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('emits structured event with required keys', () {
     final events = <Map<String, dynamic>>[];
-    final audit = DeletionAudit(
-      metrics: SyncMetrics(),
-      onEvent: events.add,
-    );
+    final audit = DeletionAudit(metrics: SyncMetrics(), onEvent: events.add);
     audit.log(
       op: 'deleteHabit',
       target: 'habit',

@@ -28,14 +28,14 @@ class HabitCompletionResult {
 
   /// Convenience constructor for error or empty states.
   const HabitCompletionResult.empty()
-      : habitId = '',
-        xpEarned = 0,
-        newStreak = 0,
-        newMomentumScore = 0,
-        isStreakMilestone = false,
-        isUndo = false,
-        wasRecovery = false,
-        narratorTrigger = null;
+    : habitId = '',
+      xpEarned = 0,
+      newStreak = 0,
+      newMomentumScore = 0,
+      isStreakMilestone = false,
+      isUndo = false,
+      wasRecovery = false,
+      narratorTrigger = null;
 
   /// Whether this completion was a meaningful new completion (not an undo).
   bool get isMeaningful => !isUndo && xpEarned > 0;

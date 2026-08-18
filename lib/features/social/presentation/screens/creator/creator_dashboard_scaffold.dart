@@ -7,10 +7,7 @@ import 'package:emerge_app/features/auth/presentation/providers/creator_auth_pro
 class CreatorDashboardScaffold extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
 
-  const CreatorDashboardScaffold({
-    super.key,
-    required this.navigationShell,
-  });
+  const CreatorDashboardScaffold({super.key, required this.navigationShell});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -37,10 +34,7 @@ class CreatorDashboardScaffold extends ConsumerWidget {
         icon: Icon(Icons.handyman),
         label: 'Blueprints',
       ),
-      const NavigationDestination(
-        icon: Icon(Icons.groups),
-        label: 'Tribe',
-      ),
+      const NavigationDestination(icon: Icon(Icons.groups), label: 'Tribe'),
       const NavigationDestination(
         icon: Icon(Icons.analytics_rounded),
         label: 'Analytics',
@@ -48,10 +42,12 @@ class CreatorDashboardScaffold extends ConsumerWidget {
     ];
 
     final railDestinations = items
-        .map((item) => NavigationRailDestination(
-              icon: item.icon,
-              label: Text(item.label),
-            ))
+        .map(
+          (item) => NavigationRailDestination(
+            icon: item.icon,
+            label: Text(item.label),
+          ),
+        )
         .toList();
 
     return Scaffold(

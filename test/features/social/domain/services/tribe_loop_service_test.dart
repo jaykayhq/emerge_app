@@ -7,6 +7,7 @@ import 'package:emerge_app/features/social/domain/services/club_activity_service
 import 'package:emerge_app/features/social/domain/services/streak_watchdog.dart';
 
 class MockSocialActivity extends Mock implements SocialActivityService {}
+
 class MockStreakWatchdog extends Mock implements StreakWatchdog {}
 
 void main() {
@@ -18,25 +19,31 @@ void main() {
     mockSocial = MockSocialActivity();
     mockWatchdog = MockStreakWatchdog();
 
-    when(() => mockSocial.logStreakMilestone(
-      userId: any(named: 'userId'),
-      userName: any(named: 'userName'),
-      archetype: any(named: 'archetype'),
-      streakDays: any(named: 'streakDays'),
-    )).thenAnswer((_) async {});
+    when(
+      () => mockSocial.logStreakMilestone(
+        userId: any(named: 'userId'),
+        userName: any(named: 'userName'),
+        archetype: any(named: 'archetype'),
+        streakDays: any(named: 'streakDays'),
+      ),
+    ).thenAnswer((_) async {});
 
-    when(() => mockSocial.logLevelUp(
-      userId: any(named: 'userId'),
-      userName: any(named: 'userName'),
-      archetype: any(named: 'archetype'),
-      newLevel: any(named: 'newLevel'),
-      totalXp: any(named: 'totalXp'),
-    )).thenAnswer((_) async {});
+    when(
+      () => mockSocial.logLevelUp(
+        userId: any(named: 'userId'),
+        userName: any(named: 'userName'),
+        archetype: any(named: 'archetype'),
+        newLevel: any(named: 'newLevel'),
+        totalXp: any(named: 'totalXp'),
+      ),
+    ).thenAnswer((_) async {});
 
-    when(() => mockWatchdog.checkPartners(
-      userId: any(named: 'userId'),
-      tribeId: any(named: 'tribeId'),
-    )).thenAnswer((_) async {});
+    when(
+      () => mockWatchdog.checkPartners(
+        userId: any(named: 'userId'),
+        tribeId: any(named: 'tribeId'),
+      ),
+    ).thenAnswer((_) async {});
 
     service = TribeLoopService(
       socialActivity: mockSocial,
@@ -81,58 +88,70 @@ void main() {
 
   test('streak milestone 7 calls logStreakMilestone', () async {
     await service.onHabitCompleted(createEvent(newStreak: 7));
-    verify(() => mockSocial.logStreakMilestone(
-      userId: any(named: 'userId'),
-      userName: any(named: 'userName'),
-      archetype: any(named: 'archetype'),
-      streakDays: 7,
-    )).called(1);
+    verify(
+      () => mockSocial.logStreakMilestone(
+        userId: any(named: 'userId'),
+        userName: any(named: 'userName'),
+        archetype: any(named: 'archetype'),
+        streakDays: 7,
+      ),
+    ).called(1);
   });
 
   test('streak 14 calls logStreakMilestone', () async {
     await service.onHabitCompleted(createEvent(newStreak: 14));
-    verify(() => mockSocial.logStreakMilestone(
-      userId: any(named: 'userId'),
-      userName: any(named: 'userName'),
-      archetype: any(named: 'archetype'),
-      streakDays: 14,
-    )).called(1);
+    verify(
+      () => mockSocial.logStreakMilestone(
+        userId: any(named: 'userId'),
+        userName: any(named: 'userName'),
+        archetype: any(named: 'archetype'),
+        streakDays: 14,
+      ),
+    ).called(1);
   });
 
   test('non-milestone streak does not log', () async {
     await service.onHabitCompleted(createEvent(newStreak: 3));
-    verifyNever(() => mockSocial.logStreakMilestone(
-      userId: any(named: 'userId'),
-      userName: any(named: 'userName'),
-      archetype: any(named: 'archetype'),
-      streakDays: any(named: 'streakDays'),
-    ));
+    verifyNever(
+      () => mockSocial.logStreakMilestone(
+        userId: any(named: 'userId'),
+        userName: any(named: 'userName'),
+        archetype: any(named: 'archetype'),
+        streakDays: any(named: 'streakDays'),
+      ),
+    );
   });
 
   test('level up calls logLevelUp', () async {
     await service.onHabitCompleted(createEvent(newLevel: 6, previousLevel: 5));
-    verify(() => mockSocial.logLevelUp(
-      userId: any(named: 'userId'),
-      userName: any(named: 'userName'),
-      archetype: any(named: 'archetype'),
-      newLevel: 6,
-      totalXp: any(named: 'totalXp'),
-    )).called(1);
+    verify(
+      () => mockSocial.logLevelUp(
+        userId: any(named: 'userId'),
+        userName: any(named: 'userName'),
+        archetype: any(named: 'archetype'),
+        newLevel: 6,
+        totalXp: any(named: 'totalXp'),
+      ),
+    ).called(1);
   });
 
   test('no level change does not call logLevelUp', () async {
     await service.onHabitCompleted(createEvent(newLevel: 5, previousLevel: 5));
-    verifyNever(() => mockSocial.logLevelUp(
-      userId: any(named: 'userId'),
-      userName: any(named: 'userName'),
-      archetype: any(named: 'archetype'),
-      newLevel: any(named: 'newLevel'),
-      totalXp: any(named: 'totalXp'),
-    ));
+    verifyNever(
+      () => mockSocial.logLevelUp(
+        userId: any(named: 'userId'),
+        userName: any(named: 'userName'),
+        archetype: any(named: 'archetype'),
+        newLevel: any(named: 'newLevel'),
+        totalXp: any(named: 'totalXp'),
+      ),
+    );
   });
 
   test('calls StreakWatchdog on habit completion', () async {
     await service.onHabitCompleted(createEvent());
-    verify(() => mockWatchdog.checkPartners(userId: 'u1', tribeId: 't1')).called(1);
+    verify(
+      () => mockWatchdog.checkPartners(userId: 'u1', tribeId: 't1'),
+    ).called(1);
   });
 }

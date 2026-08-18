@@ -58,8 +58,8 @@ class HabitReflectionRepository {
               'updatedAt': saved.updatedAt,
             })
             .catchError((e) {
-          debugPrint('HabitReflectionRepository: remote write failed: $e');
-        }),
+              debugPrint('HabitReflectionRepository: remote write failed: $e');
+            }),
       );
       return Right(saved);
     } catch (e) {

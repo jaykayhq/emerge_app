@@ -40,7 +40,8 @@ class TribeAnalyticsSnapshot extends Equatable {
         date: map['date'] as String,
         memberCount: (map['memberCount'] as num?)?.toInt() ?? 0,
         totalXp: (map['totalXp'] as num?)?.toInt() ?? 0,
-        totalHabitsCompleted: (map['totalHabitsCompleted'] as num?)?.toInt() ?? 0,
+        totalHabitsCompleted:
+            (map['totalHabitsCompleted'] as num?)?.toInt() ?? 0,
         totalChallengesCompleted:
             (map['totalChallengesCompleted'] as num?)?.toInt() ?? 0,
         activeMembers: (map['activeMembers'] as num?)?.toInt() ?? 0,
@@ -49,8 +50,14 @@ class TribeAnalyticsSnapshot extends Equatable {
 
   @override
   List<Object?> get props => [
-    tribeId, date, memberCount, totalXp, totalHabitsCompleted,
-    totalChallengesCompleted, activeMembers, newMembersThisWeek,
+    tribeId,
+    date,
+    memberCount,
+    totalXp,
+    totalHabitsCompleted,
+    totalChallengesCompleted,
+    activeMembers,
+    newMembersThisWeek,
   ];
 }
 
@@ -162,8 +169,18 @@ class CreatorAnalytics extends Equatable {
 
   @override
   List<Object?> get props => [
-    tribeId, tribeName, memberCount, totalXp, totalHabitsCompleted,
-    totalChallengesCompleted, newMembersThisWeek, activeMembers, activeRate,
-    blueprintStats, topMembers, challengeStats, trends,
+    tribeId,
+    tribeName,
+    memberCount,
+    totalXp,
+    totalHabitsCompleted,
+    totalChallengesCompleted,
+    newMembersThisWeek,
+    activeMembers,
+    activeRate,
+    blueprintStats,
+    topMembers,
+    challengeStats,
+    trends,
   ];
 }

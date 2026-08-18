@@ -24,16 +24,14 @@ class _FakeAuthRepo implements AuthRepository {
   Future<Either<Failure, AuthUser>> signInWithEmailAndPassword({
     required String email,
     required String password,
-  }) async =>
-      const Left<Failure, AuthUser>(AuthFailure());
+  }) async => const Left<Failure, AuthUser>(AuthFailure());
 
   @override
   Future<Either<Failure, AuthUser>> signUpWithEmailAndPassword({
     required String email,
     required String password,
     required String username,
-  }) async =>
-      const Left<Failure, AuthUser>(AuthFailure());
+  }) async => const Left<Failure, AuthUser>(AuthFailure());
 
   @override
   Future<Either<Failure, AuthUser>> signInWithGoogle({bool isLogin = false}) =>
@@ -47,8 +45,7 @@ class _FakeAuthRepo implements AuthRepository {
   Future<Either<Failure, void>> resetPasswordWithCode({
     required String oobCode,
     required String newPassword,
-  }) async =>
-      const Right<Failure, void>(null);
+  }) async => const Right<Failure, void>(null);
 
   @override
   Future<void> signOut() async {}
@@ -76,8 +73,7 @@ class _FakeAuthRepo implements AuthRepository {
   @override
   Future<Either<Failure, bool>> checkUsernameAvailability(
     String username,
-  ) async =>
-      const Right<Failure, bool>(true);
+  ) async => const Right<Failure, bool>(true);
 
   @override
   Future<Either<Failure, bool>> checkEmailVerified() async =>
@@ -100,11 +96,15 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Who do you wish to become?'), findsOneWidget);
-    expect(find.text('Forge Your Identity. Build Your Habits.'), findsOneWidget);
+    expect(
+      find.text('Forge Your Identity. Build Your Habits.'),
+      findsOneWidget,
+    );
   });
 
-  testWidgets('does not overflow on short viewports (IDX preview pane)',
-      (tester) async {
+  testWidgets('does not overflow on short viewports (IDX preview pane)', (
+    tester,
+  ) async {
     // Regression: the fixed-height Column (title + CTA + Google button +
     // legal links) overflowed by ~195px in the short IDX web preview pane,
     // throwing a RenderFlex overflow. The screen must lay out without
@@ -116,8 +116,11 @@ void main() {
     await tester.pumpWidget(_buildTest());
     await tester.pumpAndSettle();
 
-    expect(tester.takeException(), isNull,
-        reason: 'WelcomeScreen overflowed on a short viewport');
+    expect(
+      tester.takeException(),
+      isNull,
+      reason: 'WelcomeScreen overflowed on a short viewport',
+    );
   });
 
   testWidgets('get started button renders and is tappable', (tester) async {

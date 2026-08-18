@@ -14,26 +14,17 @@ void main() {
     });
 
     test('returns 1.0 when all habits completed', () {
-      final habits = const [
-        _TestHabit(true),
-        _TestHabit(true),
-      ];
+      final habits = const [_TestHabit(true), _TestHabit(true)];
       expect(computeCompletionFraction(habits), 1.0);
     });
 
     test('returns 0.5 when half habits completed', () {
-      final habits = const [
-        _TestHabit(true),
-        _TestHabit(false),
-      ];
+      final habits = const [_TestHabit(true), _TestHabit(false)];
       expect(computeCompletionFraction(habits), 0.5);
     });
 
     test('returns 0.0 when none completed', () {
-      final habits = const [
-        _TestHabit(false),
-        _TestHabit(false),
-      ];
+      final habits = const [_TestHabit(false), _TestHabit(false)];
       expect(computeCompletionFraction(habits), 0.0);
     });
   });
@@ -86,28 +77,16 @@ void main() {
 
   group('shouldPulseIncompleteBadge', () {
     test('false when nothing incomplete', () {
-      expect(
-        shouldPulseIncompleteBadge(0, DateTime(2026, 7, 26, 18)),
-        isFalse,
-      );
+      expect(shouldPulseIncompleteBadge(0, DateTime(2026, 7, 26, 18)), isFalse);
     });
     test('true in final 2 hours of daylight (17-19)', () {
-      expect(
-        shouldPulseIncompleteBadge(2, DateTime(2026, 7, 26, 18)),
-        isTrue,
-      );
+      expect(shouldPulseIncompleteBadge(2, DateTime(2026, 7, 26, 18)), isTrue);
     });
     test('false before 17:00 even with incomplete habits', () {
-      expect(
-        shouldPulseIncompleteBadge(3, DateTime(2026, 7, 26, 12)),
-        isFalse,
-      );
+      expect(shouldPulseIncompleteBadge(3, DateTime(2026, 7, 26, 12)), isFalse);
     });
     test('false at/after 19:00', () {
-      expect(
-        shouldPulseIncompleteBadge(3, DateTime(2026, 7, 26, 19)),
-        isFalse,
-      );
+      expect(shouldPulseIncompleteBadge(3, DateTime(2026, 7, 26, 19)), isFalse);
     });
   });
 }

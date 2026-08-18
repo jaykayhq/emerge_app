@@ -69,16 +69,12 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           .read(authRepositoryProvider)
           .checkUsernameAvailability(value);
       if (!mounted) return;
-      result.fold(
-        (_) {},
-        (available) {
-          final nextError =
-              available ? null : 'This username is already taken';
-          if (nextError != _usernameAvailabilityError) {
-            setState(() => _usernameAvailabilityError = nextError);
-          }
-        },
-      );
+      result.fold((_) {}, (available) {
+        final nextError = available ? null : 'This username is already taken';
+        if (nextError != _usernameAvailabilityError) {
+          setState(() => _usernameAvailabilityError = nextError);
+        }
+      });
     });
   }
 
@@ -101,12 +97,12 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   /// successful send.
   Future<void> _sendVerificationEmailBestEffort(AuthUser user) async {
     if (user.emailVerified) return;
-    final result =
-        await ref.read(authRepositoryProvider).sendVerificationEmail();
+    final result = await ref
+        .read(authRepositoryProvider)
+        .sendVerificationEmail();
     result.fold(
-      (failure) => AppLogger.w(
-        'Initial verification email failed: ${failure.message}',
-      ),
+      (failure) =>
+          AppLogger.w('Initial verification email failed: ${failure.message}'),
       (_) {},
     );
   }
@@ -124,7 +120,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         username: _usernameController.text.trim(),
       );
 
-      await result.fold((error) => throw Exception(error.message), (user) async {
+      await result.fold((error) => throw Exception(error.message), (
+        user,
+      ) async {
         // Create User Profile with initial onboarding state
         final onboardingState = ref.read(onboardingStateControllerProvider);
 
@@ -761,7 +759,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                           child: SingleChildScrollView(
                             child: Form(
                               key: _formKey,
-                              autovalidateMode: AutovalidateMode.onUserInteraction,
+                              autovalidateMode:
+                                  AutovalidateMode.onUserInteraction,
                               // *Simplification*: The original code duplicated the form.
                               // I'll direct the user to look at the mobile layout for simplicity or duplicate the fields if I must match exact functionality.
                               // I will duplicate the fields with the new styling.
@@ -795,8 +794,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                               'Must be unique — no one else '
                                               'can use it',
                                           helperStyle: TextStyle(
-                                            color: EmergeColors.teal
-                                                .withValues(alpha: 0.7),
+                                            color: EmergeColors.teal.withValues(
+                                              alpha: 0.7,
+                                            ),
                                             fontSize: 11,
                                           ),
                                           errorText: _usernameAvailabilityError,
@@ -1058,7 +1058,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                   // Login Link
                                   Wrap(
                                     alignment: WrapAlignment.center,
-                                    crossAxisAlignment: WrapCrossAlignment.center,
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
                                     children: [
                                       Text(
                                         'Already have an account?',
@@ -1081,7 +1082,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                   const Gap(16),
                                   // Creator Login Link
                                   TextButton(
-                                    onPressed: () => context.push('/creator/login'),
+                                    onPressed: () =>
+                                        context.push('/creator/login'),
                                     child: const Text(
                                       'Creator Login',
                                       style: TextStyle(

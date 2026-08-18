@@ -127,24 +127,26 @@ void main() {
       );
     });
 
-    test('role=unknown, hasCreatorProfile=true, complete -> /creator/dashboard',
-        () {
-      expect(
-        determineSplashRoute(
-          isLoggedIn: true,
-          isFirstLaunch: false,
-          role: UserRole.unknown,
-          hasCreatorProfile: true,
-          creatorOnboarding: const CreatorOnboardingState(
-            progress: 3,
-            isComplete: true,
+    test(
+      'role=unknown, hasCreatorProfile=true, complete -> /creator/dashboard',
+      () {
+        expect(
+          determineSplashRoute(
+            isLoggedIn: true,
+            isFirstLaunch: false,
+            role: UserRole.unknown,
+            hasCreatorProfile: true,
+            creatorOnboarding: const CreatorOnboardingState(
+              progress: 3,
+              isComplete: true,
+            ),
+            userOnboardingProgress: null,
+            userOnboardingCompletedAt: null,
           ),
-          userOnboardingProgress: null,
-          userOnboardingCompletedAt: null,
-        ),
-        '/creator/dashboard',
-      );
-    });
+          '/creator/dashboard',
+        );
+      },
+    );
 
     // 4. Unknown role, no creator profile (true unknown) -> normal user flow.
     test('role=unknown, no creator profile, progress=0 -> identity-studio', () {
@@ -162,58 +164,63 @@ void main() {
       );
     });
 
-    test('role=unknown, no creator profile, progress=3 -> first-habits (step 4)',
-        () {
-      expect(
-        determineSplashRoute(
-          isLoggedIn: true,
-          isFirstLaunch: false,
-          role: UserRole.unknown,
-          hasCreatorProfile: false,
-          creatorOnboarding: null,
-          userOnboardingProgress: 3,
-          userOnboardingCompletedAt: null,
-        ),
-        '/onboarding/first-habits',
-      );
-    });
+    test(
+      'role=unknown, no creator profile, progress=3 -> first-habits (step 4)',
+      () {
+        expect(
+          determineSplashRoute(
+            isLoggedIn: true,
+            isFirstLaunch: false,
+            role: UserRole.unknown,
+            hasCreatorProfile: false,
+            creatorOnboarding: null,
+            userOnboardingProgress: 3,
+            userOnboardingCompletedAt: null,
+          ),
+          '/onboarding/first-habits',
+        );
+      },
+    );
 
     // 4b. Role=user but creator_profile exists (post-provider-fix scenario).
     test(
-        'role=user, hasCreatorProfile=true, progress=0 -> creator archetype',
-        () {
-      expect(
-        determineSplashRoute(
-          isLoggedIn: true,
-          isFirstLaunch: false,
-          role: UserRole.user,
-          hasCreatorProfile: true,
-          creatorOnboarding: CreatorOnboardingState.empty,
-          userOnboardingProgress: null,
-          userOnboardingCompletedAt: null,
-        ),
-        '/onboarding/creator/archetype',
-      );
-    });
-
-    test('role=user, hasCreatorProfile=true, complete -> /creator/dashboard',
-        () {
-      expect(
-        determineSplashRoute(
-          isLoggedIn: true,
-          isFirstLaunch: false,
-          role: UserRole.user,
-          hasCreatorProfile: true,
-          creatorOnboarding: const CreatorOnboardingState(
-            progress: 3,
-            isComplete: true,
+      'role=user, hasCreatorProfile=true, progress=0 -> creator archetype',
+      () {
+        expect(
+          determineSplashRoute(
+            isLoggedIn: true,
+            isFirstLaunch: false,
+            role: UserRole.user,
+            hasCreatorProfile: true,
+            creatorOnboarding: CreatorOnboardingState.empty,
+            userOnboardingProgress: null,
+            userOnboardingCompletedAt: null,
           ),
-          userOnboardingProgress: null,
-          userOnboardingCompletedAt: null,
-        ),
-        '/creator/dashboard',
-      );
-    });
+          '/onboarding/creator/archetype',
+        );
+      },
+    );
+
+    test(
+      'role=user, hasCreatorProfile=true, complete -> /creator/dashboard',
+      () {
+        expect(
+          determineSplashRoute(
+            isLoggedIn: true,
+            isFirstLaunch: false,
+            role: UserRole.user,
+            hasCreatorProfile: true,
+            creatorOnboarding: const CreatorOnboardingState(
+              progress: 3,
+              isComplete: true,
+            ),
+            userOnboardingProgress: null,
+            userOnboardingCompletedAt: null,
+          ),
+          '/creator/dashboard',
+        );
+      },
+    );
 
     // 5. Normal user (role=user).
     test('role=user, progress=0 -> /onboarding/identity-studio', () {

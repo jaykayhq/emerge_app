@@ -20,7 +20,8 @@ class CreatorSignUpScreen extends ConsumerStatefulWidget {
   const CreatorSignUpScreen({super.key});
 
   @override
-  ConsumerState<CreatorSignUpScreen> createState() => _CreatorSignUpScreenState();
+  ConsumerState<CreatorSignUpScreen> createState() =>
+      _CreatorSignUpScreenState();
 }
 
 class _CreatorSignUpScreenState extends ConsumerState<CreatorSignUpScreen> {
@@ -62,16 +63,12 @@ class _CreatorSignUpScreenState extends ConsumerState<CreatorSignUpScreen> {
           .read(authRepositoryProvider)
           .checkUsernameAvailability(value);
       if (!mounted) return;
-      result.fold(
-        (_) {},
-        (available) {
-          final nextError =
-              available ? null : 'This username is already taken';
-          if (nextError != _usernameAvailabilityError) {
-            setState(() => _usernameAvailabilityError = nextError);
-          }
-        },
-      );
+      result.fold((_) {}, (available) {
+        final nextError = available ? null : 'This username is already taken';
+        if (nextError != _usernameAvailabilityError) {
+          setState(() => _usernameAvailabilityError = nextError);
+        }
+      });
     });
   }
 
@@ -110,9 +107,9 @@ class _CreatorSignUpScreenState extends ConsumerState<CreatorSignUpScreen> {
       debugPrint('CATCH ERROR _signUp: $e\n$stack');
       if (mounted) {
         final errorMessage = e.toString().replaceAll('Exception: ', '');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMessage)));
       }
     } finally {
       subscription.close();
@@ -136,9 +133,9 @@ class _CreatorSignUpScreenState extends ConsumerState<CreatorSignUpScreen> {
       debugPrint('CATCH ERROR _signUpWithGoogle: $e');
       if (mounted) {
         final errorMessage = e.toString().replaceAll('Exception: ', '');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMessage)));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -276,7 +273,9 @@ class _CreatorSignUpScreenState extends ConsumerState<CreatorSignUpScreen> {
         ] else ...[
           Text(
             'Creator Sign Up',
-            style: theme.textTheme.headlineMedium?.copyWith(color: Colors.white),
+            style: theme.textTheme.headlineMedium?.copyWith(
+              color: Colors.white,
+            ),
             textAlign: TextAlign.center,
           ),
           const Gap(24),
@@ -315,7 +314,10 @@ class _CreatorSignUpScreenState extends ConsumerState<CreatorSignUpScreen> {
                     borderSide: const BorderSide(color: Colors.amber),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  prefixIcon: const Icon(Icons.person_outline, color: Colors.amber),
+                  prefixIcon: const Icon(
+                    Icons.person_outline,
+                    color: Colors.amber,
+                  ),
                 ),
                 validator: AppValidators.validateUsername,
               ).animate(delay: 100.ms).fadeIn().slideX(begin: 0.02),
@@ -338,7 +340,10 @@ class _CreatorSignUpScreenState extends ConsumerState<CreatorSignUpScreen> {
                     borderSide: const BorderSide(color: Colors.amber),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  prefixIcon: const Icon(Icons.email_outlined, color: Colors.amber),
+                  prefixIcon: const Icon(
+                    Icons.email_outlined,
+                    color: Colors.amber,
+                  ),
                 ),
                 validator: AppValidators.validateEmail,
               ).animate(delay: 150.ms).fadeIn().slideX(begin: 0.02),
@@ -362,10 +367,15 @@ class _CreatorSignUpScreenState extends ConsumerState<CreatorSignUpScreen> {
                     borderSide: const BorderSide(color: Colors.amber),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  prefixIcon: const Icon(Icons.lock_outline, color: Colors.amber),
+                  prefixIcon: const Icon(
+                    Icons.lock_outline,
+                    color: Colors.amber,
+                  ),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                      _obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
                       color: Colors.amber,
                     ),
                     onPressed: () {
@@ -373,7 +383,9 @@ class _CreatorSignUpScreenState extends ConsumerState<CreatorSignUpScreen> {
                         _obscurePassword = !_obscurePassword;
                       });
                     },
-                    tooltip: _obscurePassword ? 'Show password' : 'Hide password',
+                    tooltip: _obscurePassword
+                        ? 'Show password'
+                        : 'Hide password',
                   ),
                 ),
                 validator: AppValidators.validatePassword,
@@ -401,10 +413,15 @@ class _CreatorSignUpScreenState extends ConsumerState<CreatorSignUpScreen> {
                     borderSide: const BorderSide(color: Colors.amber),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  prefixIcon: const Icon(Icons.lock_clock_outlined, color: Colors.amber),
+                  prefixIcon: const Icon(
+                    Icons.lock_clock_outlined,
+                    color: Colors.amber,
+                  ),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscureConfirmPassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                      _obscureConfirmPassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
                       color: Colors.amber,
                     ),
                     onPressed: () {
@@ -412,7 +429,9 @@ class _CreatorSignUpScreenState extends ConsumerState<CreatorSignUpScreen> {
                         _obscureConfirmPassword = !_obscureConfirmPassword;
                       });
                     },
-                    tooltip: _obscureConfirmPassword ? 'Show password' : 'Hide password',
+                    tooltip: _obscureConfirmPassword
+                        ? 'Show password'
+                        : 'Hide password',
                   ),
                 ),
                 validator: (value) => AppValidators.validateConfirmPassword(
@@ -440,11 +459,16 @@ class _CreatorSignUpScreenState extends ConsumerState<CreatorSignUpScreen> {
                     borderSide: const BorderSide(color: Colors.amber),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  prefixIcon: const Icon(Icons.confirmation_number_outlined, color: Colors.amber),
+                  prefixIcon: const Icon(
+                    Icons.confirmation_number_outlined,
+                    color: Colors.amber,
+                  ),
                 ),
                 validator: (value) {
                   final v = value?.trim().toUpperCase() ?? '';
-                  if (v.isEmpty) return 'An invite code is required to become a creator';
+                  if (v.isEmpty) {
+                    return 'An invite code is required to become a creator';
+                  }
                   if (v.length != 8 || !RegExp(r'^[A-Z2-9]{8}$').hasMatch(v)) {
                     return 'Invite codes are 8 characters (A-Z, 2-9)';
                   }
@@ -455,63 +479,69 @@ class _CreatorSignUpScreenState extends ConsumerState<CreatorSignUpScreen> {
 
               // Submit Button
               Container(
-                height: 50,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(25),
-                  gradient: const LinearGradient(
-                    colors: [Colors.amber, Colors.orange],
-                  ),
-                ),
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _signUp,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
+                    height: 50,
+                    decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(25),
+                      gradient: const LinearGradient(
+                        colors: [Colors.amber, Colors.orange],
+                      ),
                     ),
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text(
-                          'Register as Creator',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _signUp,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
                         ),
-                ),
-              ).animate(delay: 300.ms).fadeIn().scale(begin: const Offset(0.97, 0.97)),
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              'Register as Creator',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                    ),
+                  )
+                  .animate(delay: 300.ms)
+                  .fadeIn()
+                  .scale(begin: const Offset(0.97, 0.97)),
               const Gap(16),
 
               // Google Sign-Up button
               OutlinedButton.icon(
-                onPressed: _isLoading ? null : _signUpWithGoogle,
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  side: BorderSide(
-                    color: Colors.amber.withValues(alpha: 0.5),
-                  ),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                icon: SvgPicture.asset(
-                  'assets/images/google_logo.svg',
-                  width: 20,
-                  height: 20,
-                ),
-                label: const Text('Sign up with Google'),
-              ).animate(delay: 350.ms).fadeIn().scale(begin: const Offset(0.97, 0.97)),
+                    onPressed: _isLoading ? null : _signUpWithGoogle,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: BorderSide(
+                        color: Colors.amber.withValues(alpha: 0.5),
+                      ),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: SvgPicture.asset(
+                      'assets/images/google_logo.svg',
+                      width: 20,
+                      height: 20,
+                    ),
+                    label: const Text('Sign up with Google'),
+                  )
+                  .animate(delay: 350.ms)
+                  .fadeIn()
+                  .scale(begin: const Offset(0.97, 0.97)),
               const Gap(24),
 
               // Link to Login

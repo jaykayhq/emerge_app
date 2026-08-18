@@ -12,8 +12,12 @@ import 'package:emerge_app/features/social/domain/entities/social_entities.dart'
 import 'package:emerge_app/core/services/social_notification_service.dart';
 
 class MockFriendRepo extends Mock implements FriendRepository {}
+
 class MockHabitCompletionsDao extends Mock implements HabitCompletionsDao {}
-class MockNotificationService extends Mock implements SocialNotificationService {}
+
+class MockNotificationService extends Mock
+    implements SocialNotificationService {}
+
 class MockTribeMembershipDao extends Mock implements TribeMembershipDao {}
 
 final _fakeFirestore = FakeFirebaseFirestore();
@@ -54,33 +58,43 @@ void main() {
 
   group('checkPartners', () {
     test('notifies when partner missed 2+ days', () async {
-      when(() => mockTribeMembership.getMembership('partner1', 't1'))
-          .thenAnswer((_) async => UserTribeTableData(
-                userId: 'partner1',
-                tribeId: 't1',
-                membershipType: 'archetype',
-                joinedAt: DateTime.now().toIso8601String(),
-                isActive: true,
-              ));
-      when(() => mockFriendRepo.getFriends('user1'))
-          .thenAnswer((_) async => [
-            Friend(id: 'partner1', name: 'Partner1', archetype: FriendArchetype.athlete),
-          ]);
-      when(() => mockDao.getLastCompletion('partner1'))
-          .thenAnswer((_) async => HabitCompletionsTableData(
-                id: 'c1',
-                habitId: 'h1',
-                userId: 'partner1',
-                completedAt: DateTime.now()
-                    .subtract(const Duration(days: 3))
-                    .toIso8601String(),
-                xpGained: 0,
-                streakDay: 0,
-                wasRecovery: 0,
-                challengeXp: 0,
-              ));
-      when(() => mockNotification.sendNotification(any(), any()))
-          .thenAnswer((_) async => _fakeFirestore.collection('_').doc());
+      when(
+        () => mockTribeMembership.getMembership('partner1', 't1'),
+      ).thenAnswer(
+        (_) async => UserTribeTableData(
+          userId: 'partner1',
+          tribeId: 't1',
+          membershipType: 'archetype',
+          joinedAt: DateTime.now().toIso8601String(),
+          isActive: true,
+        ),
+      );
+      when(() => mockFriendRepo.getFriends('user1')).thenAnswer(
+        (_) async => [
+          Friend(
+            id: 'partner1',
+            name: 'Partner1',
+            archetype: FriendArchetype.athlete,
+          ),
+        ],
+      );
+      when(() => mockDao.getLastCompletion('partner1')).thenAnswer(
+        (_) async => HabitCompletionsTableData(
+          id: 'c1',
+          habitId: 'h1',
+          userId: 'partner1',
+          completedAt: DateTime.now()
+              .subtract(const Duration(days: 3))
+              .toIso8601String(),
+          xpGained: 0,
+          streakDay: 0,
+          wasRecovery: 0,
+          challengeXp: 0,
+        ),
+      );
+      when(
+        () => mockNotification.sendNotification(any(), any()),
+      ).thenAnswer((_) async => _fakeFirestore.collection('_').doc());
 
       await watchdog.checkPartners(userId: 'user1', tribeId: 't1');
 
@@ -88,29 +102,38 @@ void main() {
     });
 
     test('does not notify when partner completed today', () async {
-      when(() => mockTribeMembership.getMembership('partner1', 't1'))
-          .thenAnswer((_) async => UserTribeTableData(
-                userId: 'partner1',
-                tribeId: 't1',
-                membershipType: 'archetype',
-                joinedAt: DateTime.now().toIso8601String(),
-                isActive: true,
-              ));
-      when(() => mockFriendRepo.getFriends('user1'))
-          .thenAnswer((_) async => [
-            Friend(id: 'partner1', name: 'Partner1', archetype: FriendArchetype.athlete),
-          ]);
-      when(() => mockDao.getLastCompletion('partner1'))
-          .thenAnswer((_) async => HabitCompletionsTableData(
-                id: 'c1',
-                habitId: 'h1',
-                userId: 'partner1',
-                completedAt: DateTime.now().toIso8601String(),
-                xpGained: 0,
-                streakDay: 0,
-                wasRecovery: 0,
-                challengeXp: 0,
-              ));
+      when(
+        () => mockTribeMembership.getMembership('partner1', 't1'),
+      ).thenAnswer(
+        (_) async => UserTribeTableData(
+          userId: 'partner1',
+          tribeId: 't1',
+          membershipType: 'archetype',
+          joinedAt: DateTime.now().toIso8601String(),
+          isActive: true,
+        ),
+      );
+      when(() => mockFriendRepo.getFriends('user1')).thenAnswer(
+        (_) async => [
+          Friend(
+            id: 'partner1',
+            name: 'Partner1',
+            archetype: FriendArchetype.athlete,
+          ),
+        ],
+      );
+      when(() => mockDao.getLastCompletion('partner1')).thenAnswer(
+        (_) async => HabitCompletionsTableData(
+          id: 'c1',
+          habitId: 'h1',
+          userId: 'partner1',
+          completedAt: DateTime.now().toIso8601String(),
+          xpGained: 0,
+          streakDay: 0,
+          wasRecovery: 0,
+          challengeXp: 0,
+        ),
+      );
 
       await watchdog.checkPartners(userId: 'user1', tribeId: 't1');
 
@@ -118,33 +141,43 @@ void main() {
     });
 
     test('rate-limiter suppresses duplicate within 24h', () async {
-      when(() => mockTribeMembership.getMembership('partner1', 't1'))
-          .thenAnswer((_) async => UserTribeTableData(
-                userId: 'partner1',
-                tribeId: 't1',
-                membershipType: 'archetype',
-                joinedAt: DateTime.now().toIso8601String(),
-                isActive: true,
-              ));
-      when(() => mockFriendRepo.getFriends('user1'))
-          .thenAnswer((_) async => [
-            Friend(id: 'partner1', name: 'Partner1', archetype: FriendArchetype.athlete),
-          ]);
-      when(() => mockDao.getLastCompletion('partner1'))
-          .thenAnswer((_) async => HabitCompletionsTableData(
-                id: 'c1',
-                habitId: 'h1',
-                userId: 'partner1',
-                completedAt: DateTime.now()
-                    .subtract(const Duration(days: 3))
-                    .toIso8601String(),
-                xpGained: 0,
-                streakDay: 0,
-                wasRecovery: 0,
-                challengeXp: 0,
-              ));
-      when(() => mockNotification.sendNotification(any(), any()))
-          .thenAnswer((_) async => _fakeFirestore.collection('_').doc());
+      when(
+        () => mockTribeMembership.getMembership('partner1', 't1'),
+      ).thenAnswer(
+        (_) async => UserTribeTableData(
+          userId: 'partner1',
+          tribeId: 't1',
+          membershipType: 'archetype',
+          joinedAt: DateTime.now().toIso8601String(),
+          isActive: true,
+        ),
+      );
+      when(() => mockFriendRepo.getFriends('user1')).thenAnswer(
+        (_) async => [
+          Friend(
+            id: 'partner1',
+            name: 'Partner1',
+            archetype: FriendArchetype.athlete,
+          ),
+        ],
+      );
+      when(() => mockDao.getLastCompletion('partner1')).thenAnswer(
+        (_) async => HabitCompletionsTableData(
+          id: 'c1',
+          habitId: 'h1',
+          userId: 'partner1',
+          completedAt: DateTime.now()
+              .subtract(const Duration(days: 3))
+              .toIso8601String(),
+          xpGained: 0,
+          streakDay: 0,
+          wasRecovery: 0,
+          challengeXp: 0,
+        ),
+      );
+      when(
+        () => mockNotification.sendNotification(any(), any()),
+      ).thenAnswer((_) async => _fakeFirestore.collection('_').doc());
 
       await watchdog.checkPartners(userId: 'user1', tribeId: 't1');
       await watchdog.checkPartners(userId: 'user1', tribeId: 't1');
@@ -153,20 +186,29 @@ void main() {
     });
 
     test('skips partner with no completions', () async {
-      when(() => mockTribeMembership.getMembership('partner1', 't1'))
-          .thenAnswer((_) async => UserTribeTableData(
-                userId: 'partner1',
-                tribeId: 't1',
-                membershipType: 'archetype',
-                joinedAt: DateTime.now().toIso8601String(),
-                isActive: true,
-              ));
-      when(() => mockFriendRepo.getFriends('user1'))
-          .thenAnswer((_) async => [
-            Friend(id: 'partner1', name: 'Partner1', archetype: FriendArchetype.athlete),
-          ]);
-      when(() => mockDao.getLastCompletion('partner1'))
-          .thenAnswer((_) async => null);
+      when(
+        () => mockTribeMembership.getMembership('partner1', 't1'),
+      ).thenAnswer(
+        (_) async => UserTribeTableData(
+          userId: 'partner1',
+          tribeId: 't1',
+          membershipType: 'archetype',
+          joinedAt: DateTime.now().toIso8601String(),
+          isActive: true,
+        ),
+      );
+      when(() => mockFriendRepo.getFriends('user1')).thenAnswer(
+        (_) async => [
+          Friend(
+            id: 'partner1',
+            name: 'Partner1',
+            archetype: FriendArchetype.athlete,
+          ),
+        ],
+      );
+      when(
+        () => mockDao.getLastCompletion('partner1'),
+      ).thenAnswer((_) async => null);
 
       await watchdog.checkPartners(userId: 'user1', tribeId: 't1');
 
@@ -174,12 +216,18 @@ void main() {
     });
 
     test('skips partner not in the same tribe', () async {
-      when(() => mockTribeMembership.getMembership('partner1', 't1'))
-          .thenAnswer((_) async => null);
-      when(() => mockFriendRepo.getFriends('user1'))
-          .thenAnswer((_) async => [
-            Friend(id: 'partner1', name: 'Partner1', archetype: FriendArchetype.athlete),
-          ]);
+      when(
+        () => mockTribeMembership.getMembership('partner1', 't1'),
+      ).thenAnswer((_) async => null);
+      when(() => mockFriendRepo.getFriends('user1')).thenAnswer(
+        (_) async => [
+          Friend(
+            id: 'partner1',
+            name: 'Partner1',
+            archetype: FriendArchetype.athlete,
+          ),
+        ],
+      );
 
       await watchdog.checkPartners(userId: 'user1', tribeId: 't1');
 

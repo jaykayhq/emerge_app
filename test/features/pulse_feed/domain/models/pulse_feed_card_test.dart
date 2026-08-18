@@ -8,18 +8,24 @@ void main() {
     });
 
     test('contains identityVote', () {
-      expect(PulseFeedCardType.values,
-          contains(PulseFeedCardType.identityVote));
+      expect(
+        PulseFeedCardType.values,
+        contains(PulseFeedCardType.identityVote),
+      );
     });
 
     test('contains tribeActivity', () {
-      expect(PulseFeedCardType.values,
-          contains(PulseFeedCardType.tribeActivity));
+      expect(
+        PulseFeedCardType.values,
+        contains(PulseFeedCardType.tribeActivity),
+      );
     });
 
     test('contains weeklyInsight', () {
-      expect(PulseFeedCardType.values,
-          contains(PulseFeedCardType.weeklyInsight));
+      expect(
+        PulseFeedCardType.values,
+        contains(PulseFeedCardType.weeklyInsight),
+      );
     });
   });
 

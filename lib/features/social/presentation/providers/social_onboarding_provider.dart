@@ -1,12 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart' as emerge_auth;
+import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart'
+    as emerge_auth;
 import 'package:cloud_firestore/cloud_firestore.dart' as cloud_firestore;
 import 'package:flutter/foundation.dart';
 
-final socialOnboardingCompletedProvider = AsyncNotifierProvider<SocialOnboardingNotifier, bool>(() {
-  return SocialOnboardingNotifier();
-});
+final socialOnboardingCompletedProvider =
+    AsyncNotifierProvider<SocialOnboardingNotifier, bool>(() {
+      return SocialOnboardingNotifier();
+    });
 
 class SocialOnboardingNotifier extends AsyncNotifier<bool> {
   @override
@@ -29,12 +31,13 @@ class SocialOnboardingNotifier extends AsyncNotifier<bool> {
             .collection('pulse_feed_cards')
             .doc(user.uid)
             .collection('cards');
-            
+
         await cardsRef.add({
           'userId': user.uid,
           'type': 'tribeActivity',
           'headline': 'Welcome to the Pulse Feed',
-          'subtext': 'This is where you will see updates from your network, challenges, and creator blueprints.',
+          'subtext':
+              'This is where you will see updates from your network, challenges, and creator blueprints.',
           'createdAt': cloud_firestore.FieldValue.serverTimestamp(),
         });
       }

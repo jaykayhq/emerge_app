@@ -37,16 +37,13 @@ enum NarratorTrigger {
     return switch (this) {
       NarratorTrigger.onboardingPostArchetype =>
         NarratorNoteType.onboardingStep,
-      NarratorTrigger.morningBriefEarlyDays =>
-        NarratorNoteType.morningBrief,
-      NarratorTrigger.streakBreakFirstMiss =>
-        NarratorNoteType.absenceDetected,
+      NarratorTrigger.morningBriefEarlyDays => NarratorNoteType.morningBrief,
+      NarratorTrigger.streakBreakFirstMiss => NarratorNoteType.absenceDetected,
       NarratorTrigger.onFireState => NarratorNoteType.streakMilestone,
       NarratorTrigger.levelUp => NarratorNoteType.levelUp,
       NarratorTrigger.weeklyRecap => NarratorNoteType.weeklyRecap,
       NarratorTrigger.longAbsence => NarratorNoteType.absenceDetected,
-      NarratorTrigger.eveningReflection =>
-        NarratorNoteType.reflectionLogged,
+      NarratorTrigger.eveningReflection => NarratorNoteType.reflectionLogged,
       NarratorTrigger.askNarrator => NarratorNoteType.aiInsight,
     };
   }

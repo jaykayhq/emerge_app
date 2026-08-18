@@ -245,7 +245,8 @@ void main() {
           expect(
             challenge.steps[i].day,
             i + 1,
-            reason: '${challenge.title}: step $i has day ${challenge.steps[i].day}, expected ${i + 1}',
+            reason:
+                '${challenge.title}: step $i has day ${challenge.steps[i].day}, expected ${i + 1}',
           );
         }
       }
@@ -257,27 +258,42 @@ void main() {
       expect(daily.steps[0].day, 1);
     });
 
-    test('getAvailableChallenges returns challenges with sequential step days', () {
-      final challenges = ChallengeCatalog.getAvailableChallenges('athlete');
+    test(
+      'getAvailableChallenges returns challenges with sequential step days',
+      () {
+        final challenges = ChallengeCatalog.getAvailableChallenges('athlete');
 
-      for (final challenge in challenges) {
-        for (var i = 0; i < challenge.steps.length; i++) {
-          expect(
-            challenge.steps[i].day,
-            i + 1,
-            reason: '${challenge.title}: step $i has day ${challenge.steps[i].day}, expected ${i + 1}',
-          );
+        for (final challenge in challenges) {
+          for (var i = 0; i < challenge.steps.length; i++) {
+            expect(
+              challenge.steps[i].day,
+              i + 1,
+              reason:
+                  '${challenge.title}: step $i has day ${challenge.steps[i].day}, expected ${i + 1}',
+            );
+          }
         }
-      }
-    });
+      },
+    );
   });
 
   group('Challenge model - createdBy/createdAt', () {
     test('challenge round-trips createdBy and createdAt', () {
       final c = Challenge(
-        id: 'c1', title: 't', description: 'd', imageUrl: 'u', reward: 'r',
-        participants: 0, daysLeft: 0, totalDays: 7, currentDay: 0, status: ChallengeStatus.active,
-        xpReward: 100, steps: const [], createdBy: 'uid-1', createdAt: DateTime(2026, 8, 1),
+        id: 'c1',
+        title: 't',
+        description: 'd',
+        imageUrl: 'u',
+        reward: 'r',
+        participants: 0,
+        daysLeft: 0,
+        totalDays: 7,
+        currentDay: 0,
+        status: ChallengeStatus.active,
+        xpReward: 100,
+        steps: const [],
+        createdBy: 'uid-1',
+        createdAt: DateTime(2026, 8, 1),
       );
       final round = Challenge.fromMap(c.toMap(), id: 'c1');
       expect(round.createdBy, 'uid-1');
@@ -304,13 +320,18 @@ void main() {
         'steps': <Map<String, dynamic>>[],
       };
 
-      test('parses a Firestore Timestamp createdAt (serverTimestamp materialization)',
-          () {
-        final ts = Timestamp.fromDate(DateTime.utc(2026, 8, 2, 10, 30));
-        final challenge = Challenge.fromMap(mapWith(ts), id: 'c1');
-        // Timestamp.toDate() yields a local-time DateTime; compare instants.
-        expect(challenge.createdAt!.toUtc(), DateTime.utc(2026, 8, 2, 10, 30));
-      });
+      test(
+        'parses a Firestore Timestamp createdAt (serverTimestamp materialization)',
+        () {
+          final ts = Timestamp.fromDate(DateTime.utc(2026, 8, 2, 10, 30));
+          final challenge = Challenge.fromMap(mapWith(ts), id: 'c1');
+          // Timestamp.toDate() yields a local-time DateTime; compare instants.
+          expect(
+            challenge.createdAt!.toUtc(),
+            DateTime.utc(2026, 8, 2, 10, 30),
+          );
+        },
+      );
 
       test('parses an ISO-8601 string createdAt (app-written docs)', () {
         final iso = '2026-08-02T10:30:00.000';

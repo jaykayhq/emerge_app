@@ -196,26 +196,29 @@ void main() {
       ).called(1);
     });
 
-    test('deleteHabit() sets isArchived=1 and enqueues remote delete', () async {
-      final habit = createTestHabit();
-      await repository.createHabit(habit);
+    test(
+      'deleteHabit() sets isArchived=1 and enqueues remote delete',
+      () async {
+        final habit = createTestHabit();
+        await repository.createHabit(habit);
 
-      final result = await repository.deleteHabit(habit.id);
+        final result = await repository.deleteHabit(habit.id);
 
-      expect(result.isRight(), true);
+        expect(result.isRight(), true);
 
-      final retrieved = await repository.getHabit(habit.id);
-      expect(retrieved?.isArchived, true);
+        final retrieved = await repository.getHabit(habit.id);
+        expect(retrieved?.isArchived, true);
 
-      verify(
-        () => mockSyncEngine.enqueueMutation(
-          collectionPath: 'habits',
-          documentId: habit.id,
-          operation: 'delete',
-          idempotencyKey: 'del:habit:${habit.id}',
-        ),
-      ).called(1);
-    });
+        verify(
+          () => mockSyncEngine.enqueueMutation(
+            collectionPath: 'habits',
+            documentId: habit.id,
+            operation: 'delete',
+            idempotencyKey: 'del:habit:${habit.id}',
+          ),
+        ).called(1);
+      },
+    );
 
     test('completeHabit() - first completion increments streak to 1', () async {
       final habit = createTestHabit();
@@ -395,10 +398,10 @@ void main() {
             documentId: userId,
             data: any(
               named: 'data',
-              that: containsPair(
-                'avatarStats.totalXp',
-                {'__type__': 'increment', 'value': -15},
-              ),
+              that: containsPair('avatarStats.totalXp', {
+                '__type__': 'increment',
+                'value': -15,
+              }),
             ),
           ),
         ).called(1);
@@ -411,10 +414,16 @@ void main() {
         final habit = await seedSameDayUndo(withTribe: true);
         final today = DateTime.now();
 
-        await repository.completeHabit(habit.id, today,
-            activeTribeId: 'tribeA');
-        await repository.completeHabit(habit.id, today,
-            activeTribeId: 'tribeA');
+        await repository.completeHabit(
+          habit.id,
+          today,
+          activeTribeId: 'tribeA',
+        );
+        await repository.completeHabit(
+          habit.id,
+          today,
+          activeTribeId: 'tribeA',
+        );
 
         // The credit path adds base + challenge XP (10 + 5 = 15) to the
         // contributor doc; the undo must mirror the identical amount or the
@@ -425,10 +434,10 @@ void main() {
             documentId: userId,
             data: any(
               named: 'data',
-              that: containsPair(
-                'totalXpContributed',
-                {'__type__': 'increment', 'value': -15},
-              ),
+              that: containsPair('totalXpContributed', {
+                '__type__': 'increment',
+                'value': -15,
+              }),
             ),
           ),
         ).called(1);
@@ -439,10 +448,8 @@ void main() {
       final habit = await seedSameDayUndo(withTribe: true);
       final today = DateTime.now();
 
-      await repository.completeHabit(habit.id, today,
-          activeTribeId: 'tribeA');
-      await repository.completeHabit(habit.id, today,
-          activeTribeId: 'tribeA');
+      await repository.completeHabit(habit.id, today, activeTribeId: 'tribeA');
+      await repository.completeHabit(habit.id, today, activeTribeId: 'tribeA');
 
       // Tribe totals are recalc-only (server sums user_stats.totalXp);
       // the undo path must not write them either.
@@ -470,156 +477,147 @@ void main() {
       );
     }
 
-    test(
-      'completeHabit credits a creator-tribe membership when activeTribeId '
-      'is null (no local tribeStats row seeded)',
-      () async {
-        final habit = createTestHabit(difficulty: HabitDifficulty.medium);
-        await repository.createHabit(habit);
+    test('completeHabit credits a creator-tribe membership when activeTribeId '
+        'is null (no local tribeStats row seeded)', () async {
+      final habit = createTestHabit(difficulty: HabitDifficulty.medium);
+      await repository.createHabit(habit);
 
-        await db.userStatsDao.upsertStats(
-          UserStatsTableCompanion(
-            userId: Value(userId),
-            displayName: Value('Test User'),
-            archetype: Value('athlete'),
-            totalXp: Value(0),
-            level: Value(1),
-            vitalityXp: Value(0),
+      await db.userStatsDao.upsertStats(
+        UserStatsTableCompanion(
+          userId: Value(userId),
+          displayName: Value('Test User'),
+          archetype: Value('athlete'),
+          totalXp: Value(0),
+          level: Value(1),
+          vitalityXp: Value(0),
+        ),
+      );
+
+      await seedCreatorTribeMembership('creator_tribe_1');
+
+      final events = <HabitCompleted>[];
+      final sub = EventBus().on<HabitCompleted>().listen(events.add);
+      addTearDown(sub.cancel);
+
+      final result = await repository.completeHabit(habit.id, DateTime.now());
+      expect(result.isRight(), true);
+
+      // The contributor doc must target the creator tribe — the archetype
+      // lookup would previously find nothing (no local club rows) and the
+      // XP would be dropped entirely.
+      verify(
+        () => mockSyncEngine.enqueueSet(
+          collectionPath: 'tribes/creator_tribe_1/contributors',
+          documentId: userId,
+          data: any(named: 'data'),
+        ),
+      ).called(1);
+
+      // Local stats row is created on demand so leaderboard/display work
+      // for creator tribes too.
+      final stats = await db.tribeStatsDao.getStats('creator_tribe_1');
+      expect(stats, isNotNull);
+      expect(stats!.totalXp, 20); // medium habit: base 20
+      expect(stats.totalHabitsCompleted, 1);
+      expect(stats.archetypeId, isNull);
+
+      // Social logging and the event carry the resolved tribe.
+      verify(
+        () => mockSocialService.logHabitCompletion(
+          userId: userId,
+          userName: any(named: 'userName'),
+          archetype: any(named: 'archetype'),
+          habitId: habit.id,
+          habitTitle: any(named: 'habitTitle'),
+          streakDay: any(named: 'streakDay'),
+          attribute: any(named: 'attribute'),
+          xpGained: any(named: 'xpGained'),
+          currentLevel: any(named: 'currentLevel'),
+          clubId: 'creator_tribe_1',
+        ),
+      ).called(1);
+
+      final completed = events.where((e) => e.userId == userId).toList();
+      expect(completed, isNotEmpty);
+      expect(completed.last.tribeId, 'creator_tribe_1');
+    });
+
+    test('completeHabit credits the membership tribe for archetype none '
+        '(XP is not dropped)', () async {
+      final habit = createTestHabit(difficulty: HabitDifficulty.medium);
+      await repository.createHabit(habit);
+
+      await db.userStatsDao.upsertStats(
+        UserStatsTableCompanion(
+          userId: Value(userId),
+          displayName: Value('Test User'),
+          archetype: Value('none'),
+          totalXp: Value(0),
+          level: Value(1),
+          vitalityXp: Value(0),
+        ),
+      );
+
+      await seedCreatorTribeMembership('creator_tribe_2');
+
+      final result = await repository.completeHabit(habit.id, DateTime.now());
+      expect(result.isRight(), true);
+
+      // Previously the archetype-'none' branch skipped XP entirely; the
+      // membership must win over the archetype lookup.
+      verify(
+        () => mockSyncEngine.enqueueSet(
+          collectionPath: 'tribes/creator_tribe_2/contributors',
+          documentId: userId,
+          data: any(named: 'data'),
+        ),
+      ).called(1);
+
+      final stats = await db.tribeStatsDao.getStats('creator_tribe_2');
+      expect(stats, isNotNull);
+      expect(stats!.totalXp, 20);
+    });
+
+    test('undo debits the membership tribe contributor doc when activeTribeId '
+        'is null', () async {
+      final habit = createTestHabit(difficulty: HabitDifficulty.easy);
+      await repository.createHabit(habit);
+
+      await db.userStatsDao.upsertStats(
+        UserStatsTableCompanion(
+          userId: Value(userId),
+          displayName: Value('Test User'),
+          archetype: Value('athlete'),
+          totalXp: Value(0),
+          level: Value(1),
+          vitalityXp: Value(0),
+        ),
+      );
+
+      await seedCreatorTribeMembership('creator_tribe_1');
+      final today = DateTime.now();
+
+      await repository.completeHabit(habit.id, today);
+      final result2 = await repository.completeHabit(habit.id, today);
+      expect(result2.isRight(), true);
+      expect(result2.fold((l) => false, (r) => r), false);
+
+      // Easy habit: base 10 XP. The undo must debit the membership tribe's
+      // contributor doc, matching the credit the completion added.
+      verify(
+        () => mockSyncEngine.enqueueUpdate(
+          collectionPath: 'tribes/creator_tribe_1/contributors',
+          documentId: userId,
+          data: any(
+            named: 'data',
+            that: containsPair('totalXpContributed', {
+              '__type__': 'increment',
+              'value': -10,
+            }),
           ),
-        );
-
-        await seedCreatorTribeMembership('creator_tribe_1');
-
-        final events = <HabitCompleted>[];
-        final sub = EventBus().on<HabitCompleted>().listen(events.add);
-        addTearDown(sub.cancel);
-
-        final result = await repository.completeHabit(habit.id, DateTime.now());
-        expect(result.isRight(), true);
-
-        // The contributor doc must target the creator tribe — the archetype
-        // lookup would previously find nothing (no local club rows) and the
-        // XP would be dropped entirely.
-        verify(
-          () => mockSyncEngine.enqueueSet(
-            collectionPath: 'tribes/creator_tribe_1/contributors',
-            documentId: userId,
-            data: any(named: 'data'),
-          ),
-        ).called(1);
-
-        // Local stats row is created on demand so leaderboard/display work
-        // for creator tribes too.
-        final stats = await db.tribeStatsDao.getStats('creator_tribe_1');
-        expect(stats, isNotNull);
-        expect(stats!.totalXp, 20); // medium habit: base 20
-        expect(stats.totalHabitsCompleted, 1);
-        expect(stats.archetypeId, isNull);
-
-        // Social logging and the event carry the resolved tribe.
-        verify(
-          () => mockSocialService.logHabitCompletion(
-            userId: userId,
-            userName: any(named: 'userName'),
-            archetype: any(named: 'archetype'),
-            habitId: habit.id,
-            habitTitle: any(named: 'habitTitle'),
-            streakDay: any(named: 'streakDay'),
-            attribute: any(named: 'attribute'),
-            xpGained: any(named: 'xpGained'),
-            currentLevel: any(named: 'currentLevel'),
-            clubId: 'creator_tribe_1',
-          ),
-        ).called(1);
-
-        final completed = events.where((e) => e.userId == userId).toList();
-        expect(completed, isNotEmpty);
-        expect(completed.last.tribeId, 'creator_tribe_1');
-      },
-    );
-
-    test(
-      'completeHabit credits the membership tribe for archetype none '
-      '(XP is not dropped)',
-      () async {
-        final habit = createTestHabit(difficulty: HabitDifficulty.medium);
-        await repository.createHabit(habit);
-
-        await db.userStatsDao.upsertStats(
-          UserStatsTableCompanion(
-            userId: Value(userId),
-            displayName: Value('Test User'),
-            archetype: Value('none'),
-            totalXp: Value(0),
-            level: Value(1),
-            vitalityXp: Value(0),
-          ),
-        );
-
-        await seedCreatorTribeMembership('creator_tribe_2');
-
-        final result = await repository.completeHabit(habit.id, DateTime.now());
-        expect(result.isRight(), true);
-
-        // Previously the archetype-'none' branch skipped XP entirely; the
-        // membership must win over the archetype lookup.
-        verify(
-          () => mockSyncEngine.enqueueSet(
-            collectionPath: 'tribes/creator_tribe_2/contributors',
-            documentId: userId,
-            data: any(named: 'data'),
-          ),
-        ).called(1);
-
-        final stats = await db.tribeStatsDao.getStats('creator_tribe_2');
-        expect(stats, isNotNull);
-        expect(stats!.totalXp, 20);
-      },
-    );
-
-    test(
-      'undo debits the membership tribe contributor doc when activeTribeId '
-      'is null',
-      () async {
-        final habit = createTestHabit(difficulty: HabitDifficulty.easy);
-        await repository.createHabit(habit);
-
-        await db.userStatsDao.upsertStats(
-          UserStatsTableCompanion(
-            userId: Value(userId),
-            displayName: Value('Test User'),
-            archetype: Value('athlete'),
-            totalXp: Value(0),
-            level: Value(1),
-            vitalityXp: Value(0),
-          ),
-        );
-
-        await seedCreatorTribeMembership('creator_tribe_1');
-        final today = DateTime.now();
-
-        await repository.completeHabit(habit.id, today);
-        final result2 = await repository.completeHabit(habit.id, today);
-        expect(result2.isRight(), true);
-        expect(result2.fold((l) => false, (r) => r), false);
-
-        // Easy habit: base 10 XP. The undo must debit the membership tribe's
-        // contributor doc, matching the credit the completion added.
-        verify(
-          () => mockSyncEngine.enqueueUpdate(
-            collectionPath: 'tribes/creator_tribe_1/contributors',
-            documentId: userId,
-            data: any(
-              named: 'data',
-              that: containsPair(
-                'totalXpContributed',
-                {'__type__': 'increment', 'value': -10},
-              ),
-            ),
-          ),
-        ).called(1);
-      },
-    );
+        ),
+      ).called(1);
+    });
 
     test('completeHabit() - returns failure if habit not found', () async {
       final result = await repository.completeHabit(
@@ -787,10 +785,7 @@ void main() {
           ),
         );
 
-        final result = await repository.completeHabit(
-          habit.id,
-          DateTime.now(),
-        );
+        final result = await repository.completeHabit(habit.id, DateTime.now());
 
         expect(result.isRight(), true);
 
@@ -928,14 +923,14 @@ void main() {
           ),
         ).captured;
         final payload = captured.single as Map;
-        expect(
-          payload['avatarStats.totalXp'],
-          {'__type__': 'increment', 'value': 120},
-        );
-        expect(
-          payload['avatarStats.vitalityXp'],
-          {'__type__': 'increment', 'value': 120},
-        );
+        expect(payload['avatarStats.totalXp'], {
+          '__type__': 'increment',
+          'value': 120,
+        });
+        expect(payload['avatarStats.vitalityXp'], {
+          '__type__': 'increment',
+          'value': 120,
+        });
         expect(payload['avatarStats.level'], 1);
         expect(payload['avatarStats.streak'], 1);
         expect(payload['updatedAt'], isA<String>());
@@ -1003,210 +998,205 @@ void main() {
     );
 
     group('createStarterPack', () {
-      test(
-        'inserts one habit per blueprint in a single Drift batch',
-        () async {
-          final blueprints =
-              StarterHabitBlueprint.catalog
-                  .where((b) => b.archetype == UserArchetype.athlete)
-                  .take(3)
-                  .toList();
+      test('inserts one habit per blueprint in a single Drift batch', () async {
+        final blueprints = StarterHabitBlueprint.catalog
+            .where((b) => b.archetype == UserArchetype.athlete)
+            .take(3)
+            .toList();
 
-          final result = await repository.createStarterPack(
-            userId: userId,
-            blueprints: blueprints,
-            archetypeName: 'athlete',
-            interestIds: const ['movement.walking'],
-            clubId: 'club_42',
-          );
-
-          expect(result.isRight(), true);
-          final createdHabits = result.getOrElse((_) => fail('expected Right'));
-          expect(createdHabits, hasLength(3));
-
-          final stored = await db.habitsDao.watchHabits(userId).first;
-          expect(stored, hasLength(3));
-          for (final habit in stored) {
-            expect(habit.difficulty, 'easy');
-            expect(habit.frequency, 'daily');
-          }
-        },
-      );
-
-      test(
-        'tags every habit with archetype, onboarding, interests, and club '
-        'in the Firestore enqueue payload',
-        () async {
-          final blueprints =
-              StarterHabitBlueprint.catalog
-                  .where((b) => b.archetype == UserArchetype.scholar)
-                  .take(2)
-                  .toList();
-
-          final result = await repository.createStarterPack(
-            userId: userId,
-            blueprints: blueprints,
-            archetypeName: 'scholar',
-            interestIds: const ['learning.reading', 'learning.languages'],
-            clubId: 'deep_work_society',
-          );
-
-          expect(result.isRight(), true);
-
-          // The Drift row schema doesn't store identityTags, but the
-          // Firestore sync does. Validate via captured mocks.
-          final captured = verify(
-            () => mockSyncEngine.enqueueSet(
-              collectionPath: 'habits',
-              documentId: captureAny(named: 'documentId'),
-              data: captureAny(named: 'data'),
-            ),
-          ).captured;
-          // mocktail flattens captured args per position across all calls:
-          // [documentId0, data0, documentId1, data1] for 2 calls.
-          // We expect one enqueue per habit, so 4 captured entries for 2
-          // habits.
-          expect(captured.length, 4);
-
-          final payloads = <Map<String, dynamic>>[];
-          for (var i = 1; i < captured.length; i += 2) {
-            payloads.add(captured[i] as Map<String, dynamic>);
-          }
-          expect(payloads, hasLength(2));
-          for (final payload in payloads) {
-            final tags =
-                (payload['identityTags'] as List<dynamic>).cast<String>();
-            expect(tags, contains('scholar'));
-            expect(tags, contains('onboarding'));
-            expect(tags, contains('interest:learning.reading'));
-            expect(tags, contains('interest:learning.languages'));
-            expect(tags, contains('club:deep_work_society'));
-          }
-        },
-      );
-
-      test(
-        'propagates the recommended timer duration into Drift and the '
-        'Firestore payload',
-        () async {
-          final blueprints =
-              StarterHabitBlueprint.catalog
-                  .where((b) => b.archetype == UserArchetype.athlete)
-                  .take(2)
-                  .toList();
-
-          final result = await repository.createStarterPack(
-            userId: userId,
-            blueprints: blueprints,
-            archetypeName: 'athlete',
-          );
-
-          expect(result.isRight(), true);
-
-          final stored = await db.habitsDao.watchHabits(userId).first;
-          expect(stored, hasLength(2));
-          for (var i = 0; i < stored.length; i++) {
-            expect(stored[i].timerDurationMinutes,
-                blueprints[i].timerDurationMinutes,
-                reason:
-                    'starter habits must keep the blueprint\'s recommended '
-                    'duration instead of the blanket default');
-          }
-
-          final captured = verify(
-            () => mockSyncEngine.enqueueSet(
-              collectionPath: 'habits',
-              documentId: captureAny(named: 'documentId'),
-              data: captureAny(named: 'data'),
-            ),
-          ).captured;
-          for (var i = 1; i < captured.length; i += 2) {
-            final payload = captured[i] as Map<String, dynamic>;
-            expect(
-              payload['timerDurationMinutes'],
-              isA<int>(),
-              reason: 'Firestore payload must carry the duration',
-            );
-          }
-        },
-      );
-
-      test('returns empty list and skips writes when given zero blueprints',
-          () async {
         final result = await repository.createStarterPack(
           userId: userId,
-          blueprints: const [],
+          blueprints: blueprints,
+          archetypeName: 'athlete',
+          interestIds: const ['movement.walking'],
+          clubId: 'club_42',
         );
+
         expect(result.isRight(), true);
-        expect(result.getOrElse((_) => []), isEmpty);
+        final createdHabits = result.getOrElse((_) => fail('expected Right'));
+        expect(createdHabits, hasLength(3));
 
         final stored = await db.habitsDao.watchHabits(userId).first;
-        expect(stored, isEmpty);
+        expect(stored, hasLength(3));
+        for (final habit in stored) {
+          expect(habit.difficulty, 'easy');
+          expect(habit.frequency, 'daily');
+        }
       });
 
-      test('logs a starter_pack_created social activity once per call',
-          () async {
-        final blueprints =
-            StarterHabitBlueprint.catalog
-                .where((b) => b.archetype == UserArchetype.stoic)
-                .take(2)
-                .toList();
+      test('tags every habit with archetype, onboarding, interests, and club '
+          'in the Firestore enqueue payload', () async {
+        final blueprints = StarterHabitBlueprint.catalog
+            .where((b) => b.archetype == UserArchetype.scholar)
+            .take(2)
+            .toList();
 
-        await repository.createStarterPack(
+        final result = await repository.createStarterPack(
           userId: userId,
           blueprints: blueprints,
-          archetypeName: 'stoic',
+          archetypeName: 'scholar',
+          interestIds: const ['learning.reading', 'learning.languages'],
+          clubId: 'deep_work_society',
         );
 
-        verify(
-          () => mockSocialService.logActivity(
-            type: 'starter_pack_created',
-            userId: userId,
-            data: any(named: 'data'),
+        expect(result.isRight(), true);
+
+        // The Drift row schema doesn't store identityTags, but the
+        // Firestore sync does. Validate via captured mocks.
+        final captured = verify(
+          () => mockSyncEngine.enqueueSet(
+            collectionPath: 'habits',
+            documentId: captureAny(named: 'documentId'),
+            data: captureAny(named: 'data'),
           ),
-        ).called(1);
+        ).captured;
+        // mocktail flattens captured args per position across all calls:
+        // [documentId0, data0, documentId1, data1] for 2 calls.
+        // We expect one enqueue per habit, so 4 captured entries for 2
+        // habits.
+        expect(captured.length, 4);
+
+        final payloads = <Map<String, dynamic>>[];
+        for (var i = 1; i < captured.length; i += 2) {
+          payloads.add(captured[i] as Map<String, dynamic>);
+        }
+        expect(payloads, hasLength(2));
+        for (final payload in payloads) {
+          final tags = (payload['identityTags'] as List<dynamic>)
+              .cast<String>();
+          expect(tags, contains('scholar'));
+          expect(tags, contains('onboarding'));
+          expect(tags, contains('interest:learning.reading'));
+          expect(tags, contains('interest:learning.languages'));
+          expect(tags, contains('club:deep_work_society'));
+        }
       });
-    });
 
-    test('createHabitsFromBlueprint stores reminderTime in created habits', () async {
-      await db.userStatsDao.upsertStats(
-        UserStatsTableCompanion(
-          userId: Value(userId),
-          displayName: Value('Test User'),
-          archetype: Value('athlete'),
-          totalXp: Value(0),
-          level: Value(1),
-          vitalityXp: Value(0),
-        ),
+      test('propagates the recommended timer duration into Drift and the '
+          'Firestore payload', () async {
+        final blueprints = StarterHabitBlueprint.catalog
+            .where((b) => b.archetype == UserArchetype.athlete)
+            .take(2)
+            .toList();
+
+        final result = await repository.createStarterPack(
+          userId: userId,
+          blueprints: blueprints,
+          archetypeName: 'athlete',
+        );
+
+        expect(result.isRight(), true);
+
+        final stored = await db.habitsDao.watchHabits(userId).first;
+        expect(stored, hasLength(2));
+        for (var i = 0; i < stored.length; i++) {
+          expect(
+            stored[i].timerDurationMinutes,
+            blueprints[i].timerDurationMinutes,
+            reason:
+                'starter habits must keep the blueprint\'s recommended '
+                'duration instead of the blanket default',
+          );
+        }
+
+        final captured = verify(
+          () => mockSyncEngine.enqueueSet(
+            collectionPath: 'habits',
+            documentId: captureAny(named: 'documentId'),
+            data: captureAny(named: 'data'),
+          ),
+        ).captured;
+        for (var i = 1; i < captured.length; i += 2) {
+          final payload = captured[i] as Map<String, dynamic>;
+          expect(
+            payload['timerDurationMinutes'],
+            isA<int>(),
+            reason: 'Firestore payload must carry the duration',
+          );
+        }
+      });
+
+      test(
+        'returns empty list and skips writes when given zero blueprints',
+        () async {
+          final result = await repository.createStarterPack(
+            userId: userId,
+            blueprints: const [],
+          );
+          expect(result.isRight(), true);
+          expect(result.getOrElse((_) => []), isEmpty);
+
+          final stored = await db.habitsDao.watchHabits(userId).first;
+          expect(stored, isEmpty);
+        },
       );
 
-      final blueprint = Blueprint(
-        id: 'test_bp',
-        title: 'Test Blueprint',
-        description: 'A test blueprint',
-        category: 'Morning',
-        creatorName: 'Test',
-        creatorUserId: userId,
-        creatorArchetype: 'Scholar',
-        createdAt: DateTime.now(),
-        habits: [const BlueprintHabit(title: 'Wake Up')],
+      test(
+        'logs a starter_pack_created social activity once per call',
+        () async {
+          final blueprints = StarterHabitBlueprint.catalog
+              .where((b) => b.archetype == UserArchetype.stoic)
+              .take(2)
+              .toList();
+
+          await repository.createStarterPack(
+            userId: userId,
+            blueprints: blueprints,
+            archetypeName: 'stoic',
+          );
+
+          verify(
+            () => mockSocialService.logActivity(
+              type: 'starter_pack_created',
+              userId: userId,
+              data: any(named: 'data'),
+            ),
+          ).called(1);
+        },
       );
-
-      final result = await repository.createHabitsFromBlueprint(
-        userId: userId,
-        blueprint: blueprint,
-        reminderTime: '07:30',
-      );
-
-      expect(result.isRight(), true);
-
-      final habits = await db.habitsDao.watchHabits(userId).first;
-      expect(habits, isNotEmpty);
-      expect(habits.first.title, 'Wake Up');
     });
 
     test(
-        'createHabitsFromBlueprint maps timeOfDay to timeOfDayPreference and '
+      'createHabitsFromBlueprint stores reminderTime in created habits',
+      () async {
+        await db.userStatsDao.upsertStats(
+          UserStatsTableCompanion(
+            userId: Value(userId),
+            displayName: Value('Test User'),
+            archetype: Value('athlete'),
+            totalXp: Value(0),
+            level: Value(1),
+            vitalityXp: Value(0),
+          ),
+        );
+
+        final blueprint = Blueprint(
+          id: 'test_bp',
+          title: 'Test Blueprint',
+          description: 'A test blueprint',
+          category: 'Morning',
+          creatorName: 'Test',
+          creatorUserId: userId,
+          creatorArchetype: 'Scholar',
+          createdAt: DateTime.now(),
+          habits: [const BlueprintHabit(title: 'Wake Up')],
+        );
+
+        final result = await repository.createHabitsFromBlueprint(
+          userId: userId,
+          blueprint: blueprint,
+          reminderTime: '07:30',
+        );
+
+        expect(result.isRight(), true);
+
+        final habits = await db.habitsDao.watchHabits(userId).first;
+        expect(habits, isNotEmpty);
+        expect(habits.first.title, 'Wake Up');
+      },
+    );
+
+    test('createHabitsFromBlueprint maps timeOfDay to timeOfDayPreference and '
         'defaultTime to reminderTime', () async {
       final blueprint = Blueprint(
         id: 'test_bp_slots',
@@ -1267,49 +1257,50 @@ void main() {
         for (var i = 1; i < captured.length; i += 2)
           captured[i] as Map<String, dynamic>,
       ];
-      final morningPayload =
-          payloads.firstWhere((p) => p['title'] == 'Wake Up at 6 AM');
+      final morningPayload = payloads.firstWhere(
+        (p) => p['title'] == 'Wake Up at 6 AM',
+      );
       expect(morningPayload['timeOfDayPreference'], 'morning');
     });
 
     test(
-        'createHabitsFromBlueprint keeps dialog reminderTime over blueprint defaultTime',
-        () async {
-      final blueprint = Blueprint(
-        id: 'test_bp_reminder',
-        title: 'Test Blueprint',
-        description: 'A test blueprint',
-        category: 'Morning',
-        creatorName: 'Test',
-        creatorUserId: userId,
-        creatorArchetype: 'Scholar',
-        createdAt: DateTime.now(),
-        habits: [
-          BlueprintHabit(
-            title: 'Wake Up at 6 AM',
-            timeOfDay: 'Morning',
-            defaultTime: const TimeOfDay(hour: 6, minute: 0),
-          ),
-        ],
-      );
+      'createHabitsFromBlueprint keeps dialog reminderTime over blueprint defaultTime',
+      () async {
+        final blueprint = Blueprint(
+          id: 'test_bp_reminder',
+          title: 'Test Blueprint',
+          description: 'A test blueprint',
+          category: 'Morning',
+          creatorName: 'Test',
+          creatorUserId: userId,
+          creatorArchetype: 'Scholar',
+          createdAt: DateTime.now(),
+          habits: [
+            BlueprintHabit(
+              title: 'Wake Up at 6 AM',
+              timeOfDay: 'Morning',
+              defaultTime: const TimeOfDay(hour: 6, minute: 0),
+            ),
+          ],
+        );
 
-      final result = await repository.createHabitsFromBlueprint(
-        userId: userId,
-        blueprint: blueprint,
-        reminderTime: '07:30',
-      );
+        final result = await repository.createHabitsFromBlueprint(
+          userId: userId,
+          blueprint: blueprint,
+          reminderTime: '07:30',
+        );
 
-      expect(result.isRight(), true);
+        expect(result.isRight(), true);
 
-      final rows = await db.habitsDao.watchHabits(userId).first;
-      final habit = await repository.getHabit(rows.single.id);
-      expect(habit?.reminderTime?.hour, 7);
-      expect(habit?.reminderTime?.minute, 30);
-      expect(habit?.timeOfDayPreference, TimeOfDayPreference.morning);
-    });
+        final rows = await db.habitsDao.watchHabits(userId).first;
+        final habit = await repository.getHabit(rows.single.id);
+        expect(habit?.reminderTime?.hour, 7);
+        expect(habit?.reminderTime?.minute, 30);
+        expect(habit?.timeOfDayPreference, TimeOfDayPreference.morning);
+      },
+    );
 
-    test(
-        'createHabitsFromBlueprint rolls back ALL habits on a mid-loop '
+    test('createHabitsFromBlueprint rolls back ALL habits on a mid-loop '
         'failure and a retry succeeds', () async {
       final blueprint = Blueprint(
         id: 'test_bp_atomic',
@@ -1348,12 +1339,18 @@ void main() {
         userId: userId,
         blueprint: blueprint,
       );
-      expect(failed.isLeft(), true,
-          reason: 'a mid-loop failure must surface as a failure');
+      expect(
+        failed.isLeft(),
+        true,
+        reason: 'a mid-loop failure must surface as a failure',
+      );
 
       final afterFailure = await db.habitsDao.watchHabits(userId).first;
-      expect(afterFailure, isEmpty,
-          reason: 'no partial blueprint habits may survive the rollback');
+      expect(
+        afterFailure,
+        isEmpty,
+        reason: 'no partial blueprint habits may survive the rollback',
+      );
 
       // Retry succeeds: with no leftover rows, the duplicate guard in
       // blueprint_detail_controller cannot block the retry.

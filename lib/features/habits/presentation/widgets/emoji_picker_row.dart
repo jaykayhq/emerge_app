@@ -6,9 +6,24 @@ class EmojiPickerRow extends StatelessWidget {
   final List<String> recentlyUsed;
 
   static const fullEmojiList = [
-    '🔥', '💧', '🌿', '📖', '💪', '🧠', '✨', '🎯',
-    '🏃', '💤', '🍎', '🧘', '🎸', '🎨', '💼', '🏡',
-    '🔋', '🚀',
+    '🔥',
+    '💧',
+    '🌿',
+    '📖',
+    '💪',
+    '🧠',
+    '✨',
+    '🎯',
+    '🏃',
+    '💤',
+    '🍎',
+    '🧘',
+    '🎸',
+    '🎨',
+    '💼',
+    '🏡',
+    '🔋',
+    '🚀',
   ];
 
   const EmojiPickerRow({
@@ -23,11 +38,13 @@ class EmojiPickerRow extends StatelessWidget {
     final emojis = recentlyUsed.take(5).toList();
     return Row(
       children: [
-        ...emojis.map((e) => _EmojiChip(
-              emoji: e,
-              isSelected: e == selectedEmoji,
-              onTap: () => onEmojiSelected(e),
-            )),
+        ...emojis.map(
+          (e) => _EmojiChip(
+            emoji: e,
+            isSelected: e == selectedEmoji,
+            onTap: () => onEmojiSelected(e),
+          ),
+        ),
         _EmojiChip(
           emoji: '+',
           onTap: () => _showFullPicker(context),
@@ -46,13 +63,15 @@ class EmojiPickerRow extends StatelessWidget {
           spacing: 8,
           runSpacing: 8,
           children: fullEmojiList
-              .map((e) => GestureDetector(
-                    onTap: () {
-                      onEmojiSelected(e);
-                      Navigator.pop(ctx);
-                    },
-                    child: Text(e, style: const TextStyle(fontSize: 32)),
-                  ))
+              .map(
+                (e) => GestureDetector(
+                  onTap: () {
+                    onEmojiSelected(e);
+                    Navigator.pop(ctx);
+                  },
+                  child: Text(e, style: const TextStyle(fontSize: 32)),
+                ),
+              )
               .toList(),
         ),
       ),

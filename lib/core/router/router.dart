@@ -140,8 +140,9 @@ String? decideRedirect({
 
   final isOnAuthPath = authPaths.contains(currentPath);
   final isOnOobCodeSafePath = oobCodeSafePaths.contains(currentPath);
-  final isOnCreatorOnboardingPath =
-      currentPath.startsWith('/onboarding/creator/');
+  final isOnCreatorOnboardingPath = currentPath.startsWith(
+    '/onboarding/creator/',
+  );
   final isOnNormalOnboardingPath =
       currentPath.startsWith('/onboarding/') && !isOnCreatorOnboardingPath;
   final isOnCreatorPath = currentPath.startsWith('/creator');
@@ -236,7 +237,8 @@ String? decideRedirect({
     }
 
     final progress = ctx.userOnboardingProgress;
-    final isUserOnboardingComplete = ctx.userOnboardingCompletedAt != null ||
+    final isUserOnboardingComplete =
+        ctx.userOnboardingCompletedAt != null ||
         (progress != null && progress >= 4);
 
     if (!isUserOnboardingComplete) {
@@ -292,7 +294,10 @@ GoRouter router(Ref ref) {
   // and throwing setState-during-build errors on web.
   // When they change, we just ask GoRouter to re-evaluate redirect.
   ref.listen(currentUserRoleProvider, (_, _) => refreshNotifier.value++);
-  ref.listen(currentCreatorOnboardingProvider, (_, _) => refreshNotifier.value++);
+  ref.listen(
+    currentCreatorOnboardingProvider,
+    (_, _) => refreshNotifier.value++,
+  );
   ref.listen(userStatsStreamProvider, (_, _) => refreshNotifier.value++);
   ref.listen(onboardingControllerProvider, (_, _) => refreshNotifier.value++);
   ref.listen(currentEmailLockedAtProvider, (_, _) => refreshNotifier.value++);
@@ -317,7 +322,9 @@ GoRouter router(Ref ref) {
       try {
         isFirstLaunch = ref.read(onboardingControllerProvider);
       } catch (e) {
-        debugPrint('[Router] Provider not ready during redirect, deferring: $e');
+        debugPrint(
+          '[Router] Provider not ready during redirect, deferring: $e',
+        );
         // Return null to defer redirect safely (provider will trigger rebuild when ready)
       }
 
@@ -336,14 +343,17 @@ GoRouter router(Ref ref) {
             : null;
       } catch (e) {
         debugPrint(
-            '[Router] emailLockedAt provider not ready during redirect, deferring: $e');
+          '[Router] emailLockedAt provider not ready during redirect, deferring: $e',
+        );
       }
 
       final role = roleAsync is AsyncData ? roleAsync.value : null;
       final creatorOnboarding = creatorOnboardingAsync is AsyncData
           ? creatorOnboardingAsync.value
           : null;
-      final userStats = userStatsAsync is AsyncData ? userStatsAsync.value : null;
+      final userStats = userStatsAsync is AsyncData
+          ? userStatsAsync.value
+          : null;
 
       return decideRedirect(
         currentPath: path,
@@ -433,9 +443,8 @@ GoRouter router(Ref ref) {
       GoRoute(
         path: '/creators/:id',
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => CreatorProfileScreen(
-          creatorId: state.pathParameters['id']!,
-        ),
+        builder: (context, state) =>
+            CreatorProfileScreen(creatorId: state.pathParameters['id']!),
       ),
       // /blueprint/:id — deep-link entry point for any blueprint by id
       // (push sites may also pass the resolved Blueprint via `extra` to skip the fetch).
@@ -445,7 +454,9 @@ GoRouter router(Ref ref) {
         builder: (context, state) {
           final id = state.pathParameters['id']!;
           final extra = state.extra;
-          if (extra is Blueprint) return BlueprintDetailScreen(blueprint: extra);
+          if (extra is Blueprint) {
+            return BlueprintDetailScreen(blueprint: extra);
+          }
           return _BlueprintByIdLoader(blueprintId: id);
         },
       ),
@@ -491,15 +502,16 @@ GoRouter router(Ref ref) {
                       transitionsBuilder:
                           (context, animation, secondaryAnimation, child) =>
                               SlideTransition(
-                                position: Tween<Offset>(
-                                  begin: const Offset(0, 1),
-                                  end: Offset.zero,
-                                ).animate(
-                                  CurvedAnimation(
-                                    parent: animation,
-                                    curve: Curves.easeInOut,
-                                  ),
-                                ),
+                                position:
+                                    Tween<Offset>(
+                                      begin: const Offset(0, 1),
+                                      end: Offset.zero,
+                                    ).animate(
+                                      CurvedAnimation(
+                                        parent: animation,
+                                        curve: Curves.easeInOut,
+                                      ),
+                                    ),
                                 child: child,
                               ),
                     ),
@@ -605,8 +617,7 @@ GoRouter router(Ref ref) {
                   GoRoute(
                     path: 'contacts',
                     parentNavigatorKey: _rootNavigatorKey,
-                    builder: (context, state) =>
-                        const SocialContactsScreen(),
+                    builder: (context, state) => const SocialContactsScreen(),
                   ),
                   GoRoute(
                     path: 'contracts',
@@ -626,9 +637,7 @@ GoRouter router(Ref ref) {
                     path: 'tribe/:id',
                     parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) =>
-                        TribeLobbyScreen(
-                      tribeId: state.pathParameters['id'],
-                    ),
+                        TribeLobbyScreen(tribeId: state.pathParameters['id']),
                   ),
                   GoRoute(
                     path: 'all',
@@ -737,8 +746,7 @@ class _BlueprintByIdLoader extends ConsumerWidget {
             ),
             body: AppErrorWidget(
               message: 'Blueprint not found',
-              onRetry: () =>
-                  ref.invalidate(blueprintByIdProvider(blueprintId)),
+              onRetry: () => ref.invalidate(blueprintByIdProvider(blueprintId)),
             ),
           );
         }

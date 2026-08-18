@@ -84,9 +84,7 @@ class HierarchicalHabitTimeline extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             color: Colors.white.withValues(alpha: 0.06),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.08),
-            ),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
           ),
           child: Center(
             child: Column(
@@ -223,9 +221,7 @@ class _HabitCategorySection extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,8 +272,10 @@ class _HabitCategorySection extends StatelessWidget {
               // XP badge
               if (xp > 0)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF2BEE79).withValues(alpha: 0.14),
                     borderRadius: BorderRadius.circular(12),
@@ -313,17 +311,19 @@ class _HabitCategorySection extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           // Habit rows
-          ...habits.map((habit) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: IndentedHabitItem(
-                  habit: habit,
-                  selectedDate: selectedDate,
-                  onRowBodyTap: () => onHabitTap(habit),
-                  onCheckboxTap: () => onHabitToggle(habit),
-                  onTimerTap: onTimerTap,
-                  onMenuTap: () => onMenuTap(habit),
-                ),
-              )),
+          ...habits.map(
+            (habit) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: IndentedHabitItem(
+                habit: habit,
+                selectedDate: selectedDate,
+                onRowBodyTap: () => onHabitTap(habit),
+                onCheckboxTap: () => onHabitToggle(habit),
+                onTimerTap: onTimerTap,
+                onMenuTap: () => onMenuTap(habit),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -439,8 +439,8 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
     final gradientStops = completed
         ? const [0.0, 1.0]
         : _isTimerRunning
-            ? [progress, progress]
-            : const [0.0, 0.0];
+        ? [progress, progress]
+        : const [0.0, 0.0];
 
     return GestureDetector(
       onTap: widget.onRowBodyTap,
@@ -450,11 +450,12 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
         curve: Curves.easeOut,
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
         decoration: BoxDecoration(
-          gradient: LinearGradient(colors: gradientColors, stops: gradientStops),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.08),
+          gradient: LinearGradient(
+            colors: gradientColors,
+            stops: gradientStops,
           ),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         ),
         child: completed ? _buildCompleted(color) : _buildPending(color),
       ),
@@ -476,17 +477,14 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
             borderRadius: BorderRadius.circular(10),
           ),
           child: Center(
-            child: widget.habit.imageUrl != null &&
+            child:
+                widget.habit.imageUrl != null &&
                     widget.habit.imageUrl!.isNotEmpty
                 ? Text(
                     widget.habit.imageUrl!,
                     style: const TextStyle(fontSize: 16),
                   )
-                : Icon(
-                    Icons.bolt,
-                    size: 16,
-                    color: attrColor,
-                  ),
+                : Icon(Icons.bolt, size: 16, color: attrColor),
           ),
         ),
         const SizedBox(width: 10),
@@ -522,9 +520,7 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.06),
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: attrColor.withValues(alpha: 0.25),
-            ),
+            border: Border.all(color: attrColor.withValues(alpha: 0.25)),
           ),
           child: Text(
             attributeAbbrev(widget.habit.attribute),
@@ -577,7 +573,10 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
           GestureDetector(
             onTap: () async {
               final minutes = await widget.onTimerTap(widget.habit);
-              if (minutes != null && minutes > 0 && mounted && !_isTimerRunning) {
+              if (minutes != null &&
+                  minutes > 0 &&
+                  mounted &&
+                  !_isTimerRunning) {
                 startTimerFromDuration(minutes);
               }
             },
@@ -622,7 +621,8 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
             borderRadius: BorderRadius.circular(10),
           ),
           child: Center(
-            child: widget.habit.imageUrl != null &&
+            child:
+                widget.habit.imageUrl != null &&
                     widget.habit.imageUrl!.isNotEmpty
                 ? Text(
                     widget.habit.imageUrl!,
@@ -657,9 +657,7 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.04),
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: attrColor.withValues(alpha: 0.15),
-            ),
+            border: Border.all(color: attrColor.withValues(alpha: 0.15)),
           ),
           child: Text(
             attributeAbbrev(widget.habit.attribute),
@@ -679,16 +677,9 @@ class _IndentedHabitItemState extends State<IndentedHabitItem> {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: const Color(0xFF2BCE6B),
-            border: Border.all(
-              color: const Color(0xFF2BCE6B),
-              width: 2,
-            ),
+            border: Border.all(color: const Color(0xFF2BCE6B), width: 2),
           ),
-          child: const Icon(
-            Icons.check,
-            color: Color(0xFF0B0F17),
-            size: 16,
-          ),
+          child: const Icon(Icons.check, color: Color(0xFF0B0F17), size: 16),
         ),
         const SizedBox(width: 4),
         // Undo button

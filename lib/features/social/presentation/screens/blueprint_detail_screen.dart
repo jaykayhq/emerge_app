@@ -15,6 +15,7 @@ import 'package:go_router/go_router.dart';
 import 'package:emerge_app/features/social/presentation/widgets/blueprint_adopt_dialog.dart';
 import 'package:emerge_app/features/blueprints/presentation/widgets/blueprint_artwork.dart';
 import 'package:emerge_app/features/blueprints/presentation/providers/blueprint_detail_controller.dart';
+
 class BlueprintDetailScreen extends ConsumerWidget {
   final Blueprint blueprint;
 
@@ -38,16 +39,27 @@ class BlueprintDetailScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildCreatorInfo(),
-                    if (blueprint.isCreatorBlueprint && blueprint.creatorUserId.isNotEmpty)
+                    if (blueprint.isCreatorBlueprint &&
+                        blueprint.creatorUserId.isNotEmpty)
                       Card(
                         margin: const EdgeInsets.symmetric(vertical: 16),
                         child: ListTile(
-                          leading: const CircleAvatar(child: Icon(Icons.person)),
-                          title: Text(blueprint.creatorName.isNotEmpty ? blueprint.creatorName : 'Creator'),
-                          subtitle: Text('${blueprint.tribeMemberCount} tribe members'),
+                          leading: const CircleAvatar(
+                            child: Icon(Icons.person),
+                          ),
+                          title: Text(
+                            blueprint.creatorName.isNotEmpty
+                                ? blueprint.creatorName
+                                : 'Creator',
+                          ),
+                          subtitle: Text(
+                            '${blueprint.tribeMemberCount} tribe members',
+                          ),
                           trailing: const Icon(Icons.chevron_right),
                           onTap: () {
-                            context.push('/social/creator/${blueprint.creatorUserId}');
+                            context.push(
+                              '/social/creator/${blueprint.creatorUserId}',
+                            );
                           },
                         ),
                       ),
@@ -233,7 +245,11 @@ class BlueprintDetailScreen extends ConsumerWidget {
                     children: [
                       Text(
                         habit.title,
-                        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Wrap(
@@ -254,12 +270,14 @@ class BlueprintDetailScreen extends ConsumerWidget {
                               icon: Icons.timer_outlined,
                               label: '${habit.timerDurationMinutes}M',
                             ),
-                          if (habit.integrationType == HabitIntegrationType.healthSteps)
+                          if (habit.integrationType ==
+                              HabitIntegrationType.healthSteps)
                             _StatBadge(
                               icon: Icons.directions_walk,
                               label: 'Steps',
                             ),
-                          if (habit.integrationType == HabitIntegrationType.screenTimeLimit)
+                          if (habit.integrationType ==
+                              HabitIntegrationType.screenTimeLimit)
                             _StatBadge(
                               icon: Icons.phone_android,
                               label: 'Screen Time',
@@ -292,7 +310,7 @@ class BlueprintDetailScreen extends ConsumerWidget {
       child: ElevatedButton(
         onPressed: isLoading
             ? null
-              : () async {
+            : () async {
                 if (userId == null) return;
 
                 var didAdopt = false;
@@ -340,9 +358,10 @@ class BlueprintDetailScreen extends ConsumerWidget {
                         limitType: PremiumLimitType.habit,
                       );
                     } else {
-                      final errorMsg = e
-                          .toString()
-                          .replaceAll('Exception: ', '');
+                      final errorMsg = e.toString().replaceAll(
+                        'Exception: ',
+                        '',
+                      );
                       if (errorMsg == 'Premium required') {
                         context.push('/paywall');
                       } else {
@@ -380,7 +399,10 @@ class BlueprintDetailScreen extends ConsumerWidget {
                 blueprint.isPremium && !isPremium
                     ? 'UNLOCK PREMIUM STACK'
                     : 'ADOPT BLUEPRINT',
-                style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
               ),
       ),
     );

@@ -10,9 +10,7 @@ Widget _buildTest() {
   return createScreenUnderTest(
     screen: const WorldRevealScreen(),
     overrides: [
-      socialDataPreloadProvider.overrideWithValue(
-        const AsyncValue.data(null),
-      ),
+      socialDataPreloadProvider.overrideWithValue(const AsyncValue.data(null)),
     ],
   );
 }

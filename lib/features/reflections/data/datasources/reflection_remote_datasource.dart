@@ -7,7 +7,8 @@ abstract class ReflectionRemoteDatasource {
 
 /// Firestore-backed implementation.
 /// Writes a daily reflection doc to users/{uid}/reflections/{dateKey}.
-class FirestoreReflectionRemoteDatasource implements ReflectionRemoteDatasource {
+class FirestoreReflectionRemoteDatasource
+    implements ReflectionRemoteDatasource {
   FirestoreReflectionRemoteDatasource({required this.firestore});
   final FirebaseFirestore firestore;
 

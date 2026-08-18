@@ -64,7 +64,10 @@ class _RecapShareSheetState extends State<RecapShareSheet> {
       final epoch = DateTime.now().microsecondsSinceEpoch;
       for (var i = 0; i < selected.length; i++) {
         if (!mounted) return;
-        final bytes = await ShareableImageExporter.renderPng(context, selected[i]);
+        final bytes = await ShareableImageExporter.renderPng(
+          context,
+          selected[i],
+        );
         if (bytes == null) {
           if (mounted) {
             setState(() => _error = 'Could not render the recap image.');
@@ -179,7 +182,10 @@ class _OptionTile extends StatelessWidget {
                     ),
                     Text(
                       subtitle,
-                      style: const TextStyle(color: Colors.white54, fontSize: 12),
+                      style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),

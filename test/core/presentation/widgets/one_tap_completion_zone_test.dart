@@ -3,7 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:emerge_app/core/presentation/widgets/one_tap_completion_zone.dart';
 import 'package:emerge_app/core/presentation/widgets/completion_particles.dart';
 
-Widget buildTestWidget({required Color color, required VoidCallback onComplete}) {
+Widget buildTestWidget({
+  required Color color,
+  required VoidCallback onComplete,
+}) {
   return MaterialApp(
     home: Scaffold(
       body: OneTapCompletionZone(
@@ -82,8 +85,9 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
     });
 
-    testWidgets('removes CompletionParticles after animation completes',
-        (tester) async {
+    testWidgets('removes CompletionParticles after animation completes', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildTestWidget(color: Colors.blue, onComplete: () {}),
       );
@@ -126,24 +130,27 @@ void main() {
 
       // Second tap is ignored by _isProcessing guard
       expect(callCount, 1);
-      
+
       await tester.pump(const Duration(seconds: 1));
     });
 
-    testWidgets('uses the provided color for the circle container',
-        (tester) async {
+    testWidgets('uses the provided color for the circle container', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildTestWidget(color: Colors.amber, onComplete: () {}),
       );
 
       // Fix 10: find specifically the decorated circular Container
       // (there may be multiple Containers in the tree after a tap)
-      final containers = tester.widgetList<Container>(
-        find.descendant(
-          of: find.byKey(const Key('completion-zone')),
-          matching: find.byType(Container),
-        ),
-      ).toList();
+      final containers = tester
+          .widgetList<Container>(
+            find.descendant(
+              of: find.byKey(const Key('completion-zone')),
+              matching: find.byType(Container),
+            ),
+          )
+          .toList();
 
       // The decoration container is the one with a BoxDecoration circle shape
       final decoratedContainer = containers.firstWhere(

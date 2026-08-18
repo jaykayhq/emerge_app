@@ -179,8 +179,7 @@ class WeeklyRecapService {
       habitCounts[activity.habitId] = (habitCounts[activity.habitId] ?? 0) + 1;
 
       final attribute = activity.attribute;
-      attributeVotes[attribute] =
-          (attributeVotes[attribute] ?? 0) + 1;
+      attributeVotes[attribute] = (attributeVotes[attribute] ?? 0) + 1;
     }
 
     // A "perfect day" is a day on which ALL active (non-archived) habits
@@ -262,9 +261,11 @@ class WeeklyRecapService {
     if (activeHabitIds.isEmpty) return 0;
 
     int perfectDays = 0;
-    for (var day = startDate;
-        !day.isAfter(endDate);
-        day = day.add(const Duration(days: 1))) {
+    for (
+      var day = startDate;
+      !day.isAfter(endDate);
+      day = day.add(const Duration(days: 1))
+    ) {
       final completedHabitIds = completions
           .where((c) => _isSameDay(c.completedAt, day))
           .map((c) => c.habitId)

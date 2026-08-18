@@ -27,10 +27,7 @@ class _ConstellationPainter extends CustomPainter {
   final Offset center;
   final List<Offset> nodePositions;
 
-  _ConstellationPainter({
-    required this.center,
-    required this.nodePositions,
-  });
+  _ConstellationPainter({required this.center, required this.nodePositions});
 
   @override
   void paint(Canvas canvas, Size size) {

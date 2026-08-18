@@ -48,7 +48,9 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
       }),
       (_) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Thanks — your feedback helps us improve.')),
+          const SnackBar(
+            content: Text('Thanks — your feedback helps us improve.'),
+          ),
         );
         context.pop();
       },
@@ -65,11 +67,19 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Help us improve',
-                style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+            const Text(
+              'Help us improve',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const Gap(8),
-            const Text('What got in the way?',
-                style: TextStyle(color: Colors.white60)),
+            const Text(
+              'What got in the way?',
+              style: TextStyle(color: Colors.white60),
+            ),
             const Gap(24),
             TextField(
               controller: _controller,
@@ -82,15 +92,19 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
                 hintStyle: const TextStyle(color: Colors.white38),
                 filled: true,
                 fillColor: Colors.white.withValues(alpha: 0.06),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
             const Gap(16),
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
-                child: Text(_error!,
-                    style: const TextStyle(color: Colors.redAccent)),
+                child: Text(
+                  _error!,
+                  style: const TextStyle(color: Colors.redAccent),
+                ),
               ),
             FilledButton(
               onPressed: (_submitting || _controller.text.trim().isEmpty)
@@ -98,10 +112,21 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
                   : _submit,
               style: FilledButton.styleFrom(backgroundColor: EmergeColors.teal),
               child: _submitting
-                  ? const SizedBox(height: 20, width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
-                  : const Text('Submit',
-                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.black,
+                      ),
+                    )
+                  : const Text(
+                      'Submit',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
             ),
           ],
         ),

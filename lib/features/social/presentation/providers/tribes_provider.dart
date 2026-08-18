@@ -62,10 +62,7 @@ final userClubProvider = FutureProvider.family<Tribe?, String>((
 /// The user's tribe, merged from local Drift stats + the remote Firestore
 /// doc. Membership-aware: covers creator tribes, which never appear in
 /// [allArchetypeClubsProvider]'s official-only stream.
-final userTribeProvider = StreamProvider.family<Tribe?, String>((
-  ref,
-  userId,
-) {
+final userTribeProvider = StreamProvider.family<Tribe?, String>((ref, userId) {
   final repository = ref.watch(tribeRepositoryProvider);
   return repository.watchUserTribes(userId).map((tribes) => tribes.firstOrNull);
 });
@@ -227,7 +224,6 @@ final worldLeaderboardProvider =
       var remoteDocs = <String, Map<String, dynamic>>{};
 
       void emitMerged() {
-
         // Build entries from Firestore (source of truth for cross-user data).
         // Merge local increments for the current user's own tribe.
         final entries = remoteDocs.entries
@@ -374,7 +370,9 @@ Future<bool> clubJoinBlockedByFreeTier(
   }
   if (isPremium) return false;
   try {
-    final tribes = await ref.read(tribeRepositoryProvider).getUserTribes(userId);
+    final tribes = await ref
+        .read(tribeRepositoryProvider)
+        .getUserTribes(userId);
     if (!context.mounted) return true;
     if (tribes.isNotEmpty) {
       showPremiumLimitDialog(context, limitType: PremiumLimitType.club);

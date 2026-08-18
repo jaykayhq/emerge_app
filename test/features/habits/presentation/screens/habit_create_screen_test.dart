@@ -84,18 +84,16 @@ void main() {
   });
 
   group('HabitCreateScreen', () {
-    testWidgets('renders header, identity builder, emoji + difficulty',
-        (tester) async {
+    testWidgets('renders header, identity builder, emoji + difficulty', (
+      tester,
+    ) async {
       await tester.pumpWidget(_createTestWidget());
       await tester.pump();
 
       // App bar title.
       expect(find.text('CREATE HABIT'), findsOneWidget);
       // Identity sentence builder copy.
-      expect(
-        find.text('I am the type of person who'),
-        findsOneWidget,
-      );
+      expect(find.text('I am the type of person who'), findsOneWidget);
       // Default emoji shown in the sentence pill.
       expect(find.text('🔥'), findsOneWidget);
       // Difficulty chips render (default difficulty = medium).
@@ -104,20 +102,17 @@ void main() {
       expect(find.byType(IdentitySentenceBuilder), findsOneWidget);
     });
 
-    testWidgets('forge button disabled until action is set',
-        (tester) async {
+    testWidgets('forge button disabled until action is set', (tester) async {
       await tester.pumpWidget(_createTestWidget());
       await tester.pump();
 
-      final forgeButton =
-          find.widgetWithText(ElevatedButton, 'FORGE HABIT');
+      final forgeButton = find.widgetWithText(ElevatedButton, 'FORGE HABIT');
       expect(forgeButton, findsOneWidget);
       // With no action set, the button is disabled.
       expect(tester.widget<ElevatedButton>(forgeButton).enabled, isFalse);
     });
 
-    testWidgets('sentence shows placeholder pills when empty',
-        (tester) async {
+    testWidgets('sentence shows placeholder pills when empty', (tester) async {
       await tester.pumpWidget(_createTestWidget());
       await tester.pump();
 
@@ -126,16 +121,18 @@ void main() {
       expect(find.text('where...'), findsOneWidget);
     });
 
-    testWidgets('renders the nebula background behind the form',
-        (tester) async {
+    testWidgets('renders the nebula background behind the form', (
+      tester,
+    ) async {
       await tester.pumpWidget(_createTestWidget());
       await tester.pump();
 
       expect(find.byType(NebulaBackground), findsOneWidget);
     });
 
-    testWidgets('title sheet live-filters recommendations as you type',
-        (tester) async {
+    testWidgets('title sheet live-filters recommendations as you type', (
+      tester,
+    ) async {
       await tester.pumpWidget(_createTestWidget());
       await tester.pump();
 
@@ -172,8 +169,9 @@ void main() {
   });
 
   group('HabitCreateScreen - time-of-day persistence', () {
-    testWidgets('stores timeOfDayPreference derived from the reminder time',
-        (tester) async {
+    testWidgets('stores timeOfDayPreference derived from the reminder time', (
+      tester,
+    ) async {
       Habit? captured;
       await tester.pumpWidget(
         _createTestWidgetWithCapture((habit) => captured = habit),
@@ -202,8 +200,9 @@ void main() {
   });
 
   group('HabitCreateScreen - integrations', () {
-    testWidgets('integration pill opens the sheet and applies a steps target',
-        (tester) async {
+    testWidgets('integration pill opens the sheet and applies a steps target', (
+      tester,
+    ) async {
       await tester.pumpWidget(_createTestWidget());
       await tester.pump();
 
@@ -228,8 +227,9 @@ void main() {
       expect(find.text('STEPS 10000'), findsOneWidget);
     });
 
-    testWidgets('invalid target keeps the sheet open and shows an error',
-        (tester) async {
+    testWidgets('invalid target keeps the sheet open and shows an error', (
+      tester,
+    ) async {
       await tester.pumpWidget(_createTestWidget());
       await tester.pump();
 
@@ -255,43 +255,46 @@ void main() {
       expect(find.text('STEPS 0'), findsNothing);
     });
 
-    testWidgets('switching integration type resets target and clears the error',
-        (tester) async {
-      await tester.pumpWidget(_createTestWidget());
-      await tester.pump();
+    testWidgets(
+      'switching integration type resets target and clears the error',
+      (tester) async {
+        await tester.pumpWidget(_createTestWidget());
+        await tester.pump();
 
-      await tester.tap(find.text('NO INTEGRATION'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 350));
+        await tester.tap(find.text('NO INTEGRATION'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
 
-      await tester.tap(find.text('Health Steps'));
-      await tester.pump();
+        await tester.tap(find.text('Health Steps'));
+        await tester.pump();
 
-      // Enter an invalid target and confirm → error appears.
-      await tester.enterText(
-        find.byKey(const Key('integration_target_field')),
-        '0',
-      );
-      await tester.tap(find.text('CONFIRM'));
-      await tester.pump();
-      expect(find.text('Enter a valid target above 0.'), findsOneWidget);
+        // Enter an invalid target and confirm → error appears.
+        await tester.enterText(
+          find.byKey(const Key('integration_target_field')),
+          '0',
+        );
+        await tester.tap(find.text('CONFIRM'));
+        await tester.pump();
+        expect(find.text('Enter a valid target above 0.'), findsOneWidget);
 
-      // Switching to Screen Time Limit resets the field to its default and
-      // clears the error.
-      await tester.tap(find.text('Screen Time Limit'));
-      await tester.pump();
+        // Switching to Screen Time Limit resets the field to its default and
+        // clears the error.
+        await tester.tap(find.text('Screen Time Limit'));
+        await tester.pump();
 
-      final targetField = tester.widget<TextField>(
-        find.byKey(const Key('integration_target_field')),
-      );
-      expect(targetField.controller!.text, '30');
-      expect(find.text('Enter a valid target above 0.'), findsNothing);
-    });
+        final targetField = tester.widget<TextField>(
+          find.byKey(const Key('integration_target_field')),
+        );
+        expect(targetField.controller!.text, '30');
+        expect(find.text('Enter a valid target above 0.'), findsNothing);
+      },
+    );
   });
 
   group('HabitCreateScreen - integration persistence', () {
-    testWidgets('forges a habit with the selected integration fields',
-        (tester) async {
+    testWidgets('forges a habit with the selected integration fields', (
+      tester,
+    ) async {
       Habit? captured;
       await tester.pumpWidget(
         _createTestWidgetWithCapture((habit) => captured = habit),
@@ -331,55 +334,57 @@ void main() {
       expect(captured!.integrationTarget, 45);
     });
 
-    testWidgets('No Integration clears a previously applied integration target',
-        (tester) async {
-      Habit? captured;
-      await tester.pumpWidget(
-        _createTestWidgetWithCapture((habit) => captured = habit),
-      );
-      await tester.pump();
+    testWidgets(
+      'No Integration clears a previously applied integration target',
+      (tester) async {
+        Habit? captured;
+        await tester.pumpWidget(
+          _createTestWidgetWithCapture((habit) => captured = habit),
+        );
+        await tester.pump();
 
-      // Title via typeahead.
-      await tester.tap(find.text('action'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 350));
-      await tester.enterText(find.byType(TextField), 'med');
-      await tester.pump();
-      await tester.tap(find.text('Meditate'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 350));
+        // Title via typeahead.
+        await tester.tap(find.text('action'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+        await tester.enterText(find.byType(TextField), 'med');
+        await tester.pump();
+        await tester.tap(find.text('Meditate'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
 
-      // Apply Screen Time Limit = 45.
-      await tester.tap(find.text('NO INTEGRATION'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 350));
-      await tester.tap(find.text('Screen Time Limit'));
-      await tester.pump();
-      await tester.enterText(
-        find.byKey(const Key('integration_target_field')),
-        '45',
-      );
-      await tester.tap(find.text('CONFIRM'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 350));
+        // Apply Screen Time Limit = 45.
+        await tester.tap(find.text('NO INTEGRATION'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+        await tester.tap(find.text('Screen Time Limit'));
+        await tester.pump();
+        await tester.enterText(
+          find.byKey(const Key('integration_target_field')),
+          '45',
+        );
+        await tester.tap(find.text('CONFIRM'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
 
-      // Reopen the sheet and pick No Integration.
-      await tester.tap(find.text('SCREEN 45 MIN'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 350));
-      await tester.tap(find.text('No Integration'));
-      await tester.pump();
-      await tester.tap(find.text('CONFIRM'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 350));
+        // Reopen the sheet and pick No Integration.
+        await tester.tap(find.text('SCREEN 45 MIN'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+        await tester.tap(find.text('No Integration'));
+        await tester.pump();
+        await tester.tap(find.text('CONFIRM'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
 
-      await tester.tap(find.text('FORGE HABIT'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 350));
+        await tester.tap(find.text('FORGE HABIT'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
 
-      expect(captured, isNotNull);
-      expect(captured!.integrationType, HabitIntegrationType.none);
-      expect(captured!.integrationTarget, isNull);
-    });
+        expect(captured, isNotNull);
+        expect(captured!.integrationType, HabitIntegrationType.none);
+        expect(captured!.integrationTarget, isNull);
+      },
+    );
   });
 }

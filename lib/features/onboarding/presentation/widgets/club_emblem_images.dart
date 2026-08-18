@@ -65,6 +65,8 @@ String clubEmblemImageUrl({
   if (themed != null) return themed;
 
   // Deterministic pick from the generic pool so a club always looks the same.
-  final hash = clubId.isEmpty ? 0 : clubId.codeUnits.fold<int>(0, (a, b) => a + b);
+  final hash = clubId.isEmpty
+      ? 0
+      : clubId.codeUnits.fold<int>(0, (a, b) => a + b);
   return _genericEmblems[hash % _genericEmblems.length];
 }

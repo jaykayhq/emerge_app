@@ -63,39 +63,40 @@ class TribeCard extends ConsumerWidget {
                         height: double.infinity,
                         errorBuilder: (context, error, stackTrace) =>
                             const Center(
-                          child: Icon(
-                            Icons.groups,
-                            size: 36,
-                            color: EmergeColors.teal,
-                          ),
-                        ),
+                              child: Icon(
+                                Icons.groups,
+                                size: 36,
+                                color: EmergeColors.teal,
+                              ),
+                            ),
                       )
                     : Image.network(
-                  imageUrl,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                  loadingBuilder: (context, child, progress) {
-                    if (progress == null) return child;
-                    return const Center(
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: EmergeColors.teal,
-                        ),
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                        loadingBuilder: (context, child, progress) {
+                          if (progress == null) return child;
+                          return const Center(
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: EmergeColors.teal,
+                              ),
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Center(
+                              child: Icon(
+                                Icons.groups,
+                                size: 36,
+                                color: EmergeColors.teal,
+                              ),
+                            ),
                       ),
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace) => const Center(
-                    child: Icon(
-                      Icons.groups,
-                      size: 36,
-                      color: EmergeColors.teal,
-                    ),
-                  ),
-                ),
               ),
             ),
             // Info area.
@@ -242,7 +243,9 @@ class _MembershipButton extends ConsumerWidget {
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Joined ${tribe.name}! It is now your active tribe.'),
+                    content: Text(
+                      'Joined ${tribe.name}! It is now your active tribe.',
+                    ),
                   ),
                 );
               }

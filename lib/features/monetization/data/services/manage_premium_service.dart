@@ -52,5 +52,7 @@ class ManagePremiumService {
 
 @riverpod
 ManagePremiumService managePremiumService(Ref ref) {
-  return ManagePremiumService(FirebaseFunctionsCaller(FirebaseFunctions.instance));
+  return ManagePremiumService(
+    FirebaseFunctionsCaller(FirebaseFunctions.instance),
+  );
 }

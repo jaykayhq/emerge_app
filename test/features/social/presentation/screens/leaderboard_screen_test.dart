@@ -33,15 +33,11 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          userStatsStreamProvider.overrideWith(
-            (ref) => const Stream.empty(),
-          ),
+          userStatsStreamProvider.overrideWith((ref) => const Stream.empty()),
           friendsLeaderboardProvider.overrideWith(
             (ref) => const Stream.empty(),
           ),
-          worldLeaderboardProvider.overrideWith(
-            (ref) => const Stream.empty(),
-          ),
+          worldLeaderboardProvider.overrideWith((ref) => const Stream.empty()),
         ],
         child: const MaterialApp(home: LeaderboardScreen()),
       ),
@@ -55,15 +51,11 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          friendsLeaderboardProvider.overrideWith(
-            (ref) => Stream.value([]),
-          ),
+          friendsLeaderboardProvider.overrideWith((ref) => Stream.value([])),
           userStatsStreamProvider.overrideWith(
             (ref) => Stream.value(const UserProfile(uid: '')),
           ),
-          worldLeaderboardProvider.overrideWith(
-            (ref) => Stream.value([]),
-          ),
+          worldLeaderboardProvider.overrideWith((ref) => Stream.value([])),
         ],
         child: const MaterialApp(home: LeaderboardScreen()),
       ),
@@ -104,7 +96,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            userStatsStreamProvider.overrideWith((ref) => Stream.value(profile)),
+            userStatsStreamProvider.overrideWith(
+              (ref) => Stream.value(profile),
+            ),
             activeMembershipProvider.overrideWith(
               (ref) => Stream.value(
                 UserTribeTableData(
@@ -118,21 +112,19 @@ void main() {
             ),
             // Both candidate clubs are stubbed with distinguishable entries:
             // only the club the tab actually watches must render.
-            clubLeaderboardProvider('tribeA').overrideWith(
-              (ref) => Stream.value(const [tribeAEntry]),
-            ),
-            clubLeaderboardProvider('morning_warriors').overrideWith(
-              (ref) => Stream.value(const [archetypeEntry]),
-            ),
+            clubLeaderboardProvider(
+              'tribeA',
+            ).overrideWith((ref) => Stream.value(const [tribeAEntry])),
+            clubLeaderboardProvider(
+              'morning_warriors',
+            ).overrideWith((ref) => Stream.value(const [archetypeEntry])),
             userTribesProvider('user1').overrideWith(
               (ref) => Stream.value([
                 _tribe(members: const ['memberA']),
               ]),
             ),
           ],
-          child: const MaterialApp(
-            home: LeaderboardScreen(initialTabIndex: 1),
-          ),
+          child: const MaterialApp(home: LeaderboardScreen(initialTabIndex: 1)),
         ),
       );
 
@@ -146,125 +138,115 @@ void main() {
     },
   );
 
-  testWidgets(
-    'tribe leaderboard tab falls back to the archetype club without '
-    'membership',
-    (tester) async {
-      const archetypeEntry = LeaderboardEntry(
-        userId: 'memberB',
-        userName: 'Archetype Member',
-        xp: 50,
-        level: 1,
-        archetype: UserArchetype.athlete,
-        rank: 1,
-      );
-      const tribeAEntry = LeaderboardEntry(
-        userId: 'memberA',
-        userName: 'Tribe A Member',
-        xp: 100,
-        level: 2,
-        archetype: UserArchetype.athlete,
-        rank: 1,
-      );
+  testWidgets('tribe leaderboard tab falls back to the archetype club without '
+      'membership', (tester) async {
+    const archetypeEntry = LeaderboardEntry(
+      userId: 'memberB',
+      userName: 'Archetype Member',
+      xp: 50,
+      level: 1,
+      archetype: UserArchetype.athlete,
+      rank: 1,
+    );
+    const tribeAEntry = LeaderboardEntry(
+      userId: 'memberA',
+      userName: 'Tribe A Member',
+      xp: 100,
+      level: 2,
+      archetype: UserArchetype.athlete,
+      rank: 1,
+    );
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            userStatsStreamProvider.overrideWith(
-              (ref) => Stream.value(
-                UserProfile(uid: 'user1', archetype: UserArchetype.athlete),
-              ),
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          userStatsStreamProvider.overrideWith(
+            (ref) => Stream.value(
+              UserProfile(uid: 'user1', archetype: UserArchetype.athlete),
             ),
-            activeMembershipProvider.overrideWith(
-              (ref) => Stream.value(null),
-            ),
-            clubLeaderboardProvider('tribeA').overrideWith(
-              (ref) => Stream.value(const [tribeAEntry]),
-            ),
-            clubLeaderboardProvider('morning_warriors').overrideWith(
-              (ref) => Stream.value(const [archetypeEntry]),
-            ),
-          ],
-          child: const MaterialApp(
-            home: LeaderboardScreen(initialTabIndex: 1),
           ),
-        ),
-      );
+          activeMembershipProvider.overrideWith((ref) => Stream.value(null)),
+          clubLeaderboardProvider(
+            'tribeA',
+          ).overrideWith((ref) => Stream.value(const [tribeAEntry])),
+          clubLeaderboardProvider(
+            'morning_warriors',
+          ).overrideWith((ref) => Stream.value(const [archetypeEntry])),
+        ],
+        child: const MaterialApp(home: LeaderboardScreen(initialTabIndex: 1)),
+      ),
+    );
 
-      // Nested stream providers; see the active-tribe test above.
-      await tester.pump(const Duration(seconds: 1));
-      await tester.pump();
+    // Nested stream providers; see the active-tribe test above.
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump();
 
-      expect(find.text('Archetype Member'), findsOneWidget);
-      expect(find.text('Tribe A Member'), findsNothing);
-    },
-  );
+    expect(find.text('Archetype Member'), findsOneWidget);
+    expect(find.text('Tribe A Member'), findsNothing);
+  });
 
-  testWidgets(
-    'tribe leaderboard tab hides users who are no longer members',
-    (tester) async {
-      const tribeAEntry = LeaderboardEntry(
-        userId: 'memberA',
-        userName: 'Tribe A Member',
-        xp: 100,
-        level: 2,
-        archetype: UserArchetype.athlete,
-        rank: 1,
-      );
-      const leaverEntry = LeaderboardEntry(
-        userId: 'leaverX',
-        userName: 'Leaver Member',
-        xp: 90,
-        level: 2,
-        archetype: UserArchetype.athlete,
-        rank: 2,
-      );
+  testWidgets('tribe leaderboard tab hides users who are no longer members', (
+    tester,
+  ) async {
+    const tribeAEntry = LeaderboardEntry(
+      userId: 'memberA',
+      userName: 'Tribe A Member',
+      xp: 100,
+      level: 2,
+      archetype: UserArchetype.athlete,
+      rank: 1,
+    );
+    const leaverEntry = LeaderboardEntry(
+      userId: 'leaverX',
+      userName: 'Leaver Member',
+      xp: 90,
+      level: 2,
+      archetype: UserArchetype.athlete,
+      rank: 2,
+    );
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            userStatsStreamProvider.overrideWith(
-              (ref) => Stream.value(
-                UserProfile(uid: 'user1', archetype: UserArchetype.athlete),
-              ),
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          userStatsStreamProvider.overrideWith(
+            (ref) => Stream.value(
+              UserProfile(uid: 'user1', archetype: UserArchetype.athlete),
             ),
-            activeMembershipProvider.overrideWith(
-              (ref) => Stream.value(
-                UserTribeTableData(
-                  userId: 'user1',
-                  tribeId: 'tribeA',
-                  membershipType: 'member',
-                  joinedAt: DateTime.now().toIso8601String(),
-                  isActive: true,
-                ),
-              ),
-            ),
-            clubLeaderboardProvider('tribeA').overrideWith(
-              (ref) => Stream.value(const [tribeAEntry, leaverEntry]),
-            ),
-            clubLeaderboardProvider('morning_warriors').overrideWith(
-              (ref) => const Stream.empty(),
-            ),
-            // The tribe's remote members array lists only memberA — the
-            // leaver's history stays in the leaderboard (D2) but must not
-            // render (B10).
-            userTribesProvider('user1').overrideWith(
-              (ref) => Stream.value([
-                _tribe(members: const ['memberA']),
-              ]),
-            ),
-          ],
-          child: const MaterialApp(
-            home: LeaderboardScreen(initialTabIndex: 1),
           ),
-        ),
-      );
+          activeMembershipProvider.overrideWith(
+            (ref) => Stream.value(
+              UserTribeTableData(
+                userId: 'user1',
+                tribeId: 'tribeA',
+                membershipType: 'member',
+                joinedAt: DateTime.now().toIso8601String(),
+                isActive: true,
+              ),
+            ),
+          ),
+          clubLeaderboardProvider('tribeA').overrideWith(
+            (ref) => Stream.value(const [tribeAEntry, leaverEntry]),
+          ),
+          clubLeaderboardProvider(
+            'morning_warriors',
+          ).overrideWith((ref) => const Stream.empty()),
+          // The tribe's remote members array lists only memberA — the
+          // leaver's history stays in the leaderboard (D2) but must not
+          // render (B10).
+          userTribesProvider('user1').overrideWith(
+            (ref) => Stream.value([
+              _tribe(members: const ['memberA']),
+            ]),
+          ),
+        ],
+        child: const MaterialApp(home: LeaderboardScreen(initialTabIndex: 1)),
+      ),
+    );
 
-      await tester.pump(const Duration(seconds: 1));
-      await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump();
 
-      expect(find.text('Tribe A Member'), findsOneWidget);
-      expect(find.text('Leaver Member'), findsNothing);
-    },
-  );
+    expect(find.text('Tribe A Member'), findsOneWidget);
+    expect(find.text('Leaver Member'), findsNothing);
+  });
 }

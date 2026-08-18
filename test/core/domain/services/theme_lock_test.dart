@@ -15,7 +15,11 @@ void main() {
     test('every other theme is locked', () {
       for (final theme in AppWorldTheme.values) {
         if (theme == AppWorldTheme.nebula) continue;
-        expect(ThemeLock.isLocked(theme), isTrue, reason: '$theme should be locked');
+        expect(
+          ThemeLock.isLocked(theme),
+          isTrue,
+          reason: '$theme should be locked',
+        );
       }
     });
 

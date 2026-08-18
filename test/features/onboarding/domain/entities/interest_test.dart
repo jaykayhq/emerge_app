@@ -20,9 +20,13 @@ void main() {
 
     test('catalog ids match category prefix invariant', () {
       for (final interest in Interest.catalog) {
-        expect(interest.id.startsWith(interest.category.idPrefix), isTrue,
-            reason: 'catalog id ${interest.id} must start with its category '
-                'prefix for stable personalization joins');
+        expect(
+          interest.id.startsWith(interest.category.idPrefix),
+          isTrue,
+          reason:
+              'catalog id ${interest.id} must start with its category '
+              'prefix for stable personalization joins',
+        );
       }
     });
   });
@@ -32,23 +36,35 @@ void main() {
       final catalog = Interest.catalog;
       for (final category in InterestCategory.values) {
         final count = catalog.where((i) => i.category == category).length;
-        expect(count, greaterThanOrEqualTo(3),
-            reason: '$category must have at least 3 entries');
-        expect(count, lessThanOrEqualTo(5),
-            reason: '$category must have at most 5 entries');
+        expect(
+          count,
+          greaterThanOrEqualTo(3),
+          reason: '$category must have at least 3 entries',
+        );
+        expect(
+          count,
+          lessThanOrEqualTo(5),
+          reason: '$category must have at most 5 entries',
+        );
       }
     });
 
     test('all ids are unique', () {
       final ids = Interest.catalog.map((i) => i.id).toList();
-      expect(ids.toSet().length, ids.length,
-          reason: 'every interest must have a unique id');
+      expect(
+        ids.toSet().length,
+        ids.length,
+        reason: 'every interest must have a unique id',
+      );
     });
 
     test('no null labels or empty labels', () {
       for (final interest in Interest.catalog) {
-        expect(interest.label.trim().isNotEmpty, isTrue,
-            reason: 'interest ${interest.id} must have a non-empty label');
+        expect(
+          interest.label.trim().isNotEmpty,
+          isTrue,
+          reason: 'interest ${interest.id} must have a non-empty label',
+        );
       }
     });
 
@@ -62,8 +78,11 @@ void main() {
     test('returns a non-empty stable prefix for every category', () {
       for (final category in InterestCategory.values) {
         expect(category.idPrefix, isNotEmpty);
-        expect(category.idPrefix.contains('.'), isTrue,
-            reason: 'prefix must end with a dot so slug concat works');
+        expect(
+          category.idPrefix.contains('.'),
+          isTrue,
+          reason: 'prefix must end with a dot so slug concat works',
+        );
       }
     });
   });

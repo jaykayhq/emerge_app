@@ -28,9 +28,7 @@ class ShareableImageExporter {
     // Opacity(0) would skip painting the child, making the capture fail.
     final entry = OverlayEntry(
       builder: (_) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(
-          textScaler: TextScaler.noScaling,
-        ),
+        data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
         child: Positioned(
           left: -10000,
           top: -10000,

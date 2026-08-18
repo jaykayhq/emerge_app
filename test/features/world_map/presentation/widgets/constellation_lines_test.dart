@@ -3,7 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:emerge_app/features/world_map/presentation/widgets/constellation_lines.dart';
 
 void main() {
-  testWidgets('ConstellationLines paints lines given coordinates', (WidgetTester tester) async {
+  testWidgets('ConstellationLines paints lines given coordinates', (
+    WidgetTester tester,
+  ) async {
     final nodePositions = [
       const Offset(100, 100),
       const Offset(200, 100),

@@ -4,21 +4,23 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('emits false while the doc is missing, true after the webhook write',
-      () async {
-    final fdb = FakeFirebaseFirestore();
-    final values = <bool>[];
-    final sub = streamWebPremium(fdb, 'uid-1').listen(values.add);
+  test(
+    'emits false while the doc is missing, true after the webhook write',
+    () async {
+      final fdb = FakeFirebaseFirestore();
+      final values = <bool>[];
+      final sub = streamWebPremium(fdb, 'uid-1').listen(values.add);
 
-    await fdb
-        .collection('users')
-        .doc('uid-1')
-        .set({'isPremium': true, 'premium_since': Timestamp.now()});
-    await pumpEventQueue();
+      await fdb.collection('users').doc('uid-1').set({
+        'isPremium': true,
+        'premium_since': Timestamp.now(),
+      });
+      await pumpEventQueue();
 
-    expect(values, [false, true]);
-    await sub.cancel();
-  });
+      expect(values, [false, true]);
+      await sub.cancel();
+    },
+  );
 
   test('emits false again when the doc flips back to non-premium', () async {
     final fdb = FakeFirebaseFirestore();
@@ -53,8 +55,9 @@ void main() {
     await fdb.collection('users').doc('uid-1').set({
       'isPremium': true,
       'subscriptionStatus': 'paused',
-      'premiumEndsAt':
-          Timestamp.fromDate(DateTime.now().add(const Duration(days: 30))),
+      'premiumEndsAt': Timestamp.fromDate(
+        DateTime.now().add(const Duration(days: 30)),
+      ),
     });
     await pumpEventQueue();
 
@@ -70,8 +73,9 @@ void main() {
     await fdb.collection('users').doc('uid-1').set({
       'isPremium': true,
       'subscriptionStatus': 'paused',
-      'premiumEndsAt':
-          Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 1))),
+      'premiumEndsAt': Timestamp.fromDate(
+        DateTime.now().subtract(const Duration(days: 1)),
+      ),
     });
     await pumpEventQueue();
 

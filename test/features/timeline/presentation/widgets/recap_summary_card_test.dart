@@ -46,10 +46,7 @@ void main() {
     testWidgets('shows 0% when no completions', (tester) async {
       await tester.pumpWidget(
         buildTestApp(
-          const RecapSummaryCard(
-            completionFraction: 0.0,
-            currentStreak: 0,
-          ),
+          const RecapSummaryCard(completionFraction: 0.0, currentStreak: 0),
         ),
       );
 
@@ -60,10 +57,7 @@ void main() {
     testWidgets('shows all-done narrative without tribe data', (tester) async {
       await tester.pumpWidget(
         buildTestApp(
-          const RecapSummaryCard(
-            completionFraction: 1.0,
-            currentStreak: 5,
-          ),
+          const RecapSummaryCard(completionFraction: 1.0, currentStreak: 5),
         ),
       );
 
@@ -71,7 +65,9 @@ void main() {
       expect(find.text('All done today! Great work.'), findsOneWidget);
     });
 
-    testWidgets('shows all-done narrative with tribe percentile', (tester) async {
+    testWidgets('shows all-done narrative with tribe percentile', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildTestApp(
           const RecapSummaryCard(
@@ -89,30 +85,23 @@ void main() {
       );
     });
 
-    testWidgets('shows encouraging narrative for low completions', (tester) async {
+    testWidgets('shows encouraging narrative for low completions', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildTestApp(
-          const RecapSummaryCard(
-            completionFraction: 0.3,
-            currentStreak: 2,
-          ),
+          const RecapSummaryCard(completionFraction: 0.3, currentStreak: 2),
         ),
       );
 
       expect(find.text('30%'), findsOneWidget);
-      expect(
-        find.text("Every habit counts — you're at 30%."),
-        findsOneWidget,
-      );
+      expect(find.text("Every habit counts — you're at 30%."), findsOneWidget);
     });
 
     testWidgets('streak display scales with value', (tester) async {
       await tester.pumpWidget(
         buildTestApp(
-          const RecapSummaryCard(
-            completionFraction: 0.6,
-            currentStreak: 21,
-          ),
+          const RecapSummaryCard(completionFraction: 0.6, currentStreak: 21),
         ),
       );
 
@@ -123,10 +112,7 @@ void main() {
     testWidgets('amber arc color for mid-range completion', (tester) async {
       await tester.pumpWidget(
         buildTestApp(
-          const RecapSummaryCard(
-            completionFraction: 0.3,
-            currentStreak: 1,
-          ),
+          const RecapSummaryCard(completionFraction: 0.3, currentStreak: 1),
         ),
       );
 
@@ -134,24 +120,23 @@ void main() {
       final progressIndicator = tester.widget<CircularProgressIndicator>(
         find.byType(CircularProgressIndicator),
       );
-      final arcColor = (progressIndicator.valueColor as AlwaysStoppedAnimation<Color>).value;
+      final arcColor =
+          (progressIndicator.valueColor as AlwaysStoppedAnimation<Color>).value;
       expect(arcColor, const Color(0xFFFFC107));
     });
 
     testWidgets('coral arc color for low completion', (tester) async {
       await tester.pumpWidget(
         buildTestApp(
-          const RecapSummaryCard(
-            completionFraction: 0.1,
-            currentStreak: 0,
-          ),
+          const RecapSummaryCard(completionFraction: 0.1, currentStreak: 0),
         ),
       );
 
       final progressIndicator = tester.widget<CircularProgressIndicator>(
         find.byType(CircularProgressIndicator),
       );
-      final arcColor = (progressIndicator.valueColor as AlwaysStoppedAnimation<Color>).value;
+      final arcColor =
+          (progressIndicator.valueColor as AlwaysStoppedAnimation<Color>).value;
       expect(arcColor, const Color(0xFFFF6B6B));
     });
 

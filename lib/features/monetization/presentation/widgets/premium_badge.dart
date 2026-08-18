@@ -67,19 +67,16 @@ class _PremiumBadgeState extends State<PremiumBadge>
           boxShadow: widget.showShimmer
               ? [
                   BoxShadow(
-                    color: const Color(0xFFFFD700)
-                        .withValues(alpha: 0.4 * _controller.value),
+                    color: const Color(
+                      0xFFFFD700,
+                    ).withValues(alpha: 0.4 * _controller.value),
                     blurRadius: 6,
                     spreadRadius: 1,
                   ),
                 ]
               : null,
         ),
-        child: Icon(
-          Icons.star,
-          color: Colors.black87,
-          size: widget.size * 0.6,
-        ),
+        child: Icon(Icons.star, color: Colors.black87, size: widget.size * 0.6),
       ),
     );
   }

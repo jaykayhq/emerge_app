@@ -4,5 +4,7 @@ import 'package:emerge_app/features/social/domain/repositories/challenge_reposit
 import 'package:emerge_app/features/social/domain/repositories/leaderboard_repository.dart';
 
 class MockChallengeRepository extends Mock implements ChallengeRepository {}
+
 class MockTribeRepository extends Mock implements TribeRepository {}
+
 class MockLeaderboardRepository extends Mock implements LeaderboardRepository {}

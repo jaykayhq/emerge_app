@@ -19,19 +19,22 @@ void main() {
     });
     final inMemoryDb = AppDatabase.withExecutor(NativeDatabase.memory());
     addTearDown(inMemoryDb.close);
-    final container = ProviderContainer(overrides: [
-      appDatabaseProvider.overrideWithValue(inMemoryDb),
-      creatorAnalyticsServiceProvider.overrideWithValue(
-        CreatorAnalyticsService(firestore: firestore),
-      ),
-      tribeAnalyticsSnapshotServiceProvider.overrideWithValue(
-        TribeAnalyticsSnapshotService(firestore: firestore),
-      ),
-    ]);
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWithValue(inMemoryDb),
+        creatorAnalyticsServiceProvider.overrideWithValue(
+          CreatorAnalyticsService(firestore: firestore),
+        ),
+        tribeAnalyticsSnapshotServiceProvider.overrideWithValue(
+          TribeAnalyticsSnapshotService(firestore: firestore),
+        ),
+      ],
+    );
     addTearDown(container.dispose);
 
-    final async = await container
-        .read(creatorAnalyticsProvider(uid: 'creator1', tribeId: 't1').future);
+    final async = await container.read(
+      creatorAnalyticsProvider(uid: 'creator1', tribeId: 't1').future,
+    );
     expect(async.tribeName, 'The Forge');
     expect(async.memberCount, 1);
 

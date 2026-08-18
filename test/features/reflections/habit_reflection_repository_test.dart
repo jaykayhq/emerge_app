@@ -60,7 +60,10 @@ void main() {
 
   test('save does not throw when remote fails', () async {
     final throwingRemote = _ThrowingRemote();
-    final repo2 = HabitReflectionRepository(local: local, remote: throwingRemote);
+    final repo2 = HabitReflectionRepository(
+      local: local,
+      remote: throwingRemote,
+    );
     final result = await repo2.save(
       userId: 'u1',
       habitId: 'h1',

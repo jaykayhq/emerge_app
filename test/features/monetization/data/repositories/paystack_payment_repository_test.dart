@@ -22,16 +22,18 @@ void main() {
   });
 
   test('initializeTransaction forwards callbackUrl to the callable', () async {
-    when(() => functions.httpsCallable('initializePaystackTransaction'))
-        .thenReturn(callable);
+    when(
+      () => functions.httpsCallable('initializePaystackTransaction'),
+    ).thenReturn(callable);
     final mockResult = MockHttpsCallableResult();
     when(() => mockResult.data).thenReturn({
       'authorization_url': 'https://checkout.paystack.com/abc',
       'access_code': 'x',
       'reference': 'ref1',
     });
-    when(() => callable.call<Map<String, dynamic>>(any()))
-        .thenAnswer((_) async => mockResult);
+    when(
+      () => callable.call<Map<String, dynamic>>(any()),
+    ).thenAnswer((_) async => mockResult);
 
     await repo.initializeTransaction(
       amount: 15000,
@@ -40,25 +42,28 @@ void main() {
       callbackUrl: 'https://emerge.web.app/order-confirmed',
     );
 
-    final payload = verify(
-            () => callable.call<Map<String, dynamic>>(captureAny()))
-        .captured
-        .single as Map<String, dynamic>;
+    final payload =
+        verify(
+              () => callable.call<Map<String, dynamic>>(captureAny()),
+            ).captured.single
+            as Map<String, dynamic>;
     expect(payload['callbackUrl'], 'https://emerge.web.app/order-confirmed');
     expect(payload['amount'], 1500000); // kobo conversion unchanged
   });
 
   test('omits callbackUrl from the payload when not provided', () async {
-    when(() => functions.httpsCallable('initializePaystackTransaction'))
-        .thenReturn(callable);
+    when(
+      () => functions.httpsCallable('initializePaystackTransaction'),
+    ).thenReturn(callable);
     final mockResult = MockHttpsCallableResult();
     when(() => mockResult.data).thenReturn({
       'authorization_url': 'https://checkout.paystack.com/abc',
       'access_code': 'x',
       'reference': 'ref1',
     });
-    when(() => callable.call<Map<String, dynamic>>(any()))
-        .thenAnswer((_) async => mockResult);
+    when(
+      () => callable.call<Map<String, dynamic>>(any()),
+    ).thenAnswer((_) async => mockResult);
 
     await repo.initializeTransaction(
       amount: 15000,
@@ -66,10 +71,11 @@ void main() {
       identityType: 'yearly',
     );
 
-    final payload = verify(
-            () => callable.call<Map<String, dynamic>>(captureAny()))
-        .captured
-        .single as Map<String, dynamic>;
+    final payload =
+        verify(
+              () => callable.call<Map<String, dynamic>>(captureAny()),
+            ).captured.single
+            as Map<String, dynamic>;
     expect(payload.containsKey('callbackUrl'), isFalse);
   });
 }

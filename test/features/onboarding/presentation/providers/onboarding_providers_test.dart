@@ -5,9 +5,7 @@ import 'package:emerge_app/features/onboarding/presentation/providers/onboarding
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-ProviderContainer _makeContainer({
-  OnboardingState? onboardingState,
-}) {
+ProviderContainer _makeContainer({OnboardingState? onboardingState}) {
   return ProviderContainer(
     overrides: [
       if (onboardingState != null)
@@ -49,8 +47,9 @@ void main() {
   group('selectedArchetypeProvider', () {
     test('returns selected archetype from state', () {
       final container = _makeContainer(
-        onboardingState:
-            const OnboardingState(selectedArchetype: UserArchetype.creator),
+        onboardingState: const OnboardingState(
+          selectedArchetype: UserArchetype.creator,
+        ),
       );
       expect(container.read(selectedArchetypeProvider), UserArchetype.creator);
       container.dispose();
@@ -88,13 +87,15 @@ void main() {
 
   group('activeMilestonesProvider', () {
     test('returns first milestone when progress is 0', () {
-      final container = ProviderContainer(overrides: [
-        userStatsStreamProvider.overrideWithValue(
-          AsyncValue.data(
-            const UserProfile(uid: 'test', onboardingProgress: 0),
+      final container = ProviderContainer(
+        overrides: [
+          userStatsStreamProvider.overrideWithValue(
+            AsyncValue.data(
+              const UserProfile(uid: 'test', onboardingProgress: 0),
+            ),
           ),
-        ),
-      ]);
+        ],
+      );
       final milestones = container.read(activeMilestonesProvider);
       expect(milestones.length, 1);
       expect(milestones[0].order, 1);
@@ -102,13 +103,15 @@ void main() {
     });
 
     test('returns empty list when progress >= 4', () {
-      final container = ProviderContainer(overrides: [
-        userStatsStreamProvider.overrideWithValue(
-          AsyncValue.data(
-            const UserProfile(uid: 'test', onboardingProgress: 4),
+      final container = ProviderContainer(
+        overrides: [
+          userStatsStreamProvider.overrideWithValue(
+            AsyncValue.data(
+              const UserProfile(uid: 'test', onboardingProgress: 4),
+            ),
           ),
-        ),
-      ]);
+        ],
+      );
       expect(container.read(activeMilestonesProvider), []);
       container.dispose();
     });
@@ -116,11 +119,13 @@ void main() {
 
   group('isOnboardingActiveProvider', () {
     test('returns value from enhancedOnboardingProvider', () {
-      final container = ProviderContainer(overrides: [
-        enhancedOnboardingProvider.overrideWithValue(
-          const EnhancedOnboardingState(isOnboardingActive: true),
-        ),
-      ]);
+      final container = ProviderContainer(
+        overrides: [
+          enhancedOnboardingProvider.overrideWithValue(
+            const EnhancedOnboardingState(isOnboardingActive: true),
+          ),
+        ],
+      );
       expect(container.read(isOnboardingActiveProvider), true);
       container.dispose();
     });
@@ -128,11 +133,13 @@ void main() {
 
   group('onboardingProgressProvider', () {
     test('returns progress value', () {
-      final container = ProviderContainer(overrides: [
-        enhancedOnboardingProvider.overrideWithValue(
-          const EnhancedOnboardingState(currentStep: 2),
-        ),
-      ]);
+      final container = ProviderContainer(
+        overrides: [
+          enhancedOnboardingProvider.overrideWithValue(
+            const EnhancedOnboardingState(currentStep: 2),
+          ),
+        ],
+      );
       expect(container.read(onboardingProgressProvider), 2 / 5);
       container.dispose();
     });

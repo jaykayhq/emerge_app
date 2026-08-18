@@ -7,11 +7,15 @@ import 'package:emerge_app/features/world_map/presentation/widgets/attribute_hea
 import 'package:emerge_app/features/world_map/presentation/providers/attribute_completions_provider.dart';
 
 void main() {
-  testWidgets('AttributeHeatmapCard shows loading and then chart', (WidgetTester tester) async {
+  testWidgets('AttributeHeatmapCard shows loading and then chart', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          attributeCompletionsProvider('strength').overrideWith((ref) => Future.value([10, 20, 0, 0, 50, 0, 100])),
+          attributeCompletionsProvider(
+            'strength',
+          ).overrideWith((ref) => Future.value([10, 20, 0, 0, 50, 0, 100])),
         ],
         child: const MaterialApp(
           home: Scaffold(
@@ -22,7 +26,7 @@ void main() {
     );
 
     await tester.pumpAndSettle();
-    
+
     expect(find.byType(BarChart), findsOneWidget);
     expect(find.text('Last 7 Days XP'), findsOneWidget);
   });

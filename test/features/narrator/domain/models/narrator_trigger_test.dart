@@ -54,8 +54,5 @@ void main() {
         contains(NarratorTrigger.eveningReflection),
       );
     });
-
-
   });
 }
-

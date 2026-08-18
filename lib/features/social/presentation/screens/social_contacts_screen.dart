@@ -59,11 +59,13 @@ class _SocialContactsScreenState extends ConsumerState<SocialContactsScreen> {
       // Read on-device via fast_contacts.
       final contacts = await fc.FastContacts.getAllContacts();
       final resolved = contacts
-          .map((c) => ResolvedContact(
-                name: c.displayName,
-                phone: c.phones.isNotEmpty ? c.phones.first.number : null,
-                email: c.emails.isNotEmpty ? c.emails.first.address : null,
-              ))
+          .map(
+            (c) => ResolvedContact(
+              name: c.displayName,
+              phone: c.phones.isNotEmpty ? c.phones.first.number : null,
+              email: c.emails.isNotEmpty ? c.emails.first.address : null,
+            ),
+          )
           .where((c) => c.phone != null || c.email != null)
           .toList();
 
@@ -105,17 +107,17 @@ class _SocialContactsScreenState extends ConsumerState<SocialContactsScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
           : _error != null
-              ? Center(
-                  child: Text(
-                    _error!,
-                    style: const TextStyle(color: Colors.white60),
-                  ),
-                )
-              : _matches.isEmpty && _permissionGranted
-                  ? _emptyState()
-                  : _matches.isEmpty
-                      ? _permissionGate()
-                      : _list(),
+          ? Center(
+              child: Text(
+                _error!,
+                style: const TextStyle(color: Colors.white60),
+              ),
+            )
+          : _matches.isEmpty && _permissionGranted
+          ? _emptyState()
+          : _matches.isEmpty
+          ? _permissionGate()
+          : _list(),
     );
   }
 

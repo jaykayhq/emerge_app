@@ -8,27 +8,26 @@ void main() {
       home: Scaffold(
         body: Center(
           // Mirrors the onboarding grid tile: a narrow, bounded box.
-          child: SizedBox(
-            width: 120,
-            height: 160,
-            child: child,
-          ),
+          child: SizedBox(width: 120, height: 160, child: child),
         ),
       ),
     );
   }
 
-  testWidgets('renders with a long activity status without layout errors',
-      (tester) async {
-    await tester.pumpWidget(wrap(
-      ClubBoxCard(
-        title: 'Sunrise Ritual',
-        memberCount: 1240,
-        activityStatus: '🔥 Active right now with a very long status string',
-        typeTag: 'ARCHETYPE',
-        onTap: () {},
+  testWidgets('renders with a long activity status without layout errors', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      wrap(
+        ClubBoxCard(
+          title: 'Sunrise Ritual',
+          memberCount: 1240,
+          activityStatus: '🔥 Active right now with a very long status string',
+          typeTag: 'ARCHETYPE',
+          onTap: () {},
+        ),
       ),
-    ));
+    );
 
     // Regression for the unbounded-width crash: the info Row used Flexible
     // inside a FittedBox (which hands its child unbounded width), throwing
@@ -39,15 +38,17 @@ void main() {
   });
 
   testWidgets('renders with the short default status too', (tester) async {
-    await tester.pumpWidget(wrap(
-      ClubBoxCard(
-        title: 'Night Owls',
-        memberCount: 88,
-        activityStatus: '🌙 Quiet',
-        typeTag: 'CREATOR',
-        onTap: () {},
+    await tester.pumpWidget(
+      wrap(
+        ClubBoxCard(
+          title: 'Night Owls',
+          memberCount: 88,
+          activityStatus: '🌙 Quiet',
+          typeTag: 'CREATOR',
+          onTap: () {},
+        ),
       ),
-    ));
+    );
 
     expect(tester.takeException(), isNull);
     expect(find.text('Night Owls'), findsOneWidget);
@@ -55,32 +56,37 @@ void main() {
 
   testWidgets('forwards taps to onTap', (tester) async {
     var tapped = false;
-    await tester.pumpWidget(wrap(
-      ClubBoxCard(
-        title: 'Sunrise Ritual',
-        memberCount: 1240,
-        activityStatus: '🌙 Quiet',
-        typeTag: 'ARCHETYPE',
-        onTap: () => tapped = true,
+    await tester.pumpWidget(
+      wrap(
+        ClubBoxCard(
+          title: 'Sunrise Ritual',
+          memberCount: 1240,
+          activityStatus: '🌙 Quiet',
+          typeTag: 'ARCHETYPE',
+          onTap: () => tapped = true,
+        ),
       ),
-    ));
+    );
 
     await tester.tap(find.text('Sunrise Ritual'));
     expect(tapped, isTrue);
   });
 
-  testWidgets('renders bundled asset emblem when imageUrl is an assets path',
-      (tester) async {
-    await tester.pumpWidget(wrap(
-      ClubBoxCard(
-        title: 'Morning Warriors',
-        imageUrl: 'assets/images/clubs/morning_warriors.webp',
-        memberCount: 120,
-        activityStatus: '🔥 Active',
-        typeTag: 'ARCHETYPE',
-        onTap: () => {},
+  testWidgets('renders bundled asset emblem when imageUrl is an assets path', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      wrap(
+        ClubBoxCard(
+          title: 'Morning Warriors',
+          imageUrl: 'assets/images/clubs/morning_warriors.webp',
+          memberCount: 120,
+          activityStatus: '🔥 Active',
+          typeTag: 'ARCHETYPE',
+          onTap: () => {},
+        ),
       ),
-    ));
+    );
 
     final image = tester.widget<Image>(find.byType(Image));
     expect(

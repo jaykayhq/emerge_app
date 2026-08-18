@@ -205,7 +205,9 @@ void main() {
 
         final resumeContainer = ProviderContainer(
           overrides: [
-            userProfileRepositoryProvider.overrideWithValue(mockUserProfileRepo),
+            userProfileRepositoryProvider.overrideWithValue(
+              mockUserProfileRepo,
+            ),
             userStatsRepositoryProvider.overrideWithValue(mockUserStatsRepo),
             localSettingsRepositoryProvider.overrideWithValue(
               mockLocalSettingsRepo,
@@ -233,10 +235,16 @@ void main() {
         expect(state.interests, ['movement.walking', 'learning.reading']);
         expect(state.joinedClubId, 'deep_work_society');
         expect(state.currentStep, 3);
-        expect(state.isOnboardingActive, true,
-            reason: 'progress 3 of 5 means onboarding is still active');
-        expect(state.skippedMilestones[1], true,
-            reason: 'skipped "attributes" must be restored as a skipped step');
+        expect(
+          state.isOnboardingActive,
+          true,
+          reason: 'progress 3 of 5 means onboarding is still active',
+        );
+        expect(
+          state.skippedMilestones[1],
+          true,
+          reason: 'skipped "attributes" must be restored as a skipped step',
+        );
       },
     );
   });

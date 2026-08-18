@@ -15,7 +15,10 @@ void main() {
   group('shouldShowPaywallErrorSnackBar', () {
     test('web suppresses error snackbars regardless of error', () {
       expect(
-        shouldShowPaywallErrorSnackBar(isWeb: true, error: 'RevenueCat not configured'),
+        shouldShowPaywallErrorSnackBar(
+          isWeb: true,
+          error: 'RevenueCat not configured',
+        ),
         isFalse,
       );
     });
@@ -28,7 +31,10 @@ void main() {
     });
 
     test('native stays quiet when there is no error', () {
-      expect(shouldShowPaywallErrorSnackBar(isWeb: false, error: null), isFalse);
+      expect(
+        shouldShowPaywallErrorSnackBar(isWeb: false, error: null),
+        isFalse,
+      );
     });
   });
 }

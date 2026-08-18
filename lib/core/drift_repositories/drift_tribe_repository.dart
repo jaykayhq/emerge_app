@@ -72,8 +72,10 @@ class DriftTribeRepository implements TribeRepository {
         final tribeName = (remote?['name'] as String?)?.isNotEmpty == true
             ? remote!['name'] as String
             : row.tribeName ?? '';
-        final description = remote?['description'] as String? ??
-            (OfficialClubsSeed.getOfficialClubsMap()[row.tribeId]?['description']
+        final description =
+            remote?['description'] as String? ??
+            (OfficialClubsSeed.getOfficialClubsMap()[row
+                        .tribeId]?['description']
                     as String? ??
                 '');
         // Distinct per-tribe image: remote first, then the seed catalog.
@@ -81,14 +83,15 @@ class DriftTribeRepository implements TribeRepository {
         // stale — the bundled seed artwork wins for official clubs, so the
         // curated per-club assets actually render. Real custom images (any
         // other URL) still take precedence.
-        final seedImage = OfficialClubsSeed
-            .getOfficialClubsMap()[row.tribeId]?['imageUrl'] as String?;
+        final seedImage =
+            OfficialClubsSeed.getOfficialClubsMap()[row.tribeId]?['imageUrl']
+                as String?;
         final remoteImage = remote?['imageUrl'] as String?;
-        final isLegacyRemote = remoteImage == null ||
+        final isLegacyRemote =
+            remoteImage == null ||
             remoteImage.isEmpty ||
             remoteImage.startsWith('https://images.unsplash.com/');
-        final imageUrl =
-            isLegacyRemote ? (seedImage ?? '') : remoteImage;
+        final imageUrl = isLegacyRemote ? (seedImage ?? '') : remoteImage;
         final members = List<String>.from(remote?['members'] ?? const []);
 
         return Tribe(
@@ -404,14 +407,18 @@ class DriftTribeRepository implements TribeRepository {
     // SP-G D1: idempotence. Never join twice — the onboarding flow calls
     // joinTribe (Firestore transaction) and this method back-to-back, and a
     // reinstall can leave Firestore membership without local Drift state.
-    final localMembership =
-        await _db.tribeMembershipDao.watchActiveMembership(userId).first;
+    final localMembership = await _db.tribeMembershipDao
+        .watchActiveMembership(userId)
+        .first;
     if (localMembership != null && localMembership.isActive) return;
 
     var remoteExists = false;
     try {
       remoteExists = await _firestore
-          .collection('users').doc(userId).collection('tribes').doc(tribeId)
+          .collection('users')
+          .doc(userId)
+          .collection('tribes')
+          .doc(tribeId)
           .get()
           .then((s) => s.exists);
     } catch (_) {
@@ -421,13 +428,15 @@ class DriftTribeRepository implements TribeRepository {
 
     // 1. Update local Drift database
     await _db.tribeStatsDao.incrementMemberCount(tribeId, delta: 1);
-    await _db.tribeMembershipDao.upsertMembership(UserTribeTableCompanion(
-      userId: Value(userId),
-      tribeId: Value(tribeId),
-      membershipType: const Value('archetype'),
-      joinedAt: Value(DateTime.now().toIso8601String()),
-      isActive: const Value(true),
-    ));
+    await _db.tribeMembershipDao.upsertMembership(
+      UserTribeTableCompanion(
+        userId: Value(userId),
+        tribeId: Value(tribeId),
+        membershipType: const Value('archetype'),
+        joinedAt: Value(DateTime.now().toIso8601String()),
+        isActive: const Value(true),
+      ),
+    );
 
     // 2. Enqueue multi-path sync to Firestore
 
@@ -483,8 +492,9 @@ class DriftTribeRepository implements TribeRepository {
   Future<List<Tribe>> getUserTribes(String userId) async {
     // Gather local data first so we can fall back to it on Firestore failure
     List<Tribe> localTribes = [];
-    final membership =
-        await _db.tribeMembershipDao.watchActiveMembership(userId).first;
+    final membership = await _db.tribeMembershipDao
+        .watchActiveMembership(userId)
+        .first;
     if (membership != null) {
       final row = await _db.tribeStatsDao.getStats(membership.tribeId);
       if (row != null) localTribes = [_rowToTribe(row)];
@@ -498,21 +508,27 @@ class DriftTribeRepository implements TribeRepository {
           .where('members', arrayContains: userId)
           .get();
       if (tribeDocs.docs.isEmpty) return [];
-      final tribes =
-          tribeDocs.docs.map((doc) => Tribe.fromMap(doc.data())).toList();
+      final tribes = tribeDocs.docs
+          .map((doc) => Tribe.fromMap(doc.data()))
+          .toList();
       for (final tribe in tribes) {
-        await _db.tribeMembershipDao.upsertMembership(UserTribeTableCompanion(
-          userId: Value(userId),
-          tribeId: Value(tribe.id),
-          membershipType:
-              Value(tribe.archetypeId != null ? 'archetype' : 'creator'),
-          joinedAt: Value(DateTime.now().toIso8601String()),
-          isActive: const Value(true),
-        ));
+        await _db.tribeMembershipDao.upsertMembership(
+          UserTribeTableCompanion(
+            userId: Value(userId),
+            tribeId: Value(tribe.id),
+            membershipType: Value(
+              tribe.archetypeId != null ? 'archetype' : 'creator',
+            ),
+            joinedAt: Value(DateTime.now().toIso8601String()),
+            isActive: const Value(true),
+          ),
+        );
       }
       return tribes;
     } catch (e, st) {
-      debugPrint('[TribeRepo] getUserTribes Firestore fallback failed: $e\n$st');
+      debugPrint(
+        '[TribeRepo] getUserTribes Firestore fallback failed: $e\n$st',
+      );
       // Return local data only - don't silently return empty
       return localTribes;
     }
@@ -533,7 +549,11 @@ class DriftTribeRepository implements TribeRepository {
     void emitTribe() {
       if (controller.isClosed) return;
 
-      final tribe = _mergeTribeData(currentTribeId, localTribeStats, remoteTribeData);
+      final tribe = _mergeTribeData(
+        currentTribeId,
+        localTribeStats,
+        remoteTribeData,
+      );
       if (tribe != null) {
         controller.add([tribe]);
       } else {
@@ -542,87 +562,108 @@ class DriftTribeRepository implements TribeRepository {
     }
 
     // Listen to user's active membership in Drift
-    membershipSub = _db.tribeMembershipDao.watchActiveMembership(userId).listen(
-      (membership) {
-        final newTribeId = membership?.tribeId;
-        if (newTribeId != currentTribeId) {
-          // Tribe ID changed, clean up old tribe stats subscription
-          tribeStatsSub?.cancel();
-          tribeStatsSub = null;
-          localTribeStats = null;
-          currentTribeId = newTribeId;
+    membershipSub = _db.tribeMembershipDao
+        .watchActiveMembership(userId)
+        .listen(
+          (membership) {
+            final newTribeId = membership?.tribeId;
+            if (newTribeId != currentTribeId) {
+              // Tribe ID changed, clean up old tribe stats subscription
+              tribeStatsSub?.cancel();
+              tribeStatsSub = null;
+              localTribeStats = null;
+              currentTribeId = newTribeId;
 
-          // Subscribe to new tribe's stats if we have a tribeId
-          if (newTribeId != null) {
-tribeStatsSub = _db.tribeStatsDao
-                .watchStats(newTribeId)
-                .listen((stats) {
-                  localTribeStats = stats;
-                  emitTribe();
-                }, onError: (error) {
-                  AppLogger.e('Error watching tribe stats for $newTribeId', error);
-});
-          }
-        }
-        emitTribe();
-      },
-      onError: (error) {
-        AppLogger.e('Error watching user membership for $userId', error);
-      },
-    );
+              // Subscribe to new tribe's stats if we have a tribeId
+              if (newTribeId != null) {
+                tribeStatsSub = _db.tribeStatsDao
+                    .watchStats(newTribeId)
+                    .listen(
+                      (stats) {
+                        localTribeStats = stats;
+                        emitTribe();
+                      },
+                      onError: (error) {
+                        AppLogger.e(
+                          'Error watching tribe stats for $newTribeId',
+                          error,
+                        );
+                      },
+                    );
+              }
+            }
+            emitTribe();
+          },
+          onError: (error) {
+            AppLogger.e('Error watching user membership for $userId', error);
+          },
+        );
 
     // Listen to tribes in Firestore where user is a member
     tribesSub = _firestore
         .collection('tribes')
         .where('members', arrayContains: userId)
         .snapshots()
-        .listen((snapshot) {
-          // We expect at most one tribe for the current user (based on current design)
-          // but handle multiple just in case
-          if (snapshot.docs.isNotEmpty) {
-            // Take the first tribe (should be only one in current design)
-            final doc = snapshot.docs.first;
-            remoteTribeData = doc.data();
-            emitTribe();
-          } else {
-            // No tribes found for user in Firestore
-            remoteTribeData = null;
-            emitTribe();
-          }
-        }, onError: (error) {
-          AppLogger.e('Error watching user tribes in Firestore for $userId', error);
-        });
+        .listen(
+          (snapshot) {
+            // We expect at most one tribe for the current user (based on current design)
+            // but handle multiple just in case
+            if (snapshot.docs.isNotEmpty) {
+              // Take the first tribe (should be only one in current design)
+              final doc = snapshot.docs.first;
+              remoteTribeData = doc.data();
+              emitTribe();
+            } else {
+              // No tribes found for user in Firestore
+              remoteTribeData = null;
+              emitTribe();
+            }
+          },
+          onError: (error) {
+            AppLogger.e(
+              'Error watching user tribes in Firestore for $userId',
+              error,
+            );
+          },
+        );
 
     // Initialize: try to get initial state from Drift
-    _db.tribeMembershipDao.watchActiveMembership(userId).first.then((membership) {
-      if (!controller.isClosed) {
-        final tribeId = membership?.tribeId;
-        if (tribeId != null) {
-          currentTribeId = tribeId;
-          // Try to get initial tribe stats from Drift
-          _db.tribeStatsDao
-              .watchStats(tribeId)
-              .first
-              .then((stats) {
-                if (!controller.isClosed) {
-                  localTribeStats = stats;
-                  emitTribe();
-                }
-              })
-              .catchError((error) {
-                if (!controller.isClosed) {
-                  AppLogger.e('Error getting initial tribe stats for $tribeId', error);
-                }
-              });
-        }
-        emitTribe();
-      }
-    }).catchError((error) {
-      if (!controller.isClosed) {
-        AppLogger.e('Error getting initial membership for $userId', error);
-        emitTribe(); // Emit empty list on error
-      }
-    });
+    _db.tribeMembershipDao
+        .watchActiveMembership(userId)
+        .first
+        .then((membership) {
+          if (!controller.isClosed) {
+            final tribeId = membership?.tribeId;
+            if (tribeId != null) {
+              currentTribeId = tribeId;
+              // Try to get initial tribe stats from Drift
+              _db.tribeStatsDao
+                  .watchStats(tribeId)
+                  .first
+                  .then((stats) {
+                    if (!controller.isClosed) {
+                      localTribeStats = stats;
+                      emitTribe();
+                    }
+                  })
+                  .catchError((error) {
+                    if (!controller.isClosed) {
+                      AppLogger.e(
+                        'Error getting initial tribe stats for $tribeId',
+                        error,
+                      );
+                    }
+                  });
+            }
+            emitTribe();
+          }
+        })
+        .catchError((error) {
+          if (!controller.isClosed) {
+            AppLogger.e('Error getting initial membership for $userId', error);
+            emitTribe(); // Emit empty list on error
+          }
+        });
 
     controller.onCancel = () {
       membershipSub?.cancel();
@@ -634,9 +675,10 @@ tribeStatsSub = _db.tribeStatsDao
   }
 
   Tribe? _mergeTribeData(
-      String? tribeId,
-      TribeStatsTableData? localStats,
-      Map<String, dynamic>? remoteData) {
+    String? tribeId,
+    TribeStatsTableData? localStats,
+    Map<String, dynamic>? remoteData,
+  ) {
     if (tribeId == null) return null;
 
     // Start with default values
@@ -670,8 +712,7 @@ tribeStatsSub = _db.tribeStatsDao
           ? (remoteData['name'] as String)
           : name;
       description = (remoteData['description'] as String?) ?? description;
-      imageUrl = (remoteData['imageUrl'] as String? ?? '')
-          .isNotEmpty
+      imageUrl = (remoteData['imageUrl'] as String? ?? '').isNotEmpty
           ? (remoteData['imageUrl'] as String)
           : imageUrl;
       ownerId = (remoteData['ownerId'] as String?) ?? ownerId;

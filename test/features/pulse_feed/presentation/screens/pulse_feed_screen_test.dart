@@ -7,7 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   // Force the empty state (no tribe selected) via provider override.
-  final override = pulseFeedProvider.overrideWith((ref) => Stream.value(<PulseFeedCard>[]));
+  final override = pulseFeedProvider.overrideWith(
+    (ref) => Stream.value(<PulseFeedCard>[]),
+  );
 
   testWidgets('empty state shows the three onboarding prompts', (tester) async {
     await tester.pumpWidget(
@@ -16,7 +18,8 @@ void main() {
         child: MaterialApp(home: PulseFeedScreen()),
       ),
     );
-    await tester.pump(); // single frame; ring animates forever so no pumpAndSettle
+    await tester
+        .pump(); // single frame; ring animates forever so no pumpAndSettle
     expect(find.text('Your Pulse is just getting started'), findsOneWidget);
     expect(find.text('Complete a habit'), findsOneWidget);
     expect(find.text('Explore tribes'), findsOneWidget);
@@ -31,7 +34,8 @@ void main() {
         child: MaterialApp(home: PulseFeedScreen()),
       ),
     );
-    await tester.pump(); // single frame; ring animates forever so no pumpAndSettle
+    await tester
+        .pump(); // single frame; ring animates forever so no pumpAndSettle
 
     // Across several animation frames the ring's outer SizedBox must stay
     // a constant 180x180. If it ever changes size per frame, the
@@ -41,8 +45,11 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
       final boxes = tester.widgetList<SizedBox>(find.byType(SizedBox));
       final match = boxes.where((b) => b.width == 180 && b.height == 180);
-      expect(match, isNotEmpty,
-          reason: 'pulse ring must be wrapped in a fixed 180x180 box');
+      expect(
+        match,
+        isNotEmpty,
+        reason: 'pulse ring must be wrapped in a fixed 180x180 box',
+      );
       fixedBox = match.first;
     }
     expect(fixedBox!.width, 180);

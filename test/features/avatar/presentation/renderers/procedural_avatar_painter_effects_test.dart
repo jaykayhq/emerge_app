@@ -51,7 +51,9 @@ void main() {
       const hat = ShopItem(id: 'hat', name: 'Hat', slot: EquipmentSlot.head);
       const cape = ShopItem(id: 'cape', name: 'Cape', slot: EquipmentSlot.back);
       const sword = ShopItem(
-        id: 'sword', name: 'Sword', slot: EquipmentSlot.rightHand,
+        id: 'sword',
+        name: 'Sword',
+        slot: EquipmentSlot.rightHand,
       );
       final avatar = AvatarData.defaultAvatar()
           .equipItem(hat)

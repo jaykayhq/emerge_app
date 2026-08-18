@@ -20,13 +20,17 @@ void main() {
       'type': 'creator',
     });
     final contributors = firestore
-        .collection('tribes').doc('t1').collection('contributors');
+        .collection('tribes')
+        .doc('t1')
+        .collection('contributors');
     await contributors.doc('u1').set({
       'userName': 'Ada',
       'totalXpContributed': 3000,
       'totalHabitsCompleted': 40,
       'totalChallengesCompleted': 2,
-      'joinedAt': DateTime.now().subtract(const Duration(days: 30)).toIso8601String(),
+      'joinedAt': DateTime.now()
+          .subtract(const Duration(days: 30))
+          .toIso8601String(),
       'lastActivity': DateTime.now().toIso8601String(),
     });
     await contributors.doc('u2').set({
@@ -34,7 +38,9 @@ void main() {
       'totalXpContributed': 2000,
       'totalHabitsCompleted': 20,
       'totalChallengesCompleted': 1,
-      'joinedAt': DateTime.now().subtract(const Duration(days: 2)).toIso8601String(),
+      'joinedAt': DateTime.now()
+          .subtract(const Duration(days: 2))
+          .toIso8601String(),
       'lastActivity': DateTime.now().toIso8601String(),
     });
     await contributors.doc('u3').set({
@@ -42,8 +48,12 @@ void main() {
       'totalXpContributed': 0,
       'totalHabitsCompleted': 0,
       'totalChallengesCompleted': 0,
-      'joinedAt': DateTime.now().subtract(const Duration(days: 60)).toIso8601String(),
-      'lastActivity': DateTime.now().subtract(const Duration(days: 30)).toIso8601String(),
+      'joinedAt': DateTime.now()
+          .subtract(const Duration(days: 60))
+          .toIso8601String(),
+      'lastActivity': DateTime.now()
+          .subtract(const Duration(days: 30))
+          .toIso8601String(),
     });
   }
 
@@ -53,7 +63,10 @@ void main() {
       'creatorUserId': 'creator1',
       'title': 'Morning Stack',
       'adoptionCount': 7,
-      'habits': [{'title': 'Read'}, {'title': 'Run'}],
+      'habits': [
+        {'title': 'Read'},
+        {'title': 'Run'},
+      ],
     });
     await firestore.collection('challenges').doc('c1').set({
       'createdBy': 'creator1',
@@ -91,7 +104,10 @@ void main() {
       'createdBy': 'creator1',
       'type': 'creator',
     });
-    final result = await service.getCreatorAnalytics(uid: 'creator1', tribeId: 't1');
+    final result = await service.getCreatorAnalytics(
+      uid: 'creator1',
+      tribeId: 't1',
+    );
     expect(result.isRight(), isTrue);
     final analytics = result.getRight().toNullable()!;
     expect(analytics.memberCount, 0);
@@ -100,7 +116,10 @@ void main() {
   });
 
   test('returns Left on invalid input', () async {
-    final result = await service.getCreatorAnalytics(uid: 'creator1', tribeId: '');
+    final result = await service.getCreatorAnalytics(
+      uid: 'creator1',
+      tribeId: '',
+    );
     expect(result.isLeft(), isTrue);
   });
 }

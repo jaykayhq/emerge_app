@@ -95,7 +95,9 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
           ),
         );
         if (mounted) {
-          ref.read(pendingMilestoneProvider.notifier).set(
+          ref
+              .read(pendingMilestoneProvider.notifier)
+              .set(
                 PendingMilestoneLine(
                   line: welcomeLine,
                   trigger: NarratorTrigger.onboardingPostArchetype,
@@ -265,14 +267,11 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<PendingMilestoneLine?>(
-      pendingMilestoneProvider,
-      (prev, next) {
-        if (prev == null && next != null) {
-          setState(() => _pendingMilestone = next);
-        }
-      },
-    );
+    ref.listen<PendingMilestoneLine?>(pendingMilestoneProvider, (prev, next) {
+      if (prev == null && next != null) {
+        setState(() => _pendingMilestone = next);
+      }
+    });
 
     // Cosmic purple background
     return Stack(
@@ -296,13 +295,13 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
                   AnimatedOnboardingProgressBar(
                     targetProgress: 0.4,
                     label: onboardingLabelFor(0.4),
-                    accentColor: _selectedArchetype != null && _selectedArchetype != UserArchetype.none
+                    accentColor:
+                        _selectedArchetype != null &&
+                            _selectedArchetype != UserArchetype.none
                         ? ArchetypeColors.all[_selectedArchetype!.name]?.accent
                         : null,
                   ),
-                  Expanded(
-                    child: _buildArchetypeCarousel(),
-                  ),
+                  Expanded(child: _buildArchetypeCarousel()),
                 ],
               ),
             ),
@@ -456,8 +455,9 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
             width: double.infinity,
             height: 56,
             child: ElevatedButton(
-              onPressed:
-                  _selectedArchetype != null ? _completeIdentityStudio : null,
+              onPressed: _selectedArchetype != null
+                  ? _completeIdentityStudio
+                  : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF2BEE79), // Neon Teal
                 foregroundColor: const Color(0xFF05100B), // Dark text
@@ -701,6 +701,4 @@ class _IdentityStudioScreenState extends ConsumerState<IdentityStudioScreen> {
       ],
     );
   }
-
-
 }

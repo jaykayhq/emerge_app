@@ -92,10 +92,7 @@ void main() {
     });
 
     test('returns levelUp when level increased', () {
-      final stats = defaultStats.copyWith(
-        currentLevel: 4,
-        previousLevel: 3,
-      );
+      final stats = defaultStats.copyWith(currentLevel: 4, previousLevel: 3);
 
       final result = NarratorTriggerEngine.shouldTrigger(
         context: defaultContext,
@@ -114,10 +111,7 @@ void main() {
         daysSinceInstall: 30,
         daysSinceLastOpen: 5,
       );
-      final stats = defaultStats.copyWith(
-        currentLevel: 4,
-        previousLevel: 3,
-      );
+      final stats = defaultStats.copyWith(currentLevel: 4, previousLevel: 3);
 
       final result = NarratorTriggerEngine.shouldTrigger(
         context: ctx,
@@ -195,27 +189,29 @@ void main() {
       expect(result, NarratorTrigger.morningBriefEarlyDays);
     });
 
-    test('returns eveningReflection when reflection not completed and evening',
-        () {
-      final eveningCtx = AppOpenContext(
-        currentRoute: '/timeline',
-        now: DateTime(2026, 7, 2, 20, 0), // 8 PM
-        isFirstAppOpen: false,
-        daysSinceInstall: 30,
-        daysSinceLastOpen: 1,
-      );
-      final stats = defaultStats.copyWith(
-        hasCompletedEveningReflectionToday: false,
-      );
+    test(
+      'returns eveningReflection when reflection not completed and evening',
+      () {
+        final eveningCtx = AppOpenContext(
+          currentRoute: '/timeline',
+          now: DateTime(2026, 7, 2, 20, 0), // 8 PM
+          isFirstAppOpen: false,
+          daysSinceInstall: 30,
+          daysSinceLastOpen: 1,
+        );
+        final stats = defaultStats.copyWith(
+          hasCompletedEveningReflectionToday: false,
+        );
 
-      final result = NarratorTriggerEngine.shouldTrigger(
-        context: eveningCtx,
-        stats: stats,
-        recentTriggers: emptyCooldown,
-      );
+        final result = NarratorTriggerEngine.shouldTrigger(
+          context: eveningCtx,
+          stats: stats,
+          recentTriggers: emptyCooldown,
+        );
 
-      expect(result, NarratorTrigger.eveningReflection);
-    });
+        expect(result, NarratorTrigger.eveningReflection);
+      },
+    );
 
     test('does not return eveningReflection if already completed', () {
       final eveningCtx = AppOpenContext(
@@ -249,10 +245,7 @@ void main() {
     });
 
     test('respects cooldown - same trigger within 4 hours returns null', () {
-      final stats = defaultStats.copyWith(
-        currentLevel: 4,
-        previousLevel: 3,
-      );
+      final stats = defaultStats.copyWith(currentLevel: 4, previousLevel: 3);
 
       final cooldown = <NarratorTrigger, DateTime>{
         NarratorTrigger.levelUp: now.subtract(const Duration(hours: 1)),
@@ -313,31 +306,35 @@ void main() {
       expect(result, isNull);
     });
 
-    test('shouldTriggerOnStreakBreak returns true when consecutiveMisses > 0',
-        () {
-      expect(
-        NarratorTriggerEngine.shouldTriggerOnStreakBreak(
-          consecutiveMisses: 1,
-        ),
-        true,
-      );
-      expect(
-        NarratorTriggerEngine.shouldTriggerOnStreakBreak(
-          consecutiveMisses: 5,
-        ),
-        true,
-      );
-    });
+    test(
+      'shouldTriggerOnStreakBreak returns true when consecutiveMisses > 0',
+      () {
+        expect(
+          NarratorTriggerEngine.shouldTriggerOnStreakBreak(
+            consecutiveMisses: 1,
+          ),
+          true,
+        );
+        expect(
+          NarratorTriggerEngine.shouldTriggerOnStreakBreak(
+            consecutiveMisses: 5,
+          ),
+          true,
+        );
+      },
+    );
 
-    test('shouldTriggerOnStreakBreak returns false when no consecutive misses',
-        () {
-      expect(
-        NarratorTriggerEngine.shouldTriggerOnStreakBreak(
-          consecutiveMisses: 0,
-        ),
-        false,
-      );
-    });
+    test(
+      'shouldTriggerOnStreakBreak returns false when no consecutive misses',
+      () {
+        expect(
+          NarratorTriggerEngine.shouldTriggerOnStreakBreak(
+            consecutiveMisses: 0,
+          ),
+          false,
+        );
+      },
+    );
 
     test('cooldown expired after 4 hours allows trigger again', () {
       final stats = defaultStats.copyWith(

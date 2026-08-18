@@ -29,15 +29,12 @@ void main() {
 
     test('uses totalXp when present and skips attribute sum', () {
       final userData = {
-        'avatarStats': {
-          'totalXp': 5000,
-          'strengthXp': 100,
-          'intellectXp': 200,
-        },
+        'avatarStats': {'totalXp': 5000, 'strengthXp': 100, 'intellectXp': 200},
       };
 
       final avatarStats = userData['avatarStats'] as Map<String, dynamic>;
-      final xp = (avatarStats['totalXp'] as int?) ??
+      final xp =
+          (avatarStats['totalXp'] as int?) ??
           (avatarStats['currentXp'] as int?) ??
           0;
       expect(xp, 5000);
@@ -53,7 +50,8 @@ void main() {
       };
 
       final avatarStats = userData['avatarStats'] as Map<String, dynamic>;
-      int userXp = (avatarStats['totalXp'] as int?) ??
+      int userXp =
+          (avatarStats['totalXp'] as int?) ??
           (avatarStats['currentXp'] as int?) ??
           0;
 
@@ -65,29 +63,23 @@ void main() {
     });
 
     test('uses top-level currentXp when totalXp is absent', () {
-      final userData = {
-        'currentXp': 777,
-      };
+      final userData = {'currentXp': 777};
 
-      final xp = userData['totalXp'] ??
-          userData['currentXp'] ??
-          0;
+      final xp = userData['totalXp'] ?? userData['currentXp'] ?? 0;
       expect(xp, 777);
     });
 
     test('includes customAttributeXp in fallback sum', () {
       final userData = {
         'avatarStats': {
-          'attributeXp': {
-            'custom1': 50,
-            'custom2': 30,
-          },
+          'attributeXp': {'custom1': 50, 'custom2': 30},
           'strengthXp': 10,
         },
       };
 
       final avatarStats = userData['avatarStats'] as Map<String, dynamic>;
-      int userXp = (avatarStats['totalXp'] as int?) ??
+      int userXp =
+          (avatarStats['totalXp'] as int?) ??
           (avatarStats['currentXp'] as int?) ??
           0;
 
@@ -106,22 +98,18 @@ void main() {
     });
 
     test('falls back to top-level totalXp when avatarStats is null', () {
-      final Map<String, dynamic> userData = {
-        'totalXp': 999,
-      };
+      final Map<String, dynamic> userData = {'totalXp': 999};
 
-      final xp = (userData['totalXp'] as int?) ??
-          (userData['currentXp'] as int?) ??
-          0;
+      final xp =
+          (userData['totalXp'] as int?) ?? (userData['currentXp'] as int?) ?? 0;
       expect(xp, 999);
     });
 
     test('returns 0 when no XP data is present', () {
       final userData = <String, dynamic>{};
 
-      final xp = (userData['totalXp'] as int?) ??
-          (userData['currentXp'] as int?) ??
-          0;
+      final xp =
+          (userData['totalXp'] as int?) ?? (userData['currentXp'] as int?) ?? 0;
       expect(xp, 0);
     });
   });

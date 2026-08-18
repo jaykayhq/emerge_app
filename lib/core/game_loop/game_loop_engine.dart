@@ -7,10 +7,10 @@ class LocalGameLoopEngine {
   static const double _streakBonusPerStep = 0.10;
   static const double _maxStreakBonus = 0.50;
   static const int _completionBoost = 10;
+
   /// World-health delta applied per habit completion (and reversed on undo).
   /// Derived from [_completionBoost].
-  static const double completionWorldHealthDelta =
-      _completionBoost / 100.0;
+  static const double completionWorldHealthDelta = _completionBoost / 100.0;
 
   /// Checks if a habit's streak should be broken due to missed days.
   /// Call this on app launch and when viewing a habit.
@@ -21,7 +21,10 @@ class LocalGameLoopEngine {
     required DateTime now,
   }) {
     final lastDay = DateTime(
-        lastCompletedDate.year, lastCompletedDate.month, lastCompletedDate.day);
+      lastCompletedDate.year,
+      lastCompletedDate.month,
+      lastCompletedDate.day,
+    );
     final today = DateTime(now.year, now.month, now.day);
     final daysMissed = today.difference(lastDay).inDays;
 
@@ -37,7 +40,8 @@ class LocalGameLoopEngine {
     required int streak,
   }) {
     final clampedStreak = streak > 0 ? streak : 0;
-    double streakBonus = (clampedStreak / _streakBonusStepDays) * _streakBonusPerStep;
+    double streakBonus =
+        (clampedStreak / _streakBonusStepDays) * _streakBonusPerStep;
     if (streakBonus > _maxStreakBonus) streakBonus = _maxStreakBonus;
     return ((_baseXpPerHabit * difficultyMultiplier) * (1 + streakBonus))
         .round();

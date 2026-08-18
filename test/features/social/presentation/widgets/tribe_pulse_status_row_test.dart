@@ -32,10 +32,7 @@ UserProfile makeProfile({int momentumScore = 50, int streak = 7}) {
   );
 }
 
-Challenge makeChallenge({
-  required String id,
-  required ChallengeStatus status,
-}) {
+Challenge makeChallenge({required String id, required ChallengeStatus status}) {
   return Challenge(
     id: id,
     title: 'C $id',
@@ -58,7 +55,8 @@ Widget buildPulseTest({
   List<Challenge>? challenges,
 }) {
   final overrideChallenges = challenges ?? <Challenge>[];
-  final overrideActivity = activityStream ?? const Stream<List<Map<String, dynamic>>>.empty();
+  final overrideActivity =
+      activityStream ?? const Stream<List<Map<String, dynamic>>>.empty();
   return ProviderScope(
     overrides: [
       clubActivityProvider.overrideWith((ref, _) => overrideActivity),
@@ -122,94 +120,116 @@ void main() {
   });
 
   testWidgets('MOMENTUM chip shows onFire label at high score', (tester) async {
-    await tester.pumpWidget(buildPulseTest(profile: makeProfile(momentumScore: 95)));
+    await tester.pumpWidget(
+      buildPulseTest(profile: makeProfile(momentumScore: 95)),
+    );
     await tester.pump();
 
     expect(find.text('On Fire'), findsOneWidget);
   });
 
-  testWidgets('MOMENTUM chip shows Strong label at high-mid score', (tester) async {
-    await tester.pumpWidget(buildPulseTest(profile: makeProfile(momentumScore: 75)));
+  testWidgets('MOMENTUM chip shows Strong label at high-mid score', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      buildPulseTest(profile: makeProfile(momentumScore: 75)),
+    );
     await tester.pump();
 
     expect(find.text('Strong'), findsOneWidget);
   });
 
-  testWidgets('MOMENTUM chip shows Building label at mid score', (tester) async {
-    await tester.pumpWidget(buildPulseTest(profile: makeProfile(momentumScore: 55)));
+  testWidgets('MOMENTUM chip shows Building label at mid score', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      buildPulseTest(profile: makeProfile(momentumScore: 55)),
+    );
     await tester.pump();
 
     expect(find.text('Building'), findsOneWidget);
   });
 
-  testWidgets('MOMENTUM chip shows At Risk label at low-mid score', (tester) async {
-    await tester.pumpWidget(buildPulseTest(profile: makeProfile(momentumScore: 35)));
+  testWidgets('MOMENTUM chip shows At Risk label at low-mid score', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      buildPulseTest(profile: makeProfile(momentumScore: 35)),
+    );
     await tester.pump();
 
     expect(find.text('At Risk'), findsOneWidget);
   });
 
-  testWidgets('MOMENTUM chip shows Recovery label at low score', (tester) async {
-    await tester.pumpWidget(buildPulseTest(profile: makeProfile(momentumScore: 15)));
+  testWidgets('MOMENTUM chip shows Recovery label at low score', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      buildPulseTest(profile: makeProfile(momentumScore: 15)),
+    );
     await tester.pump();
 
     expect(find.text('Recovery'), findsOneWidget);
   });
 
   testWidgets('MOMENTUM chip shows Reset label at zero score', (tester) async {
-    await tester.pumpWidget(buildPulseTest(profile: makeProfile(momentumScore: 5)));
+    await tester.pumpWidget(
+      buildPulseTest(profile: makeProfile(momentumScore: 5)),
+    );
     await tester.pump();
 
     expect(find.text('Reset'), findsOneWidget);
   });
 
-  testWidgets('LIVE chip navigates to /social/activity, not /social/accountability',
-      (tester) async {
-    final router = GoRouter(
-      initialLocation: '/',
-      routes: [
-        GoRoute(
-          path: '/',
-          builder: (_, _) => Scaffold(
-            body: TribePulseStatusRow(
-              userClub: testUserClub,
-              profile: makeProfile(),
+  testWidgets(
+    'LIVE chip navigates to /social/activity, not /social/accountability',
+    (tester) async {
+      final router = GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => Scaffold(
+              body: TribePulseStatusRow(
+                userClub: testUserClub,
+                profile: makeProfile(),
+              ),
             ),
           ),
-        ),
-        GoRoute(
-          path: '/social/activity',
-          builder: (_, _) =>
-              const Scaffold(body: Center(child: Text('ACTIVITY_SCREEN'))),
-        ),
-        GoRoute(
-          path: '/social/accountability',
-          builder: (_, _) =>
-              const Scaffold(body: Center(child: Text('FRIENDS_SCREEN'))),
-        ),
-      ],
-    );
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          clubActivityProvider.overrideWith(
-            (ref, _) => Stream.value([
-              {'type': 'habit_complete'},
-            ]),
+          GoRoute(
+            path: '/social/activity',
+            builder: (_, _) =>
+                const Scaffold(body: Center(child: Text('ACTIVITY_SCREEN'))),
           ),
-          userChallengesProvider.overrideWith((ref) async => <Challenge>[]),
+          GoRoute(
+            path: '/social/accountability',
+            builder: (_, _) =>
+                const Scaffold(body: Center(child: Text('FRIENDS_SCREEN'))),
+          ),
         ],
-        child: MaterialApp.router(routerConfig: router),
-      ),
-    );
-    await tester.pump();
+      );
 
-    // Tap the LIVE chip (it shows the label 'LIVE' and a value text).
-    await tester.tap(find.text('LIVE'));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            clubActivityProvider.overrideWith(
+              (ref, _) => Stream.value([
+                {'type': 'habit_complete'},
+              ]),
+            ),
+            userChallengesProvider.overrideWith((ref) async => <Challenge>[]),
+          ],
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pump();
 
-    expect(find.text('ACTIVITY_SCREEN'), findsOneWidget);
-    expect(find.text('FRIENDS_SCREEN'), findsNothing);
-  });
+      // Tap the LIVE chip (it shows the label 'LIVE' and a value text).
+      await tester.tap(find.text('LIVE'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('ACTIVITY_SCREEN'), findsOneWidget);
+      expect(find.text('FRIENDS_SCREEN'), findsNothing);
+    },
+  );
 }

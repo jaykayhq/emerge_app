@@ -21,11 +21,7 @@ class DailyReflection extends Equatable {
     required this.updatedAt,
   });
 
-  DailyReflection copyWith({
-    Mood? mood,
-    String? note,
-    DateTime? updatedAt,
-  }) {
+  DailyReflection copyWith({Mood? mood, String? note, DateTime? updatedAt}) {
     return DailyReflection(
       id: id,
       userId: userId,
@@ -38,5 +34,13 @@ class DailyReflection extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, userId, localDate, mood, note, createdAt, updatedAt];
+  List<Object?> get props => [
+    id,
+    userId,
+    localDate,
+    mood,
+    note,
+    createdAt,
+    updatedAt,
+  ];
 }

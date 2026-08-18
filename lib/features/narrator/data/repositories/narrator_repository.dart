@@ -9,7 +9,7 @@ class NarratorRepository {
   final NarratorLocalDatasource _datasource;
 
   NarratorRepository({required NarratorLocalDatasource datasource})
-      : _datasource = datasource;
+    : _datasource = datasource;
 
   /// Records a habit completion observation.
   Future<NarratorNote> recordHabitCompleted({

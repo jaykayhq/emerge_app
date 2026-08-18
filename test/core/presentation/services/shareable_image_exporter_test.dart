@@ -16,10 +16,16 @@ void main() {
 
     expect(bytes, isNotNull);
     // PNG magic header: 89 50 4E 47 0D 0A 1A 0A
-    expect(
-      bytes!.sublist(0, 8),
-      [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A],
-    );
+    expect(bytes!.sublist(0, 8), [
+      0x89,
+      0x50,
+      0x4E,
+      0x47,
+      0x0D,
+      0x0A,
+      0x1A,
+      0x0A,
+    ]);
   });
 
   testWidgets('capture is non-blank at the requested 9:16 dimensions', (
@@ -59,10 +65,16 @@ void main() {
     // overflowing/deformed export.
     final bytes = await _capture(tester, data: _testData, textScale: 4.0);
     expect(bytes, isNotNull);
-    expect(
-      bytes!.sublist(0, 8),
-      [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A],
-    );
+    expect(bytes!.sublist(0, 8), [
+      0x89,
+      0x50,
+      0x4E,
+      0x47,
+      0x0D,
+      0x0A,
+      0x1A,
+      0x0A,
+    ]);
   });
 }
 

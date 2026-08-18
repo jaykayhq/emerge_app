@@ -11,11 +11,7 @@ class TribeQuestsTab extends ConsumerWidget {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
-        children: [
-          const Gap(16),
-          const TribeQuestsSection(),
-          const Gap(32),
-        ],
+        children: [const Gap(16), const TribeQuestsSection(), const Gap(32)],
       ),
     );
   }

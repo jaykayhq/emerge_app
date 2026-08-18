@@ -30,8 +30,9 @@ class CreatorAnalyticsTab extends ConsumerWidget {
         data: (profile) {
           final tribeId = profile?.tribeId;
           if (tribeId == null) return const _NoTribeState();
-          final analyticsAsync =
-              ref.watch(creatorAnalyticsProvider(uid: uid, tribeId: tribeId));
+          final analyticsAsync = ref.watch(
+            creatorAnalyticsProvider(uid: uid, tribeId: tribeId),
+          );
           return analyticsAsync.when(
             data: (analytics) => _AnalyticsView(analytics: analytics),
             loading: () => const EmergeLoadingSkeleton(itemCount: 6),
@@ -404,7 +405,11 @@ class _BlueprintRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.widgets_rounded, color: EmergeColors.neonTeal, size: 20),
+          const Icon(
+            Icons.widgets_rounded,
+            color: EmergeColors.neonTeal,
+            size: 20,
+          ),
           const Gap(12),
           Expanded(
             child: Text(
@@ -533,7 +538,11 @@ class _NoTribeState extends StatelessWidget {
             Text(
               'Publish a blueprint to create your creator tribe, then your analytics appear here.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white54, fontSize: 13, height: 1.5),
+              style: TextStyle(
+                color: Colors.white54,
+                fontSize: 13,
+                height: 1.5,
+              ),
             ),
           ],
         ),

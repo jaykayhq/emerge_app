@@ -22,7 +22,8 @@ class CreatorOnboardingProfileScreen extends ConsumerStatefulWidget {
       _CreatorProfileScreenState();
 }
 
-class _CreatorProfileScreenState extends ConsumerState<CreatorOnboardingProfileScreen> {
+class _CreatorProfileScreenState
+    extends ConsumerState<CreatorOnboardingProfileScreen> {
   static const int _maxBioChars = 280;
   static const int _maxTags = 8;
   static const int _maxTagLength = 24;
@@ -54,9 +55,9 @@ class _CreatorProfileScreenState extends ConsumerState<CreatorOnboardingProfileS
       await ref.read(saveCreatorOnboardingProgressProvider(progress: 2).future);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to save: $e')));
       return;
     }
     if (mounted) context.go('/onboarding/creator/reveal');
@@ -65,9 +66,7 @@ class _CreatorProfileScreenState extends ConsumerState<CreatorOnboardingProfileS
   @override
   Widget build(BuildContext context) {
     final tags = ref.watch(
-      creatorOnboardingDraftControllerProvider.select(
-        (s) => s.specialityTags,
-      ),
+      creatorOnboardingDraftControllerProvider.select((s) => s.specialityTags),
     );
     final remaining = _maxBioChars - _bioController.text.length;
 
@@ -94,10 +93,7 @@ class _CreatorProfileScreenState extends ConsumerState<CreatorOnboardingProfileS
           ),
           SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 16,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -144,8 +140,7 @@ class _CreatorProfileScreenState extends ConsumerState<CreatorOnboardingProfileS
                           'What do you teach? Who is it for? What makes your approach different?',
                       hintStyle: const TextStyle(color: Colors.white38),
                       filled: true,
-                      fillColor:
-                          EmergeColors.background.withValues(alpha: 0.6),
+                      fillColor: EmergeColors.background.withValues(alpha: 0.6),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(
@@ -201,8 +196,9 @@ class _CreatorProfileScreenState extends ConsumerState<CreatorOnboardingProfileS
                             hintText: 'e.g. Strength, Mobility, Recovery',
                             hintStyle: const TextStyle(color: Colors.white38),
                             filled: true,
-                            fillColor: EmergeColors.background
-                                .withValues(alpha: 0.6),
+                            fillColor: EmergeColors.background.withValues(
+                              alpha: 0.6,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: const BorderSide(
@@ -252,8 +248,9 @@ class _CreatorProfileScreenState extends ConsumerState<CreatorOnboardingProfileS
                                   .removeTag(t);
                               setState(() {});
                             },
-                            backgroundColor:
-                                Colors.amber.withValues(alpha: 0.15),
+                            backgroundColor: Colors.amber.withValues(
+                              alpha: 0.15,
+                            ),
                             deleteIconColor: Colors.amber,
                             side: const BorderSide(color: Colors.amber),
                             labelStyle: const TextStyle(

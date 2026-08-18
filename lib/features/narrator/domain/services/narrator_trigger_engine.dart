@@ -101,10 +101,10 @@ class NarratorUserStats {
   }) {
     return NarratorUserStats(
       momentumScore: momentumScore ?? this.momentumScore,
-      consecutiveActiveDays: consecutiveActiveDays ?? this.consecutiveActiveDays,
+      consecutiveActiveDays:
+          consecutiveActiveDays ?? this.consecutiveActiveDays,
       totalHabitsToday: totalHabitsToday ?? this.totalHabitsToday,
-      completedHabitsToday:
-          completedHabitsToday ?? this.completedHabitsToday,
+      completedHabitsToday: completedHabitsToday ?? this.completedHabitsToday,
       currentLevel: currentLevel ?? this.currentLevel,
       previousLevel: previousLevel ?? this.previousLevel,
       hasStreakBreak: hasStreakBreak ?? this.hasStreakBreak,
@@ -113,7 +113,7 @@ class NarratorUserStats {
       consecutiveMisses: consecutiveMisses ?? this.consecutiveMisses,
       hasCompletedEveningReflectionToday:
           hasCompletedEveningReflectionToday ??
-              this.hasCompletedEveningReflectionToday,
+          this.hasCompletedEveningReflectionToday,
       hasCompletedOnboarding:
           hasCompletedOnboarding ?? this.hasCompletedOnboarding,
       archetypeSelected: archetypeSelected ?? this.archetypeSelected,
@@ -159,7 +159,8 @@ class NarratorTriggerEngine {
 
   /// Returns the askNarrator trigger for explicit user-initiated opens.
   /// No cooldown applies (user-driven).
-  static NarratorTrigger resolveAskNarratorTrigger() => NarratorTrigger.askNarrator;
+  static NarratorTrigger resolveAskNarratorTrigger() =>
+      NarratorTrigger.askNarrator;
 
   /// Helper to detect if a streak break should trigger.
   static bool shouldTriggerOnStreakBreak({required int consecutiveMisses}) {
@@ -176,7 +177,11 @@ class NarratorTriggerEngine {
     Map<NarratorTrigger, DateTime> recentTriggers,
   ) {
     if (context.daysSinceLastOpen >= 3 &&
-        !_isOnCooldown(NarratorTrigger.longAbsence, context.now, recentTriggers)) {
+        !_isOnCooldown(
+          NarratorTrigger.longAbsence,
+          context.now,
+          recentTriggers,
+        )) {
       return NarratorTrigger.longAbsence;
     }
     return null;
@@ -199,8 +204,14 @@ class NarratorTriggerEngine {
     DateTime now,
     Map<NarratorTrigger, DateTime> recentTriggers,
   ) {
-    if (shouldTriggerOnStreakBreak(consecutiveMisses: stats.consecutiveMisses) &&
-        !_isOnCooldown(NarratorTrigger.streakBreakFirstMiss, now, recentTriggers)) {
+    if (shouldTriggerOnStreakBreak(
+          consecutiveMisses: stats.consecutiveMisses,
+        ) &&
+        !_isOnCooldown(
+          NarratorTrigger.streakBreakFirstMiss,
+          now,
+          recentTriggers,
+        )) {
       return NarratorTrigger.streakBreakFirstMiss;
     }
     return null;
@@ -226,7 +237,11 @@ class NarratorTriggerEngine {
     // Trigger on day 7, 14, 21, etc.
     if (context.daysSinceInstall > 0 &&
         context.daysSinceInstall % 7 == 0 &&
-        !_isOnCooldown(NarratorTrigger.weeklyRecap, context.now, recentTriggers)) {
+        !_isOnCooldown(
+          NarratorTrigger.weeklyRecap,
+          context.now,
+          recentTriggers,
+        )) {
       return NarratorTrigger.weeklyRecap;
     }
     return null;
@@ -240,7 +255,11 @@ class NarratorTriggerEngine {
     if (context.daysSinceInstall <= 5 &&
         stats.hasCompletedOnboarding &&
         stats.archetypeSelected &&
-        !_isOnCooldown(NarratorTrigger.morningBriefEarlyDays, context.now, recentTriggers)) {
+        !_isOnCooldown(
+          NarratorTrigger.morningBriefEarlyDays,
+          context.now,
+          recentTriggers,
+        )) {
       return NarratorTrigger.morningBriefEarlyDays;
     }
     return null;
@@ -253,7 +272,11 @@ class NarratorTriggerEngine {
   ) {
     if (!stats.hasCompletedEveningReflectionToday &&
         context.now.hour >= 18 && // 6 PM or later
-        !_isOnCooldown(NarratorTrigger.eveningReflection, context.now, recentTriggers)) {
+        !_isOnCooldown(
+          NarratorTrigger.eveningReflection,
+          context.now,
+          recentTriggers,
+        )) {
       return NarratorTrigger.eveningReflection;
     }
     return null;

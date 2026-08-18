@@ -48,10 +48,10 @@ class PulseFeedCard {
       createdAt: (json['createdAt'] as dynamic) is String
           ? DateTime.parse(json['createdAt'] as String)
           : (json['createdAt'] as dynamic) is num
-              ? DateTime.fromMillisecondsSinceEpoch(
-                  (json['createdAt'] as num).toInt(),
-                )
-              : DateTime.now(),
+          ? DateTime.fromMillisecondsSinceEpoch(
+              (json['createdAt'] as num).toInt(),
+            )
+          : DateTime.now(),
       habitId: json['habitId'] as String?,
       tribeUserId: json['tribeUserId'] as String?,
     );
@@ -83,15 +83,8 @@ class PulseFeedCard {
           tribeUserId == other.tribeUserId;
 
   @override
-  int get hashCode => Object.hash(
-        id,
-        type,
-        headline,
-        subtext,
-        createdAt,
-        habitId,
-        tribeUserId,
-      );
+  int get hashCode =>
+      Object.hash(id, type, headline, subtext, createdAt, habitId, tribeUserId);
 
   @override
   String toString() =>

@@ -47,11 +47,11 @@ class LastHabitCompleted extends _$LastHabitCompleted {
 
     // Only count habits that are active today so the "all done" celebration
     // fires at the right moment (ignoring weekly habits not scheduled today).
-    final todaysHabits =
-        habits.where((h) => h.isActiveOnDay(now)).toList();
+    final todaysHabits = habits.where((h) => h.isActiveOnDay(now)).toList();
     final total = todaysHabits.length;
-    final currentCompleted =
-        todaysHabits.where((h) => h.isCompletedOn(now)).length;
+    final currentCompleted = todaysHabits
+        .where((h) => h.isCompletedOn(now))
+        .length;
 
     // First real build: record baseline only, never celebrate.
     if (_previousCompleted == null) {

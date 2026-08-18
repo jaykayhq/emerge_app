@@ -63,7 +63,8 @@ class _SheetRouteHostState extends State<_SheetRouteHost> {
     return Scaffold(
       body: Center(
         child: TextButton(
-          onPressed: () => HabitOptionsSheet.show(context, widget.habit, DateTime.now()),
+          onPressed: () =>
+              HabitOptionsSheet.show(context, widget.habit, DateTime.now()),
           child: const Text('open sheet'),
         ),
       ),
@@ -101,12 +102,10 @@ class _FakeHabitRepo implements HabitRepository {
     String habitId,
     DateTime completedAt, {
     String? activeTribeId,
-  }) async =>
-      const Right(true);
+  }) async => const Right(true);
 
   @override
-  Future<Either<Failure, Unit>> createHabit(Habit habit) async =>
-      Right(unit);
+  Future<Either<Failure, Unit>> createHabit(Habit habit) async => Right(unit);
 
   @override
   Future<Either<Failure, Unit>> deleteHabit(String habitId) async {
@@ -136,19 +135,18 @@ class _FakeHabitRepo implements HabitRepository {
     String userId,
     DateTime start,
     DateTime end,
-  ) async =>
-      [];
+  ) async => [];
 
   @override
   Future<Either<Failure, Unit>> createHabitsFromBlueprint({
     required String userId,
     required Blueprint blueprint,
     String? reminderTime,
-  }) async =>
-      const Right(unit);
+  }) async => const Right(unit);
 
   @override
-  Future<Either<Failure, List<HabitCompletionEntity>>> getCompletionsBetweenDates(
+  Future<Either<Failure, List<HabitCompletionEntity>>>
+  getCompletionsBetweenDates(
     String userId,
     DateTime start,
     DateTime end,
@@ -163,8 +161,7 @@ class _FakeHabitRepo implements HabitRepository {
     String? archetypeName,
     List<String> interestIds = const [],
     String? clubId,
-  }) async =>
-      const Right([]);
+  }) async => const Right([]);
 }
 
 /// Fake reflection repository that extends the real class with stub
@@ -173,18 +170,14 @@ class _FakeReflectionRepo extends HabitReflectionRepository {
   HabitReflection? _stored;
 
   _FakeReflectionRepo()
-      : super(
-          local: _MockLocalDatasource(),
-          remote: _MockRemoteDatasource(),
-        );
+    : super(local: _MockLocalDatasource(), remote: _MockRemoteDatasource());
 
   @override
   Future<Either<Failure, HabitReflection?>> getForHabit({
     required String userId,
     required String habitId,
     required DateTime localDate,
-  }) async =>
-      Right(_stored);
+  }) async => Right(_stored);
 
   @override
   Future<Either<Failure, HabitReflection>> save({
@@ -223,19 +216,17 @@ void main() {
   });
 
   Widget buildTestApp(Widget child) => ProviderScope(
-        overrides: [
-          habitRepositoryProvider.overrideWithValue(habitRepo),
-          habitReflectionRepositoryProvider.overrideWithValue(reflectionRepo),
-          notificationServiceProvider.overrideWithValue(notificationService),
-          dashboardStateProvider.overrideWith(() => _FakeDashboardNotifier()),
-          authStateChangesProvider.overrideWithValue(
-            const AsyncValue.data(
-              AuthUser(id: 'u1', email: 'test@example.com'),
-            ),
-          ),
-        ],
-        child: MaterialApp(home: Scaffold(body: child)),
-      );
+    overrides: [
+      habitRepositoryProvider.overrideWithValue(habitRepo),
+      habitReflectionRepositoryProvider.overrideWithValue(reflectionRepo),
+      notificationServiceProvider.overrideWithValue(notificationService),
+      dashboardStateProvider.overrideWith(() => _FakeDashboardNotifier()),
+      authStateChangesProvider.overrideWithValue(
+        const AsyncValue.data(AuthUser(id: 'u1', email: 'test@example.com')),
+      ),
+    ],
+    child: MaterialApp(home: Scaffold(body: child)),
+  );
 
   final habit = Habit(
     id: 'h1',
@@ -309,14 +300,13 @@ void main() {
       expect(find.text('Cancel'), findsOneWidget);
     });
 
-    testWidgets('confirming delete removes the habit and reports success',
-        (tester) async {
+    testWidgets('confirming delete removes the habit and reports success', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(800, 1400);
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      await tester.pumpWidget(
-        buildTestApp(_SheetRouteHost(habit: habit)),
-      );
+      await tester.pumpWidget(buildTestApp(_SheetRouteHost(habit: habit)));
       await tester.tap(find.text('open sheet'));
       await tester.pumpAndSettle();
 
@@ -331,22 +321,25 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(habitRepo.deletedId, 'h1');
-      expect(find.byType(HabitOptionsSheet), findsNothing, reason: 'sheet closes');
+      expect(
+        find.byType(HabitOptionsSheet),
+        findsNothing,
+        reason: 'sheet closes',
+      );
       expect(find.text('Habit deleted'), findsOneWidget);
       verify(
         () => notificationService.cancelHabitNotifications('h1'),
       ).called(1);
     });
 
-    testWidgets('failed delete keeps the sheet open and reports the error',
-        (tester) async {
+    testWidgets('failed delete keeps the sheet open and reports the error', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(800, 1400);
       addTearDown(() => tester.view.resetPhysicalSize());
 
       habitRepo.failDelete = true;
-      await tester.pumpWidget(
-        buildTestApp(_SheetRouteHost(habit: habit)),
-      );
+      await tester.pumpWidget(buildTestApp(_SheetRouteHost(habit: habit)));
       await tester.tap(find.text('open sheet'));
       await tester.pumpAndSettle();
 
@@ -361,7 +354,11 @@ void main() {
       await tester.pump();
 
       expect(habitRepo.deletedId, 'h1');
-      expect(find.byType(HabitOptionsSheet), findsOneWidget, reason: 'sheet stays open');
+      expect(
+        find.byType(HabitOptionsSheet),
+        findsOneWidget,
+        reason: 'sheet stays open',
+      );
       expect(find.text('Habit deleted'), findsNothing);
       expect(find.textContaining('cloud sync failed'), findsOneWidget);
       // The habit is archived locally even when the remote enqueue fails, so

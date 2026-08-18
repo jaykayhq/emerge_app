@@ -716,7 +716,7 @@ void main() {
           dataJson: dataJson,
           createdAt: DateTime.now().toIso8601String(),
           retryCount: 0,
-        status: 'pending',
+          status: 'pending',
         );
 
         when(() => mockDao.getDue(any())).thenAnswer((_) async => [mutation]);
@@ -786,29 +786,33 @@ void main() {
           dataJson: null,
           createdAt: DateTime.now().toIso8601String(),
           retryCount: 0,
-        status: 'pending',
+          status: 'pending',
         );
 
         when(() => mockDao.getDue(any())).thenAnswer((_) async => [mutation]);
-        when(() => mockDao.markFailed(
+        when(
+          () => mockDao.markFailed(
             id: any(named: 'id'),
             retryCount: any(named: 'retryCount'),
             lastError: any(named: 'lastError'),
             nextRetryAt: any(named: 'nextRetryAt'),
             status: any(named: 'status'),
-          ))
-          .thenAnswer((_) async {});
+          ),
+        ).thenAnswer((_) async {});
 
         await engine.processMutationQueue();
 
         verifyNever(() => mockDocRef.set(any(), any()));
         verifyNever(() => mockDocRef.update(any()));
-        verify(() => mockDao.markFailed(
-              id: 4,
-              retryCount: 1,
-              lastError: any(named: 'lastError'),
-              nextRetryAt: any(named: 'nextRetryAt'),
-              status: 'pending')).called(1);
+        verify(
+          () => mockDao.markFailed(
+            id: 4,
+            retryCount: 1,
+            lastError: any(named: 'lastError'),
+            nextRetryAt: any(named: 'nextRetryAt'),
+            status: 'pending',
+          ),
+        ).called(1);
       },
     );
 
@@ -826,26 +830,30 @@ void main() {
       );
 
       when(() => mockDao.getDue(any())).thenAnswer((_) async => [mutation]);
-      when(() => mockDao.markFailed(
-            id: any(named: 'id'),
-            retryCount: any(named: 'retryCount'),
-            lastError: any(named: 'lastError'),
-            nextRetryAt: any(named: 'nextRetryAt'),
-            status: any(named: 'status'),
-          ))
-          .thenAnswer((_) async {});
+      when(
+        () => mockDao.markFailed(
+          id: any(named: 'id'),
+          retryCount: any(named: 'retryCount'),
+          lastError: any(named: 'lastError'),
+          nextRetryAt: any(named: 'nextRetryAt'),
+          status: any(named: 'status'),
+        ),
+      ).thenAnswer((_) async {});
       when(
         () => mockDocRef.set(any(), any()),
       ).thenThrow(FirebaseException(plugin: 'firestore'));
 
       await engine.processMutationQueue();
 
-      verify(() => mockDao.markFailed(
-            id: 5,
-            retryCount: 1,
-            lastError: any(named: 'lastError'),
-            nextRetryAt: any(named: 'nextRetryAt'),
-            status: 'pending')).called(1);
+      verify(
+        () => mockDao.markFailed(
+          id: 5,
+          retryCount: 1,
+          lastError: any(named: 'lastError'),
+          nextRetryAt: any(named: 'nextRetryAt'),
+          status: 'pending',
+        ),
+      ).called(1);
     });
 
     test('error during update mutation increments retry', () async {
@@ -862,26 +870,30 @@ void main() {
       );
 
       when(() => mockDao.getDue(any())).thenAnswer((_) async => [mutation]);
-      when(() => mockDao.markFailed(
-            id: any(named: 'id'),
-            retryCount: any(named: 'retryCount'),
-            lastError: any(named: 'lastError'),
-            nextRetryAt: any(named: 'nextRetryAt'),
-            status: any(named: 'status'),
-          ))
-          .thenAnswer((_) async {});
+      when(
+        () => mockDao.markFailed(
+          id: any(named: 'id'),
+          retryCount: any(named: 'retryCount'),
+          lastError: any(named: 'lastError'),
+          nextRetryAt: any(named: 'nextRetryAt'),
+          status: any(named: 'status'),
+        ),
+      ).thenAnswer((_) async {});
       when(
         () => mockDocRef.update(any()),
       ).thenThrow(FirebaseException(plugin: 'firestore'));
 
       await engine.processMutationQueue();
 
-      verify(() => mockDao.markFailed(
-            id: 6,
-            retryCount: 1,
-            lastError: any(named: 'lastError'),
-            nextRetryAt: any(named: 'nextRetryAt'),
-            status: 'pending')).called(1);
+      verify(
+        () => mockDao.markFailed(
+          id: 6,
+          retryCount: 1,
+          lastError: any(named: 'lastError'),
+          nextRetryAt: any(named: 'nextRetryAt'),
+          status: 'pending',
+        ),
+      ).called(1);
     });
 
     test('error during delete mutation increments retry', () async {
@@ -897,66 +909,76 @@ void main() {
       );
 
       when(() => mockDao.getDue(any())).thenAnswer((_) async => [mutation]);
-      when(() => mockDao.markFailed(
-            id: any(named: 'id'),
-            retryCount: any(named: 'retryCount'),
-            lastError: any(named: 'lastError'),
-            nextRetryAt: any(named: 'nextRetryAt'),
-            status: any(named: 'status'),
-          ))
-          .thenAnswer((_) async {});
+      when(
+        () => mockDao.markFailed(
+          id: any(named: 'id'),
+          retryCount: any(named: 'retryCount'),
+          lastError: any(named: 'lastError'),
+          nextRetryAt: any(named: 'nextRetryAt'),
+          status: any(named: 'status'),
+        ),
+      ).thenAnswer((_) async {});
       when(
         () => mockDocRef.delete(),
       ).thenThrow(FirebaseException(plugin: 'firestore'));
 
       await engine.processMutationQueue();
 
-      verify(() => mockDao.markFailed(
-            id: 7,
-            retryCount: 1,
-            lastError: any(named: 'lastError'),
-            nextRetryAt: any(named: 'nextRetryAt'),
-            status: 'pending')).called(1);
+      verify(
+        () => mockDao.markFailed(
+          id: 7,
+          retryCount: 1,
+          lastError: any(named: 'lastError'),
+          nextRetryAt: any(named: 'nextRetryAt'),
+          status: 'pending',
+        ),
+      ).called(1);
     });
 
-    test('mutation dead-lettered (not silently dropped) after maxRetries',
-        () async {
-      final mutation = MutationQueueTableData(
-        id: 8,
-        collectionPath: 'users/user1/habits',
-        documentId: 'habit_1',
-        operation: 'set',
-        dataJson: jsonEncode({'name': 'Habit'}),
-        createdAt: DateTime.now().toIso8601String(),
-        retryCount: 5,
-        status: 'pending',
-      );
+    test(
+      'mutation dead-lettered (not silently dropped) after maxRetries',
+      () async {
+        final mutation = MutationQueueTableData(
+          id: 8,
+          collectionPath: 'users/user1/habits',
+          documentId: 'habit_1',
+          operation: 'set',
+          dataJson: jsonEncode({'name': 'Habit'}),
+          createdAt: DateTime.now().toIso8601String(),
+          retryCount: 5,
+          status: 'pending',
+        );
 
-      when(() => mockDao.getDue(any())).thenAnswer((_) async => [mutation]);
-      when(() => mockDao.markFailed(
+        when(() => mockDao.getDue(any())).thenAnswer((_) async => [mutation]);
+        when(
+          () => mockDao.markFailed(
             id: any(named: 'id'),
             retryCount: any(named: 'retryCount'),
             lastError: any(named: 'lastError'),
             nextRetryAt: any(named: 'nextRetryAt'),
             status: any(named: 'status'),
-          ))
-          .thenAnswer((_) async {});
-      when(() => mockDao.deleteProcessed(any())).thenAnswer((_) async {});
-      when(
-        () => mockDocRef.set(any(), any()),
-      ).thenThrow(FirebaseException(plugin: 'firestore'));
+          ),
+        ).thenAnswer((_) async {});
+        when(() => mockDao.deleteProcessed(any())).thenAnswer((_) async {});
+        when(
+          () => mockDocRef.set(any(), any()),
+        ).thenThrow(FirebaseException(plugin: 'firestore'));
 
-      await engine.processMutationQueue();
+        await engine.processMutationQueue();
 
-      // New engine dead-letters (status 'dead') instead of silently dropping.
-      verify(() => mockDao.markFailed(
+        // New engine dead-letters (status 'dead') instead of silently dropping.
+        verify(
+          () => mockDao.markFailed(
             id: 8,
             retryCount: 6,
             lastError: any(named: 'lastError'),
             nextRetryAt: any(named: 'nextRetryAt'),
-            status: 'dead')).called(1);
-      verifyNever(() => mockDao.deleteProcessed(8));
-    });
+            status: 'dead',
+          ),
+        ).called(1);
+        verifyNever(() => mockDao.deleteProcessed(8));
+      },
+    );
 
     test('prevents concurrent execution of processMutationQueue', () async {
       when(() => mockDao.getAllPending()).thenAnswer((_) async => []);

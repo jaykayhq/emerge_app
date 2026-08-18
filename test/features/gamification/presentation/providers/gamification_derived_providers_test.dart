@@ -7,9 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 ProviderContainer _makeContainer(UserProfile profile) {
   return ProviderContainer(
     overrides: [
-      userStatsStreamProvider.overrideWithValue(
-        AsyncValue.data(profile),
-      ),
+      userStatsStreamProvider.overrideWithValue(AsyncValue.data(profile)),
     ],
   );
 }
@@ -17,9 +15,7 @@ ProviderContainer _makeContainer(UserProfile profile) {
 ProviderContainer _makeEmptyContainer() {
   return ProviderContainer(
     overrides: [
-      userStatsStreamProvider.overrideWith(
-        (ref) => const Stream.empty(),
-      ),
+      userStatsStreamProvider.overrideWith((ref) => const Stream.empty()),
     ],
   );
 }
@@ -34,9 +30,7 @@ ProviderContainer _makeContainerWithAvatarValues({
 }) {
   return ProviderContainer(
     overrides: [
-      userStatsStreamProvider.overrideWithValue(
-        AsyncValue.data(profile),
-      ),
+      userStatsStreamProvider.overrideWithValue(AsyncValue.data(profile)),
       if (avatarStats != null)
         userAvatarStatsProvider.overrideWithValue(AsyncValue.data(avatarStats)),
       if (level != null)
@@ -82,9 +76,7 @@ void main() {
     });
 
     test('returns none when profile has no archetype', () {
-      final container = _makeContainer(
-        const UserProfile(uid: 'test'),
-      );
+      final container = _makeContainer(const UserProfile(uid: 'test'));
       expect(container.read(currentArchetypeProvider), UserArchetype.none);
       container.dispose();
     });
@@ -100,9 +92,7 @@ void main() {
     });
 
     test('returns false when onboardingCompletedAt is null', () {
-      final container = _makeContainer(
-        const UserProfile(uid: 'test'),
-      );
+      final container = _makeContainer(const UserProfile(uid: 'test'));
       expect(container.read(isOnboardingCompleteProvider), false);
       container.dispose();
     });
@@ -115,10 +105,7 @@ void main() {
         profile: const UserProfile(uid: 'test').copyWith(avatarStats: stats),
         avatarStats: stats,
       );
-      expect(
-        container.read(userAvatarStatsProvider).requireValue,
-        stats,
-      );
+      expect(container.read(userAvatarStatsProvider).requireValue, stats);
       container.dispose();
     });
 
@@ -138,9 +125,9 @@ void main() {
   group('userLevelProvider', () {
     test('returns level from profile avatar stats', () {
       final container = _makeContainerWithAvatarValues(
-        profile: const UserProfile(uid: 'test').copyWith(
-          avatarStats: const UserAvatarStats(level: 10),
-        ),
+        profile: const UserProfile(
+          uid: 'test',
+        ).copyWith(avatarStats: const UserAvatarStats(level: 10)),
         level: 10,
       );
       expect(container.read(userLevelProvider).requireValue, 10);
@@ -160,9 +147,9 @@ void main() {
   group('userStreakProvider', () {
     test('returns streak from profile avatar stats', () {
       final container = _makeContainerWithAvatarValues(
-        profile: const UserProfile(uid: 'test').copyWith(
-          avatarStats: const UserAvatarStats(streak: 25),
-        ),
+        profile: const UserProfile(
+          uid: 'test',
+        ).copyWith(avatarStats: const UserAvatarStats(streak: 25)),
         streak: 25,
       );
       expect(container.read(userStreakProvider).requireValue, 25);
@@ -214,11 +201,9 @@ void main() {
   group('attributeProgressProvider', () {
     test('returns progress for a specific attribute', () {
       final container = _makeContainer(
-        const UserProfile(uid: 'test').copyWith(
-          avatarStats: const UserAvatarStats(
-            strengthXp: 300,
-          ),
-        ),
+        const UserProfile(
+          uid: 'test',
+        ).copyWith(avatarStats: const UserAvatarStats(strengthXp: 300)),
       );
       final result = container.read(attributeProgressProvider('strength'));
       expect(result, isNotNull);
@@ -228,18 +213,16 @@ void main() {
     });
 
     test('returns null for unknown attribute', () {
-      final container = _makeContainer(
-        const UserProfile(uid: 'test'),
-      );
+      final container = _makeContainer(const UserProfile(uid: 'test'));
       expect(container.read(attributeProgressProvider('unknown')), isNull);
       container.dispose();
     });
 
     test('is case-insensitive', () {
       final container = _makeContainer(
-        const UserProfile(uid: 'test').copyWith(
-          avatarStats: const UserAvatarStats(strengthXp: 200),
-        ),
+        const UserProfile(
+          uid: 'test',
+        ).copyWith(avatarStats: const UserAvatarStats(strengthXp: 200)),
       );
       expect(container.read(attributeProgressProvider('Strength')), isNotNull);
       container.dispose();

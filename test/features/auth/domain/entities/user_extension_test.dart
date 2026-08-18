@@ -37,20 +37,23 @@ void main() {
   });
 
   group('UserAvatarStats', () {
-    test('default constructor uses zeros for XPs, level=1, streak=0, momentumScore=0', () {
-      const stats = UserAvatarStats();
-      expect(stats.strengthXp, 0);
-      expect(stats.intellectXp, 0);
-      expect(stats.vitalityXp, 0);
-      expect(stats.creativityXp, 0);
-      expect(stats.focusXp, 0);
-      expect(stats.spiritXp, 0);
-      expect(stats.challengeXp, 0);
-      expect(stats.level, 1);
-      expect(stats.streak, 0);
-      expect(stats.momentumScore, 0);
-      expect(stats.lastCelebratedLevel, 0);
-    });
+    test(
+      'default constructor uses zeros for XPs, level=1, streak=0, momentumScore=0',
+      () {
+        const stats = UserAvatarStats();
+        expect(stats.strengthXp, 0);
+        expect(stats.intellectXp, 0);
+        expect(stats.vitalityXp, 0);
+        expect(stats.creativityXp, 0);
+        expect(stats.focusXp, 0);
+        expect(stats.spiritXp, 0);
+        expect(stats.challengeXp, 0);
+        expect(stats.level, 1);
+        expect(stats.streak, 0);
+        expect(stats.momentumScore, 0);
+        expect(stats.lastCelebratedLevel, 0);
+      },
+    );
 
     test('constructor with explicit values', () {
       const stats = UserAvatarStats(
@@ -188,7 +191,9 @@ void main() {
     });
 
     test('getAttributeXp returns correct value from attributeXp map', () {
-      const stats = UserAvatarStats(attributeXp: {'strength': 15, 'intellect': 25});
+      const stats = UserAvatarStats(
+        attributeXp: {'strength': 15, 'intellect': 25},
+      );
       expect(stats.getAttributeXp('strength'), 15);
       expect(stats.getAttributeXp('intellect'), 25);
     });
@@ -203,47 +208,80 @@ void main() {
       expect(stats.getAttributeXp('STRENGTH'), 15);
     });
 
-    test('addAttributeXp adds to both map and the corresponding field for strength', () {
-      const stats = UserAvatarStats(strengthXp: 10, attributeXp: {'strength': 10});
-      final updated = stats.addAttributeXp('strength', 5);
-      expect(updated.strengthXp, 15);
-      expect(updated.attributeXp['strength'], 15);
-    });
+    test(
+      'addAttributeXp adds to both map and the corresponding field for strength',
+      () {
+        const stats = UserAvatarStats(
+          strengthXp: 10,
+          attributeXp: {'strength': 10},
+        );
+        final updated = stats.addAttributeXp('strength', 5);
+        expect(updated.strengthXp, 15);
+        expect(updated.attributeXp['strength'], 15);
+      },
+    );
 
-    test('addAttributeXp adds to both map and the corresponding field for intellect', () {
-      const stats = UserAvatarStats(intellectXp: 10, attributeXp: {'intellect': 10});
-      final updated = stats.addAttributeXp('intellect', 5);
-      expect(updated.intellectXp, 15);
-      expect(updated.attributeXp['intellect'], 15);
-    });
+    test(
+      'addAttributeXp adds to both map and the corresponding field for intellect',
+      () {
+        const stats = UserAvatarStats(
+          intellectXp: 10,
+          attributeXp: {'intellect': 10},
+        );
+        final updated = stats.addAttributeXp('intellect', 5);
+        expect(updated.intellectXp, 15);
+        expect(updated.attributeXp['intellect'], 15);
+      },
+    );
 
-    test('addAttributeXp adds to both map and the corresponding field for vitality', () {
-      const stats = UserAvatarStats(vitalityXp: 10, attributeXp: {'vitality': 10});
-      final updated = stats.addAttributeXp('vitality', 5);
-      expect(updated.vitalityXp, 15);
-      expect(updated.attributeXp['vitality'], 15);
-    });
+    test(
+      'addAttributeXp adds to both map and the corresponding field for vitality',
+      () {
+        const stats = UserAvatarStats(
+          vitalityXp: 10,
+          attributeXp: {'vitality': 10},
+        );
+        final updated = stats.addAttributeXp('vitality', 5);
+        expect(updated.vitalityXp, 15);
+        expect(updated.attributeXp['vitality'], 15);
+      },
+    );
 
-    test('addAttributeXp adds to both map and the corresponding field for creativity', () {
-      const stats = UserAvatarStats(creativityXp: 10, attributeXp: {'creativity': 10});
-      final updated = stats.addAttributeXp('creativity', 5);
-      expect(updated.creativityXp, 15);
-      expect(updated.attributeXp['creativity'], 15);
-    });
+    test(
+      'addAttributeXp adds to both map and the corresponding field for creativity',
+      () {
+        const stats = UserAvatarStats(
+          creativityXp: 10,
+          attributeXp: {'creativity': 10},
+        );
+        final updated = stats.addAttributeXp('creativity', 5);
+        expect(updated.creativityXp, 15);
+        expect(updated.attributeXp['creativity'], 15);
+      },
+    );
 
-    test('addAttributeXp adds to both map and the corresponding field for focus', () {
-      const stats = UserAvatarStats(focusXp: 10, attributeXp: {'focus': 10});
-      final updated = stats.addAttributeXp('focus', 5);
-      expect(updated.focusXp, 15);
-      expect(updated.attributeXp['focus'], 15);
-    });
+    test(
+      'addAttributeXp adds to both map and the corresponding field for focus',
+      () {
+        const stats = UserAvatarStats(focusXp: 10, attributeXp: {'focus': 10});
+        final updated = stats.addAttributeXp('focus', 5);
+        expect(updated.focusXp, 15);
+        expect(updated.attributeXp['focus'], 15);
+      },
+    );
 
-    test('addAttributeXp adds to both map and the corresponding field for spirit', () {
-      const stats = UserAvatarStats(spiritXp: 10, attributeXp: {'spirit': 10});
-      final updated = stats.addAttributeXp('spirit', 5);
-      expect(updated.spiritXp, 15);
-      expect(updated.attributeXp['spirit'], 15);
-    });
+    test(
+      'addAttributeXp adds to both map and the corresponding field for spirit',
+      () {
+        const stats = UserAvatarStats(
+          spiritXp: 10,
+          attributeXp: {'spirit': 10},
+        );
+        final updated = stats.addAttributeXp('spirit', 5);
+        expect(updated.spiritXp, 15);
+        expect(updated.attributeXp['spirit'], 15);
+      },
+    );
 
     test('addAttributeXp with unknown key only updates map', () {
       const stats = UserAvatarStats();
@@ -256,14 +294,30 @@ void main() {
   group('WorldSeason', () {
     test('has four seasons', () {
       expect(WorldSeason.values.length, 4);
-      expect(WorldSeason.values, containsAll([WorldSeason.spring, WorldSeason.summer, WorldSeason.autumn, WorldSeason.winter]));
+      expect(
+        WorldSeason.values,
+        containsAll([
+          WorldSeason.spring,
+          WorldSeason.summer,
+          WorldSeason.autumn,
+          WorldSeason.winter,
+        ]),
+      );
     });
   });
 
   group('WorldTheme', () {
     test('has four themes', () {
       expect(WorldTheme.values.length, 4);
-      expect(WorldTheme.values, containsAll([WorldTheme.sanctuary, WorldTheme.island, WorldTheme.settlement, WorldTheme.floatingRealm]));
+      expect(
+        WorldTheme.values,
+        containsAll([
+          WorldTheme.sanctuary,
+          WorldTheme.island,
+          WorldTheme.settlement,
+          WorldTheme.floatingRealm,
+        ]),
+      );
     });
   });
 
@@ -378,10 +432,7 @@ void main() {
     });
 
     test('constructor with null defaultTime and timeOfDayPreference', () {
-      const stack = HabitStack(
-        anchorId: 'anchor_1',
-        habitId: 'habit_1',
-      );
+      const stack = HabitStack(anchorId: 'anchor_1', habitId: 'habit_1');
       expect(stack.anchorId, 'anchor_1');
       expect(stack.habitId, 'habit_1');
       expect(stack.defaultTime, null);
@@ -404,10 +455,7 @@ void main() {
     });
 
     test('toMap/fromMap roundtrip with null optionals', () {
-      const stack = HabitStack(
-        anchorId: 'anchor_1',
-        habitId: 'habit_1',
-      );
+      const stack = HabitStack(anchorId: 'anchor_1', habitId: 'habit_1');
       final map = stack.toMap();
       final restored = HabitStack.fromMap(map);
       expect(restored.anchorId, 'anchor_1');
@@ -518,9 +566,7 @@ void main() {
         dominantMotive: 'mastery',
         why: 'To be my best',
         anchors: ['anchor_1'],
-        habitStacks: [
-          const HabitStack(anchorId: 'a1', habitId: 'h1'),
-        ],
+        habitStacks: [const HabitStack(anchorId: 'a1', habitId: 'h1')],
         onboardingProgress: 3,
         skippedOnboardingSteps: ['archetype'],
         onboardingStartedAt: startedAt,
@@ -640,9 +686,7 @@ void main() {
         reframeMode: true,
         motive: 'Create',
         anchors: ['a1'],
-        habitStacks: [
-          const HabitStack(anchorId: 'a1', habitId: 'h1'),
-        ],
+        habitStacks: [const HabitStack(anchorId: 'a1', habitId: 'h1')],
         onboardingProgress: 2,
         settings: const UserSettings(
           notificationsEnabled: false,
@@ -721,17 +765,29 @@ void main() {
       final firestoreMap = profile.toFirestore();
 
       expect(firestoreMap['onboardingStartedAt'], isA<Timestamp>());
-      expect((firestoreMap['onboardingStartedAt'] as Timestamp).toDate(), startedAt);
+      expect(
+        (firestoreMap['onboardingStartedAt'] as Timestamp).toDate(),
+        startedAt,
+      );
 
       expect(firestoreMap['onboardingCompletedAt'], isA<Timestamp>());
-      expect((firestoreMap['onboardingCompletedAt'] as Timestamp).toDate(), completedAt);
+      expect(
+        (firestoreMap['onboardingCompletedAt'] as Timestamp).toDate(),
+        completedAt,
+      );
 
       expect(firestoreMap['accountCreatedAt'], isA<Timestamp>());
-      expect((firestoreMap['accountCreatedAt'] as Timestamp).toDate(), createdAt);
+      expect(
+        (firestoreMap['accountCreatedAt'] as Timestamp).toDate(),
+        createdAt,
+      );
 
       final worldMap = firestoreMap['worldState'] as Map<String, dynamic>;
       expect(worldMap['lastActiveDate'], isA<Timestamp>());
-      expect((worldMap['lastActiveDate'] as Timestamp).toDate(), worldLastActive);
+      expect(
+        (worldMap['lastActiveDate'] as Timestamp).toDate(),
+        worldLastActive,
+      );
     });
 
     test('copyWith overrides individual fields', () {

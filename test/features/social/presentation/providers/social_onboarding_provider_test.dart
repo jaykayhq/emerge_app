@@ -20,7 +20,9 @@ void main() {
           ),
         ],
       );
-      final result = await container.read(socialOnboardingCompletedProvider.future);
+      final result = await container.read(
+        socialOnboardingCompletedProvider.future,
+      );
       expect(result, false);
       container.dispose();
     });
@@ -33,7 +35,9 @@ void main() {
           ),
         ],
       );
-      final result = await container.read(socialOnboardingCompletedProvider.future);
+      final result = await container.read(
+        socialOnboardingCompletedProvider.future,
+      );
       expect(result, true);
       container.dispose();
     });

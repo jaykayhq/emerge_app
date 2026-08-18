@@ -21,7 +21,9 @@ class _TribeBondsTabState extends ConsumerState<TribeBondsTab> {
       child: Column(
         children: [
           const Gap(16),
-          TribeAccountabilitySection(key: _bondsKey).animate().fadeIn(delay: 400.ms),
+          TribeAccountabilitySection(
+            key: _bondsKey,
+          ).animate().fadeIn(delay: 400.ms),
           const Gap(32),
         ],
       ),

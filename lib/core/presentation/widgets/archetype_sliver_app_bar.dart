@@ -63,8 +63,10 @@ class ArchetypeSliverAppBar extends ConsumerWidget {
               ),
             ),
             if (badge != null) ...[const SizedBox(width: 8), badge!],
-            if (momentumDot != null)
-              ...[const SizedBox(width: 8), momentumDot!],
+            if (momentumDot != null) ...[
+              const SizedBox(width: 8),
+              momentumDot!,
+            ],
             if (syncIndicator != null) ...[
               const SizedBox(width: 8),
               syncIndicator!,

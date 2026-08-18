@@ -52,7 +52,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final isNormal = await ref.read(isNormalUserProvider(user.uid).future);
       if (!isNormal) {
         await ref.read(authRepositoryProvider).signOut();
-        throw Exception('This is a creator account. Please log in through the Creator Hub or switch accounts.');
+        throw Exception(
+          'This is a creator account. Please log in through the Creator Hub or switch accounts.',
+        );
       }
       // Navigation is handled by the router's redirect
     } catch (e) {
@@ -69,8 +71,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _loginWithGoogle() async {
     setState(() => _isLoading = true);
     try {
-      final result = await ref.read(authRepositoryProvider).signInWithGoogle(isLogin: true);
-      
+      final result = await ref
+          .read(authRepositoryProvider)
+          .signInWithGoogle(isLogin: true);
+
       bool proceed = false;
       result.fold(
         (error) {
@@ -95,7 +99,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         final isNormal = await ref.read(isNormalUserProvider(user.uid).future);
         if (!isNormal) {
           await ref.read(authRepositoryProvider).signOut();
-          throw Exception('This is a creator account. Please log in through the Creator Hub or switch accounts.');
+          throw Exception(
+            'This is a creator account. Please log in through the Creator Hub or switch accounts.',
+          );
         }
       }
     } catch (e) {
@@ -728,7 +734,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   // Sign Up Link
                                   Wrap(
                                     alignment: WrapAlignment.center,
-                                    crossAxisAlignment: WrapCrossAlignment.center,
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
                                     children: [
                                       const Text(
                                         "Don't have an account? ",
@@ -750,7 +757,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   const Gap(16),
                                   // Creator Login Link
                                   TextButton(
-                                    onPressed: () => context.push('/creator/login'),
+                                    onPressed: () =>
+                                        context.push('/creator/login'),
                                     child: const Text(
                                       'Creator Login',
                                       style: TextStyle(

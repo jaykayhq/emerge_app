@@ -59,8 +59,9 @@ void main() {
       expect(find.byType(Dismissible), findsNothing);
     });
 
-    testWidgets('habit with no timer shows check circle (no timer icon)',
-        (tester) async {
+    testWidgets('habit with no timer shows check circle (no timer icon)', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildTestApp(
           IndentedHabitItem(
@@ -164,25 +165,27 @@ void main() {
       expect(menu, 1);
     });
 
-    testWidgets('tapping the TIMER icon with a returned duration starts the timer',
-        (tester) async {
-      await tester.pumpWidget(
-        buildTestApp(
-          IndentedHabitItem(
-            habit: _makeHabit(timerDurationMinutes: 5),
-            selectedDate: DateTime.now(),
-            onRowBodyTap: () {},
-            onCheckboxTap: () {},
-            onTimerTap: (_) async => 5,
-            onMenuTap: () {},
+    testWidgets(
+      'tapping the TIMER icon with a returned duration starts the timer',
+      (tester) async {
+        await tester.pumpWidget(
+          buildTestApp(
+            IndentedHabitItem(
+              habit: _makeHabit(timerDurationMinutes: 5),
+              selectedDate: DateTime.now(),
+              onRowBodyTap: () {},
+              onCheckboxTap: () {},
+              onTimerTap: (_) async => 5,
+              onMenuTap: () {},
+            ),
           ),
-        ),
-      );
-      await tester.tap(find.byIcon(Icons.timer_outlined));
-      await tester.pumpAndSettle();
-      // Running-timer state shows the pause control.
-      expect(find.byIcon(Icons.pause), findsOneWidget);
-    });
+        );
+        await tester.tap(find.byIcon(Icons.timer_outlined));
+        await tester.pumpAndSettle();
+        // Running-timer state shows the pause control.
+        expect(find.byIcon(Icons.pause), findsOneWidget);
+      },
+    );
   });
 
   group('IndentedHabitItem - completed visual', () {
@@ -233,8 +236,9 @@ void main() {
           ),
         ),
       );
-      final container =
-          tester.widget<AnimatedContainer>(find.byType(AnimatedContainer));
+      final container = tester.widget<AnimatedContainer>(
+        find.byType(AnimatedContainer),
+      );
       final decoration = container.decoration as BoxDecoration;
       final gradient = decoration.gradient as LinearGradient;
       // Completed cards use the dark background gradient (0xFF1A1A2E)
@@ -295,7 +299,9 @@ void main() {
       await tester.pumpWidget(
         section(
           slot: 'afternoon',
-          habits: [h.copyWith(timeOfDayPreference: TimeOfDayPreference.afternoon)],
+          habits: [
+            h.copyWith(timeOfDayPreference: TimeOfDayPreference.afternoon),
+          ],
         ),
       );
       expect(find.text('During Lunch'), findsOneWidget);
@@ -303,7 +309,9 @@ void main() {
       await tester.pumpWidget(
         section(
           slot: 'evening',
-          habits: [h.copyWith(timeOfDayPreference: TimeOfDayPreference.evening)],
+          habits: [
+            h.copyWith(timeOfDayPreference: TimeOfDayPreference.evening),
+          ],
         ),
       );
       expect(find.text('After Work'), findsOneWidget);
@@ -311,7 +319,9 @@ void main() {
       await tester.pumpWidget(
         section(
           slot: 'anytime',
-          habits: [h.copyWith(timeOfDayPreference: TimeOfDayPreference.anytime)],
+          habits: [
+            h.copyWith(timeOfDayPreference: TimeOfDayPreference.anytime),
+          ],
         ),
       );
       expect(find.text('Before Bed'), findsOneWidget);

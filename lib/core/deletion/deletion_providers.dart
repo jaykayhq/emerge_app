@@ -7,9 +7,5 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 final deletionServiceProvider = Provider<DeletionService>((ref) {
   final db = ref.watch(appDatabaseProvider);
   final engine = ref.watch(enhancedSyncEngineProvider);
-  return DeletionService(
-    db: db,
-    syncEngine: engine,
-    audit: DeletionAudit(),
-  );
+  return DeletionService(db: db, syncEngine: engine, audit: DeletionAudit());
 });

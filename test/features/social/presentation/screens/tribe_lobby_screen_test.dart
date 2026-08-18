@@ -54,20 +54,12 @@ List<Override> testOverrides({
     allArchetypeClubsProvider.overrideWith(
       (ref) => clubsStream ?? Stream.value(<Tribe>[_testTribe]),
     ),
-    userChallengesProvider.overrideWith(
-      (ref) async => <Challenge>[],
-    ),
+    userChallengesProvider.overrideWith((ref) async => <Challenge>[]),
     dailyQuestFromBundleProvider.overrideWith((ref) => null),
     weeklySpotlightFromBundleProvider.overrideWith((ref) => null),
-    verifiedCreatorsStreamProvider.overrideWith(
-      (ref) => const Stream.empty(),
-    ),
-    clubActivityProvider.overrideWith(
-      (ref, _) => const Stream.empty(),
-    ),
-    worldLeaderboardProvider.overrideWith(
-      (ref) => const Stream.empty(),
-    ),
+    verifiedCreatorsStreamProvider.overrideWith((ref) => const Stream.empty()),
+    clubActivityProvider.overrideWith((ref, _) => const Stream.empty()),
+    worldLeaderboardProvider.overrideWith((ref) => const Stream.empty()),
   ];
 }
 
@@ -95,26 +87,16 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          userStatsStreamProvider.overrideWith(
-            (ref) => const Stream.empty(),
-          ),
-          allArchetypeClubsProvider.overrideWith(
-            (ref) => const Stream.empty(),
-          ),
-          userChallengesProvider.overrideWith(
-            (ref) async => <Challenge>[],
-          ),
+          userStatsStreamProvider.overrideWith((ref) => const Stream.empty()),
+          allArchetypeClubsProvider.overrideWith((ref) => const Stream.empty()),
+          userChallengesProvider.overrideWith((ref) async => <Challenge>[]),
           dailyQuestFromBundleProvider.overrideWith((ref) => null),
           weeklySpotlightFromBundleProvider.overrideWith((ref) => null),
           verifiedCreatorsStreamProvider.overrideWith(
             (ref) => const Stream.empty(),
           ),
-          clubActivityProvider.overrideWith(
-            (ref, _) => const Stream.empty(),
-          ),
-          worldLeaderboardProvider.overrideWith(
-            (ref) => const Stream.empty(),
-          ),
+          clubActivityProvider.overrideWith((ref, _) => const Stream.empty()),
+          worldLeaderboardProvider.overrideWith((ref) => const Stream.empty()),
         ],
         child: const MaterialApp(home: TribeLobbyScreen()),
       ),
@@ -126,37 +108,40 @@ void main() {
   });
 
   testWidgets(
-      'TribeLobbyScreen renders CTA bar with CHALLENGES and SWITCH TRIBES buttons',
-      (tester) async {
-    await tester.pumpWidget(buildTest());
-    await tester.pump(const Duration(milliseconds: 100));
+    'TribeLobbyScreen renders CTA bar with CHALLENGES and SWITCH TRIBES buttons',
+    (tester) async {
+      await tester.pumpWidget(buildTest());
+      await tester.pump(const Duration(milliseconds: 100));
 
-    // CTA bar buttons.
-    expect(find.text('CHALLENGES'), findsOneWidget);
-    expect(find.text('SWITCH TRIBES'), findsOneWidget);
-    expect(find.text('BROWSE BLUEPRINTS'), findsNothing);
-  });
+      // CTA bar buttons.
+      expect(find.text('CHALLENGES'), findsOneWidget);
+      expect(find.text('SWITCH TRIBES'), findsOneWidget);
+      expect(find.text('BROWSE BLUEPRINTS'), findsNothing);
+    },
+  );
 
   testWidgets(
-      'TribeLobbyScreen renders the dual-hub sections: YOUR CIRCLE, YOUR QUESTS, QUESTS FOR YOU',
-      (tester) async {
-    // Use a tall viewport so all slivers build.
-    tester.view.physicalSize = const Size(1080, 4000);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
+    'TribeLobbyScreen renders the dual-hub sections: YOUR CIRCLE, YOUR QUESTS, QUESTS FOR YOU',
+    (tester) async {
+      // Use a tall viewport so all slivers build.
+      tester.view.physicalSize = const Size(1080, 4000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(buildTest());
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+      await tester.pumpWidget(buildTest());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.text('YOUR CIRCLE'), findsOneWidget);
-    expect(find.text('YOUR QUESTS'), findsOneWidget);
-    expect(find.text('QUESTS FOR YOU'), findsOneWidget);
-  });
+      expect(find.text('YOUR CIRCLE'), findsOneWidget);
+      expect(find.text('YOUR QUESTS'), findsOneWidget);
+      expect(find.text('QUESTS FOR YOU'), findsOneWidget);
+    },
+  );
 
-  testWidgets('hides the back button when the lobby is the root route',
-      (tester) async {
+  testWidgets('hides the back button when the lobby is the root route', (
+    tester,
+  ) async {
     await tester.pumpWidget(buildTest());
     await tester.pump(const Duration(milliseconds: 100));
 
@@ -164,8 +149,9 @@ void main() {
     expect(find.byIcon(Icons.arrow_back_ios_new), findsNothing);
   });
 
-  testWidgets('shows a back button that pops when the lobby was pushed',
-      (tester) async {
+  testWidgets('shows a back button that pops when the lobby was pushed', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: testOverrides(),

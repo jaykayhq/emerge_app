@@ -38,19 +38,27 @@ void main() {
       test('overrides each field independently', () {
         const avatar = Avatar();
 
-        final bodyTypeUpdated = avatar.copyWith(bodyType: AvatarBodyType.feminine);
+        final bodyTypeUpdated = avatar.copyWith(
+          bodyType: AvatarBodyType.feminine,
+        );
         expect(bodyTypeUpdated.bodyType, AvatarBodyType.feminine);
 
         final skinToneUpdated = avatar.copyWith(skinTone: AvatarSkinTone.dark);
         expect(skinToneUpdated.skinTone, AvatarSkinTone.dark);
 
-        final hairStyleUpdated = avatar.copyWith(hairStyle: AvatarHairStyle.bun);
+        final hairStyleUpdated = avatar.copyWith(
+          hairStyle: AvatarHairStyle.bun,
+        );
         expect(hairStyleUpdated.hairStyle, AvatarHairStyle.bun);
 
-        final hairColorUpdated = avatar.copyWith(hairColor: AvatarHairColor.pink);
+        final hairColorUpdated = avatar.copyWith(
+          hairColor: AvatarHairColor.pink,
+        );
         expect(hairColorUpdated.hairColor, AvatarHairColor.pink);
 
-        final faceShapeUpdated = avatar.copyWith(faceShape: AvatarFaceShape.round);
+        final faceShapeUpdated = avatar.copyWith(
+          faceShape: AvatarFaceShape.round,
+        );
         expect(faceShapeUpdated.faceShape, AvatarFaceShape.round);
 
         final outfitUpdated = avatar.copyWith(outfit: AvatarOutfit.robe);

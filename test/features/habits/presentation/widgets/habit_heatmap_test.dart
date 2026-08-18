@@ -7,9 +7,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: HabitHeatmap(
-            data: List.generate(90, (i) => i % 3 == 0),
-          ),
+          body: HabitHeatmap(data: List.generate(90, (i) => i % 3 == 0)),
         ),
       ),
     );

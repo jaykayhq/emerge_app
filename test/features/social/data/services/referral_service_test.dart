@@ -214,9 +214,9 @@ void main() {
       'generateReferralCode returns existing code without enqueuing',
       () async {
         when(() => mockSnapshot.exists).thenReturn(true);
-        when(() => mockSnapshot.data()).thenReturn({
-          'referralCode': 'EXISTING',
-        });
+        when(
+          () => mockSnapshot.data(),
+        ).thenReturn({'referralCode': 'EXISTING'});
 
         final code = await service.generateReferralCode('user123');
 

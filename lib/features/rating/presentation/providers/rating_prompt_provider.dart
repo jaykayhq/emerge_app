@@ -1,4 +1,5 @@
-import 'package:emerge_app/core/services/web_update_service.dart' show kAppVersion;
+import 'package:emerge_app/core/services/web_update_service.dart'
+    show kAppVersion;
 import 'package:emerge_app/core/utils/app_logger.dart';
 import 'package:emerge_app/features/rating/domain/rating_prompt_gate.dart';
 import 'package:emerge_app/features/rating/domain/rating_prompt_store.dart';
@@ -21,8 +22,8 @@ class RatingPromptController {
   RatingPromptController({
     required RatingPromptStore store,
     required ReviewLauncher launcher,
-  })  : _store = store,
-        _launcher = launcher;
+  }) : _store = store,
+       _launcher = launcher;
 
   final RatingPromptStore _store;
   final ReviewLauncher _launcher;

@@ -8,7 +8,9 @@ import 'package:emerge_app/features/world_map/domain/models/world_type_config.da
 import 'package:emerge_app/features/habits/presentation/providers/habit_providers.dart';
 
 void main() {
-  testWidgets('AttributeDetailScreen renders correctly', (WidgetTester tester) async {
+  testWidgets('AttributeDetailScreen renders correctly', (
+    WidgetTester tester,
+  ) async {
     final habit = Habit(
       id: '1',
       title: 'Run 5km',
@@ -30,7 +32,9 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          attributeProgressProvider(HabitAttribute.strength.name).overrideWithValue(progress),
+          attributeProgressProvider(
+            HabitAttribute.strength.name,
+          ).overrideWithValue(progress),
           habitsProvider.overrideWith((ref) => Stream.value([habit])),
         ],
         child: const MaterialApp(

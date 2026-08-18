@@ -60,11 +60,7 @@ class _OneTapCompletionZoneState extends State<OneTapCompletionZone> {
               color: widget.color,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.check,
-              color: Colors.white,
-              size: 24,
-            ),
+            child: const Icon(Icons.check, color: Colors.white, size: 24),
           ),
           if (_showParticles)
             Positioned(

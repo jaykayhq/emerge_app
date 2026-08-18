@@ -32,17 +32,19 @@ class FirestoreDriftSyncer {
             if (_isCancelled) return;
             for (final doc in snapshot.docs) {
               final data = doc.data();
-              leaderboardDao.upsertEntry(LeaderboardEntriesTableCompanion(
-                id: Value(doc.id),
-                tribeId: Value(data['clubId'] as String? ?? tribeId),
-                userId: Value(data['userId'] as String? ?? ''),
-                userName: Value(data['userName'] as String? ?? ''),
-                xp: Value(data['xp'] as int? ?? 0),
-                level: Value(data['level'] as int? ?? 1),
-                rank: Value(data['rank'] as int? ?? 0),
-                archetype: Value(data['archetype'] as String? ?? ''),
-                updatedAt: Value(DateTime.now().toIso8601String()),
-              ));
+              leaderboardDao.upsertEntry(
+                LeaderboardEntriesTableCompanion(
+                  id: Value(doc.id),
+                  tribeId: Value(data['clubId'] as String? ?? tribeId),
+                  userId: Value(data['userId'] as String? ?? ''),
+                  userName: Value(data['userName'] as String? ?? ''),
+                  xp: Value(data['xp'] as int? ?? 0),
+                  level: Value(data['level'] as int? ?? 1),
+                  rank: Value(data['rank'] as int? ?? 0),
+                  archetype: Value(data['archetype'] as String? ?? ''),
+                  updatedAt: Value(DateTime.now().toIso8601String()),
+                ),
+              );
             }
           },
           onError: (error) {
@@ -59,13 +61,17 @@ class FirestoreDriftSyncer {
             if (_isCancelled) return;
             if (!doc.exists) return;
             final data = doc.data()!;
-            tribeStatsDao.upsertStats(TribeStatsTableCompanion(
-              tribeId: Value(doc.id),
-              totalXp: Value(data['totalXp'] as int? ?? 0),
-              memberCount: Value(data['memberCount'] as int? ?? 0),
-              totalHabitsCompleted: Value(data['totalHabitsCompleted'] as int? ?? 0),
-              updatedAt: Value(DateTime.now().toIso8601String()),
-            ));
+            tribeStatsDao.upsertStats(
+              TribeStatsTableCompanion(
+                tribeId: Value(doc.id),
+                totalXp: Value(data['totalXp'] as int? ?? 0),
+                memberCount: Value(data['memberCount'] as int? ?? 0),
+                totalHabitsCompleted: Value(
+                  data['totalHabitsCompleted'] as int? ?? 0,
+                ),
+                updatedAt: Value(DateTime.now().toIso8601String()),
+              ),
+            );
           },
           onError: (error) {
             AppLogger.e('Tribe stats stream sync failed', error);

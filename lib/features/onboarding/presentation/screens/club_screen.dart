@@ -55,12 +55,9 @@ class _ClubScreenState extends ConsumerState<ClubScreen> {
             tribeId: club.id,
             type: club.archetypeId != null ? 'archetype' : 'creator',
           );
-          result.fold(
-            (failure) {
-              AppLogger.e('ClubScreen: joinTribe failed', failure.message);
-            },
-            (_) {},
-          );
+          result.fold((failure) {
+            AppLogger.e('ClubScreen: joinTribe failed', failure.message);
+          }, (_) {});
         } catch (e, s) {
           AppLogger.e('ClubScreen: joinClub failed', e, s);
           if (mounted) {
@@ -74,18 +71,16 @@ class _ClubScreenState extends ConsumerState<ClubScreen> {
         }
       }
 
-      await ref
-          .read(enhancedOnboardingProvider.notifier)
-          .completeMilestone(2);
+      await ref.read(enhancedOnboardingProvider.notifier).completeMilestone(2);
 
       if (!mounted) return;
       context.push('/onboarding/first-habits');
     } catch (e, s) {
       AppLogger.e('ClubScreen: failed to save', e, s);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to save: $e')));
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -136,9 +131,8 @@ class _ClubScreenState extends ConsumerState<ClubScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final archetype = ref
-            .watch(enhancedOnboardingProvider)
-            .selectedArchetype ??
+    final archetype =
+        ref.watch(enhancedOnboardingProvider).selectedArchetype ??
         UserArchetype.none;
     final theme = ArchetypeTheme.forArchetype(archetype);
     final poolAsync = ref.watch(archetypeClubsProvider);
@@ -150,11 +144,7 @@ class _ClubScreenState extends ConsumerState<ClubScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF0A0A1A),
-              Color(0xFF1A0A2A),
-              Color(0xFF2A1A3A),
-            ],
+            colors: [Color(0xFF0A0A1A), Color(0xFF1A0A2A), Color(0xFF2A1A3A)],
           ),
         ),
         child: SafeArea(
@@ -167,10 +157,7 @@ class _ClubScreenState extends ConsumerState<ClubScreen> {
                     ? ArchetypeColors.all[archetype.name]?.accent
                     : null,
               ),
-              _Header(
-                onBack: () => context.pop(),
-                onSkip: _onSkip,
-              ),
+              _Header(onBack: () => context.pop(), onSkip: _onSkip),
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -211,15 +198,14 @@ class _ClubScreenState extends ConsumerState<ClubScreen> {
                             children: [
                               GridView.builder(
                                 shrinkWrap: true,
-                                physics:
-                                    const NeverScrollableScrollPhysics(),
+                                physics: const NeverScrollableScrollPhysics(),
                                 gridDelegate:
                                     SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: columns,
-                                  crossAxisSpacing: 8,
-                                  mainAxisSpacing: 8,
-                                  childAspectRatio: 0.75,
-                                ),
+                                      crossAxisCount: columns,
+                                      crossAxisSpacing: 8,
+                                      mainAxisSpacing: 8,
+                                      childAspectRatio: 0.75,
+                                    ),
                                 itemCount: visible.length,
                                 itemBuilder: (context, index) {
                                   final club = visible[index];
@@ -231,8 +217,7 @@ class _ClubScreenState extends ConsumerState<ClubScreen> {
                                       clubId: club.id,
                                     ),
                                     memberCount: club.memberCount,
-                                    activityStatus:
-                                        _activityStatusFor(club),
+                                    activityStatus: _activityStatusFor(club),
                                     typeTag: _typeTagFor(club),
                                     onTap: () => _openPreview(club),
                                   );
@@ -266,9 +251,7 @@ class _ClubScreenState extends ConsumerState<ClubScreen> {
                             ),
                           ),
                         ),
-                        error: (err, _) => _ErrorState(
-                          message: err.toString(),
-                        ),
+                        error: (err, _) => _ErrorState(message: err.toString()),
                       ),
                       const Gap(16),
                     ],
@@ -287,9 +270,7 @@ class _ClubScreenState extends ConsumerState<ClubScreen> {
 /// archetypeId matches the user's archetype. Falls back to [] on error.
 /// Returns up to 15 clubs; the screen shows 6 until "See more clubs →".
 final archetypeClubsProvider = FutureProvider<List<Tribe>>((ref) async {
-  final archetype = ref
-      .watch(enhancedOnboardingProvider)
-      .selectedArchetype;
+  final archetype = ref.watch(enhancedOnboardingProvider).selectedArchetype;
   if (archetype == null || archetype == UserArchetype.none) {
     return const [];
   }
@@ -310,10 +291,7 @@ class _Header extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback onSkip;
 
-  const _Header({
-    required this.onBack,
-    required this.onSkip,
-  });
+  const _Header({required this.onBack, required this.onSkip});
 
   @override
   Widget build(BuildContext context) {
@@ -384,10 +362,7 @@ class _ErrorState extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 40),
       child: Text(
         'Could not load clubs: $message',
-        style: GoogleFonts.splineSans(
-          color: Colors.redAccent,
-          fontSize: 13,
-        ),
+        style: GoogleFonts.splineSans(color: Colors.redAccent, fontSize: 13),
       ),
     );
   }

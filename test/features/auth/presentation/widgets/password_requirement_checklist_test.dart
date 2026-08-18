@@ -21,8 +21,9 @@ void main() {
     expect(find.text('At least 12 characters'), findsNothing);
   });
 
-  testWidgets('appears while typing and ticks items as rules pass',
-      (tester) async {
+  testWidgets('appears while typing and ticks items as rules pass', (
+    tester,
+  ) async {
     final controller = TextEditingController();
     addTearDown(controller.dispose);
 

@@ -16,7 +16,9 @@ ProviderContainer _makeContainer({
   return ProviderContainer(
     overrides: [
       authStateChangesProvider.overrideWithValue(
-        AsyncValue.data(authUser ?? const AuthUser(id: 'test', email: 'test@example.com')),
+        AsyncValue.data(
+          authUser ?? const AuthUser(id: 'test', email: 'test@example.com'),
+        ),
       ),
       habitRepositoryProvider.overrideWithValue(habitRepo),
     ],
@@ -57,10 +59,12 @@ void main() {
 
     test('returns habits from repository', () async {
       final now = DateTime.now();
-      final habits = [Habit(id: '1', userId: 'test', title: 'Test', createdAt: now)];
-      when(() => mockRepo.watchHabits('test')).thenAnswer(
-        (_) => Stream.value(habits).asBroadcastStream(),
-      );
+      final habits = [
+        Habit(id: '1', userId: 'test', title: 'Test', createdAt: now),
+      ];
+      when(
+        () => mockRepo.watchHabits('test'),
+      ).thenAnswer((_) => Stream.value(habits).asBroadcastStream());
       final container = _makeContainer(habitRepo: mockRepo);
       final sub = container.listen(habitsProvider, (_, _) {});
       final result = await container.read(habitsProvider.future);
@@ -81,7 +85,10 @@ void main() {
         ],
       );
       final result = await container.read(
-        habitActivityProvider(start: DateTime(2024), end: DateTime(2025)).future,
+        habitActivityProvider(
+          start: DateTime(2024),
+          end: DateTime(2025),
+        ).future,
       );
       expect(result, []);
       container.dispose();
@@ -89,11 +96,16 @@ void main() {
 
     test('returns activity from repository', () async {
       final now = DateTime.now();
-      when(() => mockRepo.getActivity('test', now, now.add(const Duration(days: 1))))
-          .thenAnswer((_) async => []);
+      when(
+        () =>
+            mockRepo.getActivity('test', now, now.add(const Duration(days: 1))),
+      ).thenAnswer((_) async => []);
       final container = _makeContainer(habitRepo: mockRepo);
       final result = await container.read(
-        habitActivityProvider(start: now, end: now.add(const Duration(days: 1))).future,
+        habitActivityProvider(
+          start: now,
+          end: now.add(const Duration(days: 1)),
+        ).future,
       );
       expect(result, []);
       container.dispose();

@@ -4,19 +4,18 @@ import 'package:emerge_app/core/presentation/widgets/fallback_initial_avatar.dar
 
 void main() {
   Widget wrap(Widget child) => MaterialApp(
-        home: Scaffold(body: Center(child: child)),
-      );
+    home: Scaffold(body: Center(child: child)),
+  );
 
   testWidgets('renders first letter of single word name', (tester) async {
-    await tester.pumpWidget(
-      wrap(const FallbackInitialAvatar(name: 'Nova')),
-    );
+    await tester.pumpWidget(wrap(const FallbackInitialAvatar(name: 'Nova')));
 
     expect(find.text('N'), findsOneWidget);
   });
 
-  testWidgets('renders both initials of multi-word name uppercase',
-      (tester) async {
+  testWidgets('renders both initials of multi-word name uppercase', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       wrap(const FallbackInitialAvatar(name: 'nova elite')),
     );
@@ -25,9 +24,7 @@ void main() {
   });
 
   testWidgets('empty name renders Icons.person_rounded', (tester) async {
-    await tester.pumpWidget(
-      wrap(const FallbackInitialAvatar(name: '')),
-    );
+    await tester.pumpWidget(wrap(const FallbackInitialAvatar(name: '')));
 
     expect(find.byIcon(Icons.person_rounded), findsOneWidget);
     // No initials text.
@@ -35,15 +32,14 @@ void main() {
   });
 
   testWidgets('null name renders Icons.person_rounded', (tester) async {
-    await tester.pumpWidget(
-      wrap(const FallbackInitialAvatar()),
-    );
+    await tester.pumpWidget(wrap(const FallbackInitialAvatar()));
 
     expect(find.byIcon(Icons.person_rounded), findsOneWidget);
   });
 
-  testWidgets('imageUrl layers ClipOval + Image.network on top of fallback',
-      (tester) async {
+  testWidgets('imageUrl layers ClipOval + Image.network on top of fallback', (
+    tester,
+  ) async {
     // Suppress network image error noise for this test.
     final oldHandler = FlutterError.onError;
     FlutterError.onError = (_) {};
@@ -68,8 +64,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 50));
   });
 
-  testWidgets('borderWidth=0 produces no border decoration on fallback box',
-      (tester) async {
+  testWidgets('borderWidth=0 produces no border decoration on fallback box', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       wrap(
         const FallbackInitialAvatar(
@@ -95,8 +92,9 @@ void main() {
     }
   });
 
-  testWidgets('borderWidth>0 produces a visible border decoration',
-      (tester) async {
+  testWidgets('borderWidth>0 produces a visible border decoration', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       wrap(
         const FallbackInitialAvatar(

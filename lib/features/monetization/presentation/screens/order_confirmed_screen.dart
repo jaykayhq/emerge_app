@@ -25,8 +25,11 @@ class OrderConfirmedScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.check_circle_outline,
-                    size: 96, color: EmergeColors.teal),
+                const Icon(
+                  Icons.check_circle_outline,
+                  size: 96,
+                  color: EmergeColors.teal,
+                ),
                 const Gap(24),
                 const Text(
                   'Order complete',
@@ -62,12 +65,16 @@ class OrderConfirmedScreen extends StatelessWidget {
                   style: FilledButton.styleFrom(
                     backgroundColor: EmergeColors.teal,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 40, vertical: 16),
+                      horizontal: 40,
+                      vertical: 16,
+                    ),
                   ),
                   child: const Text(
                     'Start exploring',
                     style: TextStyle(
-                        fontWeight: FontWeight.bold, color: Colors.black),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
                   ),
                 ),
               ],

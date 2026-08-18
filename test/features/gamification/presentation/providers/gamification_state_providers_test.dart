@@ -9,15 +9,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockUserStatsRepository extends Mock implements DriftUserStatsRepository {}
+class MockUserStatsRepository extends Mock
+    implements DriftUserStatsRepository {}
 
 void main() {
   late MockUserStatsRepository mockStatsRepo;
 
   setUp(() {
     mockStatsRepo = MockUserStatsRepository();
-    when(() => mockStatsRepo.getRecaps(any(), limit: any(named: 'limit')))
-        .thenAnswer((_) async => []);
+    when(
+      () => mockStatsRepo.getRecaps(any(), limit: any(named: 'limit')),
+    ).thenAnswer((_) async => []);
   });
 
   group('userStatsStreamProvider', () {
@@ -91,13 +93,15 @@ void main() {
     });
 
     test('returns recaps from repository', () async {
-      when(() => mockStatsRepo.getRecaps('test', limit: 20)).thenAnswer(
-        (_) async => [validRecapMap],
-      );
+      when(
+        () => mockStatsRepo.getRecaps('test', limit: 20),
+      ).thenAnswer((_) async => [validRecapMap]);
       final container = ProviderContainer(
         overrides: [
           authStateChangesProvider.overrideWithValue(
-            const AsyncValue.data(AuthUser(id: 'test', email: 'test@example.com')),
+            const AsyncValue.data(
+              AuthUser(id: 'test', email: 'test@example.com'),
+            ),
           ),
           userStatsRepositoryProvider.overrideWithValue(mockStatsRepo),
         ],
@@ -109,11 +113,15 @@ void main() {
     });
 
     test('handles repository error gracefully', () async {
-      when(() => mockStatsRepo.getRecaps('test', limit: 20)).thenThrow(Exception('DB error'));
+      when(
+        () => mockStatsRepo.getRecaps('test', limit: 20),
+      ).thenThrow(Exception('DB error'));
       final container = ProviderContainer(
         overrides: [
           authStateChangesProvider.overrideWithValue(
-            const AsyncValue.data(AuthUser(id: 'test', email: 'test@example.com')),
+            const AsyncValue.data(
+              AuthUser(id: 'test', email: 'test@example.com'),
+            ),
           ),
           userStatsRepositoryProvider.overrideWithValue(mockStatsRepo),
         ],

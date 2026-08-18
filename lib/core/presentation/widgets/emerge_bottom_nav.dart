@@ -15,10 +15,7 @@ import 'package:emerge_app/core/theme/emerge_colors.dart';
 class EmergeBottomNav extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
-  const EmergeBottomNav({
-    super.key,
-    required this.navigationShell,
-  });
+  const EmergeBottomNav({super.key, required this.navigationShell});
 
   @override
   Widget build(BuildContext context) {
@@ -41,10 +38,7 @@ class EmergeBottomNav extends StatelessWidget {
                     DateTime.now(),
                   );
                   return _NavItem(
-                    icon: _TodayNavIcon(
-                      incomplete: incomplete,
-                      pulse: pulse,
-                    ),
+                    icon: _TodayNavIcon(incomplete: incomplete, pulse: pulse),
                     label: 'Today',
                     isSelected: currentIndex == 0,
                     onTap: () => _onItemTapped(0),
@@ -126,8 +120,8 @@ class _NavItem extends StatelessWidget {
         hint: hint.isNotEmpty
             ? hint
             : (isSelected
-                ? 'Currently on $label screen'
-                : 'Navigate to $label'),
+                  ? 'Currently on $label screen'
+                  : 'Navigate to $label'),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 2),
@@ -189,9 +183,10 @@ class _TodayNavIconState extends State<_TodayNavIcon>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
-    _scale = Tween<double>(begin: 1.0, end: 1.18).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scale = Tween<double>(
+      begin: 1.0,
+      end: 1.18,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
     if (widget.pulse) {
       _controller.repeat(reverse: true);
     }

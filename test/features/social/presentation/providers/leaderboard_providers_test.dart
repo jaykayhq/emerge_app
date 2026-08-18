@@ -8,9 +8,7 @@ class MockLeaderboardRepository extends Mock implements LeaderboardRepository {}
 
 ProviderContainer _makeContainer(LeaderboardRepository repo) {
   return ProviderContainer(
-    overrides: [
-      leaderboardRepositoryProvider.overrideWithValue(repo),
-    ],
+    overrides: [leaderboardRepositoryProvider.overrideWithValue(repo)],
   );
 }
 
@@ -31,8 +29,9 @@ void main() {
 
   group('clubLeaderboardProvider', () {
     test('returns leaderboard stream', () async {
-      when(() => mockRepo.watchClubLeaderboard('club-1'))
-          .thenAnswer((_) => const Stream.empty());
+      when(
+        () => mockRepo.watchClubLeaderboard('club-1'),
+      ).thenAnswer((_) => const Stream.empty());
       final container = _makeContainer(mockRepo);
       final result = container.read(clubLeaderboardProvider('club-1'));
       expect(result, isNotNull);
@@ -42,8 +41,9 @@ void main() {
 
   group('challengeLeaderboardProvider', () {
     test('returns leaderboard stream', () async {
-      when(() => mockRepo.watchChallengeLeaderboard('ch-1'))
-          .thenAnswer((_) => const Stream.empty());
+      when(
+        () => mockRepo.watchChallengeLeaderboard('ch-1'),
+      ).thenAnswer((_) => const Stream.empty());
       final container = _makeContainer(mockRepo);
       final result = container.read(challengeLeaderboardProvider('ch-1'));
       expect(result, isNotNull);

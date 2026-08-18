@@ -24,17 +24,13 @@ void main() {
     });
 
     test('equipItem sets item in correct slot', () {
-      const hat = ShopItem(
-        id: 'hat', name: 'Hat', slot: EquipmentSlot.head,
-      );
+      const hat = ShopItem(id: 'hat', name: 'Hat', slot: EquipmentSlot.head);
       final avatar = AvatarData.defaultAvatar().equipItem(hat);
       expect(avatar.equipment[EquipmentSlot.head], hat);
     });
 
     test('unequipSlot removes item from slot', () {
-      const hat = ShopItem(
-        id: 'hat', name: 'Hat', slot: EquipmentSlot.head,
-      );
+      const hat = ShopItem(id: 'hat', name: 'Hat', slot: EquipmentSlot.head);
       final avatar = AvatarData.defaultAvatar()
           .equipItem(hat)
           .unequipSlot(EquipmentSlot.head);
@@ -49,9 +45,7 @@ void main() {
     });
 
     test('equippedItems returns non-null items only', () {
-      const hat = ShopItem(
-        id: 'hat', name: 'Hat', slot: EquipmentSlot.head,
-      );
+      const hat = ShopItem(id: 'hat', name: 'Hat', slot: EquipmentSlot.head);
       final avatar = AvatarData.defaultAvatar().equipItem(hat);
       expect(avatar.equippedItems.length, 1);
       expect(avatar.equippedItems.first, hat);

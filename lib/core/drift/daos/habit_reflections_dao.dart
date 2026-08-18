@@ -70,9 +70,9 @@ class HabitReflectionsDao extends DatabaseAccessor<AppDatabase>
         ),
       );
     } else {
-      await (update(habitReflectionsTable)
-            ..where((t) => t.id.equals(existing.id)))
-          .write(
+      await (update(
+        habitReflectionsTable,
+      )..where((t) => t.id.equals(existing.id))).write(
         HabitReflectionsTableCompanion(
           mood: Value(mood.value),
           note: Value(note),

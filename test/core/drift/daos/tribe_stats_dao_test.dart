@@ -59,12 +59,7 @@ void main() {
       ),
     );
 
-    await dao.incrementContribution(
-      'tribeA',
-      xp: 25,
-      habits: 3,
-      challenges: 1,
-    );
+    await dao.incrementContribution('tribeA', xp: 25, habits: 3, challenges: 1);
 
     final stats = await dao.getStats('tribeA');
     expect(stats, isNotNull);

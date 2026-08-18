@@ -24,7 +24,9 @@ ProviderContainer _makeContainer({
     overrides: [
       challengeRepositoryProvider.overrideWithValue(challengeRepo),
       authStateChangesProvider.overrideWithValue(
-        AsyncValue.data(authUser ?? const AuthUser(id: 'test', email: 'test@example.com')),
+        AsyncValue.data(
+          authUser ?? const AuthUser(id: 'test', email: 'test@example.com'),
+        ),
       ),
       if (profile != null)
         userStatsStreamProvider.overrideWith((ref) => Stream.value(profile)),
@@ -49,7 +51,9 @@ void main() {
 
   group('featuredChallengesProvider', () {
     test('returns list of challenges', () async {
-      when(() => mockRepo.getChallenges(featuredOnly: true)).thenAnswer((_) async => []);
+      when(
+        () => mockRepo.getChallenges(featuredOnly: true),
+      ).thenAnswer((_) async => []);
       final container = _makeContainer(challengeRepo: mockRepo);
       final result = await container.read(featuredChallengesProvider.future);
       expect(result, isA<List>());
@@ -59,7 +63,9 @@ void main() {
 
   group('allChallengesProvider', () {
     test('returns all challenges', () async {
-      when(() => mockRepo.getChallenges(featuredOnly: false)).thenAnswer((_) async => []);
+      when(
+        () => mockRepo.getChallenges(featuredOnly: false),
+      ).thenAnswer((_) async => []);
       final container = _makeContainer(challengeRepo: mockRepo);
       final result = await container.read(allChallengesProvider.future);
       expect(result, isA<List>());
@@ -83,7 +89,9 @@ void main() {
     });
 
     test('returns challenges for user', () async {
-      when(() => mockRepo.getUserChallenges('test')).thenAnswer((_) async => []);
+      when(
+        () => mockRepo.getUserChallenges('test'),
+      ).thenAnswer((_) async => []);
       final container = _makeContainer(challengeRepo: mockRepo);
       final result = await container.read(userChallengesProvider.future);
       expect(result, isA<List>());
@@ -93,10 +101,15 @@ void main() {
 
   group('archetypeChallengesProvider', () {
     test('returns challenges matching archetype', () async {
-      when(() => mockRepo.getChallengesByArchetype('athlete')).thenAnswer((_) async => []);
+      when(
+        () => mockRepo.getChallengesByArchetype('athlete'),
+      ).thenAnswer((_) async => []);
       final container = _makeContainer(
         challengeRepo: mockRepo,
-        profile: const UserProfile(uid: 'test', archetype: UserArchetype.athlete),
+        profile: const UserProfile(
+          uid: 'test',
+          archetype: UserArchetype.athlete,
+        ),
       );
       final result = await container.read(archetypeChallengesProvider.future);
       expect(result, isA<List>());
@@ -108,7 +121,10 @@ void main() {
     test('returns a challenge', () async {
       final container = _makeContainer(
         challengeRepo: mockRepo,
-        profile: const UserProfile(uid: 'test', archetype: UserArchetype.athlete),
+        profile: const UserProfile(
+          uid: 'test',
+          archetype: UserArchetype.athlete,
+        ),
       );
       final result = await container.read(dailyQuestProvider.future);
       expect(result, isA<Challenge?>());
@@ -118,7 +134,9 @@ void main() {
 
   group('challengeByIdProvider', () {
     test('returns challenge by ID', () async {
-      when(() => mockRepo.getChallengeById('ch-1')).thenAnswer((_) async => null);
+      when(
+        () => mockRepo.getChallengeById('ch-1'),
+      ).thenAnswer((_) async => null);
       final container = _makeContainer(challengeRepo: mockRepo);
       final result = await container.read(challengeByIdProvider('ch-1').future);
       expect(result, isNull);
@@ -128,8 +146,12 @@ void main() {
 
   group('filteredChallengesProvider', () {
     test('returns filtered list', () async {
-      when(() => mockRepo.getChallenges(featuredOnly: true)).thenAnswer((_) async => []);
-      when(() => mockRepo.getUserChallenges('test')).thenAnswer((_) async => []);
+      when(
+        () => mockRepo.getChallenges(featuredOnly: true),
+      ).thenAnswer((_) async => []);
+      when(
+        () => mockRepo.getUserChallenges('test'),
+      ).thenAnswer((_) async => []);
       final container = _makeContainer(challengeRepo: mockRepo);
       final result = await container.read(
         filteredChallengesProvider(ChallengeStatus.active).future,
@@ -176,12 +198,14 @@ void main() {
 
     test('streams only challenges authored by the given uid', () async {
       final fakeFirestore = FakeFirebaseFirestore();
-      await fakeFirestore.collection('challenges').doc('mine').set(
-        challengeMap(createdBy: 'creator-1'),
-      );
-      await fakeFirestore.collection('challenges').doc('theirs').set(
-        challengeMap(createdBy: 'creator-2'),
-      );
+      await fakeFirestore
+          .collection('challenges')
+          .doc('mine')
+          .set(challengeMap(createdBy: 'creator-1'));
+      await fakeFirestore
+          .collection('challenges')
+          .doc('theirs')
+          .set(challengeMap(createdBy: 'creator-2'));
 
       final container = ProviderContainer(
         overrides: [firestoreProvider.overrideWithValue(fakeFirestore)],

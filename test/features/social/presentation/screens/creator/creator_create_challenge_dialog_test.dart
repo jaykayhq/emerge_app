@@ -18,17 +18,20 @@ import 'package:emerge_app/features/social/presentation/providers/tribes_provide
 import 'package:emerge_app/features/social/presentation/screens/creator/creator_tribe_management_tab.dart';
 
 class _MockAppDatabase extends Mock implements AppDatabase {}
+
 class _MockSyncEngine extends Mock implements EnhancedSyncEngine {}
-class _MockSocialActivityService extends Mock implements SocialActivityService {}
+
+class _MockSocialActivityService extends Mock
+    implements SocialActivityService {}
 
 class FakeChallengeRepository extends DriftChallengeRepository {
   FakeChallengeRepository()
-      : super(
-          _MockAppDatabase(),
-          LocalGameLoopEngine(),
-          _MockSyncEngine(),
-          _MockSocialActivityService(),
-        );
+    : super(
+        _MockAppDatabase(),
+        LocalGameLoopEngine(),
+        _MockSyncEngine(),
+        _MockSocialActivityService(),
+      );
 
   final List<Challenge> created = [];
 
@@ -45,18 +48,18 @@ class FakeMultiFactorPlatform extends MultiFactorPlatform {
 
 class FakeUserPlatform extends UserPlatform {
   FakeUserPlatform(FirebaseAuthPlatform auth, {required String uid})
-      : super(
-          auth,
-          FakeMultiFactorPlatform(auth),
-          InternalUserDetails(
-            userInfo: InternalUserInfo(
-              uid: uid,
-              isAnonymous: false,
-              isEmailVerified: true,
-            ),
-            providerData: const [],
+    : super(
+        auth,
+        FakeMultiFactorPlatform(auth),
+        InternalUserDetails(
+          userInfo: InternalUserInfo(
+            uid: uid,
+            isAnonymous: false,
+            isEmailVerified: true,
           ),
-        );
+          providerData: const [],
+        ),
+      );
 }
 
 class FakeAuthPlatform extends FirebaseAuthPlatform {
@@ -73,8 +76,7 @@ class FakeAuthPlatform extends FirebaseAuthPlatform {
   FirebaseAuthPlatform setInitialValues({
     String? languageCode,
     InternalUserDetails? currentUser,
-  }) =>
-      this;
+  }) => this;
 }
 
 void main() {
@@ -119,8 +121,9 @@ void main() {
     );
   }
 
-  testWidgets('create challenge dialog submits a catalog challenge',
-      (tester) async {
+  testWidgets('create challenge dialog submits a catalog challenge', (
+    tester,
+  ) async {
     final repo = FakeChallengeRepository();
     await tester.pumpWidget(createTest(repo));
     await tester.pump(const Duration(milliseconds: 100));
@@ -131,7 +134,10 @@ void main() {
     // Dialog is open with title/description/category/day fields.
     expect(find.text('Launch a Tribe Challenge'), findsOneWidget);
     expect(find.widgetWithText(TextField, 'Challenge title'), findsOneWidget);
-    expect(find.widgetWithText(TextField, 'Description (optional)'), findsOneWidget);
+    expect(
+      find.widgetWithText(TextField, 'Description (optional)'),
+      findsOneWidget,
+    );
 
     await tester.enterText(
       find.widgetWithText(TextField, 'Challenge title'),

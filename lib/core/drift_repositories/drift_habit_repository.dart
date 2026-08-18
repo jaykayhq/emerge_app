@@ -46,7 +46,11 @@ class DriftHabitRepository implements HabitRepository {
         if (row.currentStreak > 0 && row.lastCompletedDate != null) {
           final lastDate = DateTime.tryParse(row.lastCompletedDate!);
           if (lastDate != null) {
-            final lastDay = DateTime(lastDate.year, lastDate.month, lastDate.day);
+            final lastDay = DateTime(
+              lastDate.year,
+              lastDate.month,
+              lastDate.day,
+            );
             final today = DateTime(now.year, now.month, now.day);
             if (today.difference(lastDay).inDays > 1) {
               // Break the streak — missed at least one full day
@@ -235,16 +239,16 @@ class DriftHabitRepository implements HabitRepository {
         // Reverse the completion: drop today's completion row(s) and
         // decrement the deltas the completion had applied.
         final today = DateTime.now();
-        final startOfDay =
-            DateTime(today.year, today.month, today.day);
+        final startOfDay = DateTime(today.year, today.month, today.day);
         final endOfDay = startOfDay.add(const Duration(days: 1));
         final todays = await _db.habitCompletionsDao.getBetweenDates(
           statsRow.userId,
           startOfDay.toIso8601String(),
           endOfDay.toIso8601String(),
         );
-        final todaysForHabit =
-            todays.where((c) => c.habitId == habitId).toList();
+        final todaysForHabit = todays
+            .where((c) => c.habitId == habitId)
+            .toList();
         if (todaysForHabit.isEmpty) {
           // Nothing to undo locally; treat as no-op success.
           return const Right(false);
@@ -256,8 +260,7 @@ class DriftHabitRepository implements HabitRepository {
         final xpToUndo = last.xpGained + challengeXpToReverse;
         final attr = last.attribute ?? 'vitality';
         final newStreak = (habitRow.currentStreak - 1).clamp(0, 99999);
-        final newMomentum =
-            (habitRow.momentumScore - 10).clamp(0, 100);
+        final newMomentum = (habitRow.momentumScore - 10).clamp(0, 100);
         // Restore lastCompletedDate to the day before today (so re-completing
         // today is counted as a fresh streak day).
         final prevDate = startOfDay.subtract(const Duration(days: 1));
@@ -271,8 +274,10 @@ class DriftHabitRepository implements HabitRepository {
         // credit-time tribe, so the undo reverses the same tribe the credit
         // wrote — even if the user switched tribes in between. Falls back to
         // the current resolution when the row is missing (fresh install).
-        final activityRow = await _db.tribeActivityDao
-            .getLatestHabitCompletion(statsRow.userId, habitId);
+        final activityRow = await _db.tribeActivityDao.getLatestHabitCompletion(
+          statsRow.userId,
+          habitId,
+        );
         final creditTribeId = activityRow?.tribeId ?? resolvedTribeId;
 
         await _db.transaction(() async {
@@ -292,8 +297,11 @@ class DriftHabitRepository implements HabitRepository {
             habitRow.longestStreak,
             prevDate.toIso8601String(),
           );
-          await _db.habitsDao.updateMomentum(habitId, newMomentum,
-              habitRow.consecutiveMisses);
+          await _db.habitsDao.updateMomentum(
+            habitId,
+            newMomentum,
+            habitRow.consecutiveMisses,
+          );
           await _db.userStatsDao.updateAttributeXp(
             statsRow.userId,
             attr,
@@ -307,13 +315,15 @@ class DriftHabitRepository implements HabitRepository {
 
           // Reverse challenge day progress
           if (challengeXpToReverse > 0) {
-            final activeChallenges =
-                await _db.challengeProgressDao.getActive(statsRow.userId);
+            final activeChallenges = await _db.challengeProgressDao.getActive(
+              statsRow.userId,
+            );
             for (final challenge in activeChallenges) {
               if (challenge.attribute == null ||
                   challenge.attribute == habitRow.attribute) {
-                await _db.challengeProgressDao
-                    .decrementDay(challenge.challengeId);
+                await _db.challengeProgressDao.decrementDay(
+                  challenge.challengeId,
+                );
               }
             }
           }
@@ -363,8 +373,9 @@ class DriftHabitRepository implements HabitRepository {
             // Guard: only debit a row the credit actually created (the undo
             // path implies one, but a wiped local DB must not mint a
             // negative-value row via the create-on-first branch).
-            final localTribeRow =
-                await _db.tribeStatsDao.getStats(creditTribeId);
+            final localTribeRow = await _db.tribeStatsDao.getStats(
+              creditTribeId,
+            );
             if (localTribeRow != null) {
               await _db.tribeStatsDao.incrementContribution(
                 creditTribeId,
@@ -381,10 +392,7 @@ class DriftHabitRepository implements HabitRepository {
                   '__type__': 'increment',
                   'value': split.userStatsDelta,
                 },
-                'totalHabitsCompleted': {
-                  '__type__': 'increment',
-                  'value': -1
-                },
+                'totalHabitsCompleted': {'__type__': 'increment', 'value': -1},
                 'contributionCount': {'__type__': 'increment', 'value': -1},
                 'lastActivity': DateTime.now().toIso8601String(),
               },
@@ -394,11 +402,13 @@ class DriftHabitRepository implements HabitRepository {
 
         // Fire undo event so GamificationService reverses world health
         // via the zone-based model (single authoritative path).
-        EventBus().fire(HabitCompletionUndone(
-          habitId: habitId,
-          userId: statsRow.userId,
-          attribute: attr,
-        ));
+        EventBus().fire(
+          HabitCompletionUndone(
+            habitId: habitId,
+            userId: statsRow.userId,
+            attribute: attr,
+          ),
+        );
 
         // Reverse the social side: activity docs (global + tribe feeds) and
         // the leaderboard XP the credit path wrote.
@@ -435,8 +445,9 @@ class DriftHabitRepository implements HabitRepository {
         // Re-read inside transaction to prevent TOCTOU race
         final freshHabitRow = await _db.habitsDao.getHabit(habitId);
         if (freshHabitRow == null) return;
-        final freshStatsRow =
-            await _db.userStatsDao.getStats(freshHabitRow.userId);
+        final freshStatsRow = await _db.userStatsDao.getStats(
+          freshHabitRow.userId,
+        );
         if (freshStatsRow == null) return;
 
         await _db.habitsDao.updateStreak(
@@ -460,7 +471,9 @@ class DriftHabitRepository implements HabitRepository {
           newTotalXp,
         );
         await _db.userStatsDao.updateStreak(
-            freshStatsRow.userId, result.newStreak);
+          freshStatsRow.userId,
+          result.newStreak,
+        );
         // World health is NOT updated here — it is computed by the
         // GamificationService zone model via the HabitCompleted event.
 
@@ -591,16 +604,18 @@ class DriftHabitRepository implements HabitRepository {
         );
       }
 
-      EventBus().fire(HabitCompleted(
-        habitId: habitId,
-        userId: habitRow.userId,
-        date: date,
-        gameLoopResult: result,
-        previousLevel: oldLevel,
-        tribeId: tribeId,
-        archetype: statsRow.archetype,
-        userName: statsRow.displayName ?? habitRow.userId,
-      ));
+      EventBus().fire(
+        HabitCompleted(
+          habitId: habitId,
+          userId: habitRow.userId,
+          date: date,
+          gameLoopResult: result,
+          previousLevel: oldLevel,
+          tribeId: tribeId,
+          archetype: statsRow.archetype,
+          userName: statsRow.displayName ?? habitRow.userId,
+        ),
+      );
 
       return const Right(true);
     } catch (e) {
@@ -646,7 +661,8 @@ class DriftHabitRepository implements HabitRepository {
   }
 
   @override
-  Future<Either<Failure, List<HabitCompletionEntity>>> getCompletionsBetweenDates(
+  Future<Either<Failure, List<HabitCompletionEntity>>>
+  getCompletionsBetweenDates(
     String userId,
     DateTime start,
     DateTime end,
@@ -658,13 +674,17 @@ class DriftHabitRepository implements HabitRepository {
         end.toIso8601String(),
       );
 
-      final entities = rows.map((r) => HabitCompletionEntity(
-        id: r.id,
-        habitId: r.habitId,
-        attribute: r.attribute ?? 'vitality',
-        xpGained: r.xpGained,
-        completedAt: DateTime.parse(r.completedAt),
-      )).toList();
+      final entities = rows
+          .map(
+            (r) => HabitCompletionEntity(
+              id: r.id,
+              habitId: r.habitId,
+              attribute: r.attribute ?? 'vitality',
+              xpGained: r.xpGained,
+              completedAt: DateTime.parse(r.completedAt),
+            ),
+          )
+          .toList();
 
       return Right(entities);
     } catch (e) {
@@ -780,8 +800,7 @@ class DriftHabitRepository implements HabitRepository {
       await _db.transaction(() async {
         for (var i = 0; i < blueprints.length; i++) {
           final blueprint = blueprints[i];
-          final habitId =
-              '${blueprint.id}_${i}_${now.millisecondsSinceEpoch}';
+          final habitId = '${blueprint.id}_${i}_${now.millisecondsSinceEpoch}';
 
           // Starter pack is intentionally simple: no reminder, no timer
           // overrides, no integration. Difficulty is hardcoded `easy` so

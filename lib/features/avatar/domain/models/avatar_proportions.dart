@@ -16,46 +16,46 @@ class AvatarProportions {
   });
 
   factory AvatarProportions.hero() => const AvatarProportions(
-        torsoWidth: 1.0,
-        armLength: 1.0,
-        legLength: 1.0,
-        headSize: 1.0,
-      );
+    torsoWidth: 1.0,
+    armLength: 1.0,
+    legLength: 1.0,
+    headSize: 1.0,
+  );
 
   factory AvatarProportions.athlete() => const AvatarProportions(
-        torsoWidth: 1.15,
-        armLength: 1.05,
-        legLength: 1.05,
-        headSize: 0.9,
-      );
+    torsoWidth: 1.15,
+    armLength: 1.05,
+    legLength: 1.05,
+    headSize: 0.9,
+  );
 
   factory AvatarProportions.scholar() => const AvatarProportions(
-        torsoWidth: 0.9,
-        armLength: 0.95,
-        legLength: 0.95,
-        headSize: 1.1,
-      );
+    torsoWidth: 0.9,
+    armLength: 0.95,
+    legLength: 0.95,
+    headSize: 1.1,
+  );
 
   factory AvatarProportions.creator() => const AvatarProportions(
-        torsoWidth: 0.95,
-        armLength: 0.95,
-        legLength: 1.0,
-        headSize: 1.0,
-      );
+    torsoWidth: 0.95,
+    armLength: 0.95,
+    legLength: 1.0,
+    headSize: 1.0,
+  );
 
   factory AvatarProportions.stoic() => const AvatarProportions(
-        torsoWidth: 1.0,
-        armLength: 1.0,
-        legLength: 1.0,
-        headSize: 1.0,
-      );
+    torsoWidth: 1.0,
+    armLength: 1.0,
+    legLength: 1.0,
+    headSize: 1.0,
+  );
 
   factory AvatarProportions.zealot() => const AvatarProportions(
-        torsoWidth: 1.05,
-        armLength: 1.05,
-        legLength: 1.05,
-        headSize: 0.95,
-      );
+    torsoWidth: 1.05,
+    armLength: 1.05,
+    legLength: 1.05,
+    headSize: 0.95,
+  );
 
   /// Return proportions for the given archetype string.
   /// Falls back to [hero] for unknown archetypes.

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:emerge_app/features/social/presentation/screens/challenges_screen.dart';
 import 'package:emerge_app/features/social/presentation/providers/challenge_bundle_provider.dart';
 import 'package:emerge_app/features/social/domain/models/challenge_bundle.dart';
+
 class _MockChallengeBundle extends ChallengeBundle {
   @override
   Future<ChallengeBundleData> build() async => ChallengeBundleData.empty();

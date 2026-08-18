@@ -32,11 +32,8 @@ abstract class HabitRepository {
     DateTime end,
   );
 
-  Future<Either<Failure, List<HabitCompletionEntity>>> getCompletionsBetweenDates(
-    String userId,
-    DateTime start,
-    DateTime end,
-  );
+  Future<Either<Failure, List<HabitCompletionEntity>>>
+  getCompletionsBetweenDates(String userId, DateTime start, DateTime end);
 
   Future<Either<Failure, Unit>> createHabitsFromBlueprint({
     required String userId,

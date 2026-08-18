@@ -13,7 +13,17 @@ const List<String> timelineSlotKeys = [
 /// Keyword table for `StarterHabitBlueprint.shortCue` → slot.
 const Map<String, List<String>> _cueKeywords = {
   'anytime': ['bed', 'night', 'reflection', 'journal', 'relax', 'sleep'],
-  'morning': ['wake', 'breakfast', 'coffee', 'morning', 'shower', 'sunrise', 'rise', 'workout', 'train'],
+  'morning': [
+    'wake',
+    'breakfast',
+    'coffee',
+    'morning',
+    'shower',
+    'sunrise',
+    'rise',
+    'workout',
+    'train',
+  ],
   'afternoon': ['lunch', 'noon', 'midday', 'afternoon'],
   'evening': ['work', 'dinner', 'evening', 'commute'],
 };
@@ -22,7 +32,12 @@ const Map<String, List<String>> _cueKeywords = {
 /// cues like "Evening reflection" land in "Before Bed", not "After Work".
 /// 'morning' precedes 'evening' so "Before workout" resolves to 'morning'
 /// rather than matching the 'work' in 'workout'.
-const List<String> _cueKeywordOrder = ['anytime', 'morning', 'afternoon', 'evening'];
+const List<String> _cueKeywordOrder = [
+  'anytime',
+  'morning',
+  'afternoon',
+  'evening',
+];
 
 /// Maps a clock time to the timeline slot key:
 /// 4:00–11:59 morning · 12:00–16:59 afternoon · 17:00–20:59 evening ·

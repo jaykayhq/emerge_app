@@ -4,9 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets('renders confirmation with the reference', (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: OrderConfirmedScreen(reference: 'PSK_abc123'),
-    ));
+    await tester.pumpWidget(
+      const MaterialApp(home: OrderConfirmedScreen(reference: 'PSK_abc123')),
+    );
 
     expect(find.text('Order complete'), findsOneWidget);
     expect(find.textContaining('PSK_abc123'), findsOneWidget);
@@ -14,9 +14,9 @@ void main() {
   });
 
   testWidgets('renders fallback copy when reference is null', (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: OrderConfirmedScreen(reference: null),
-    ));
+    await tester.pumpWidget(
+      const MaterialApp(home: OrderConfirmedScreen(reference: null)),
+    );
 
     expect(find.text('Order complete'), findsOneWidget);
     expect(find.textContaining('PSK'), findsNothing);

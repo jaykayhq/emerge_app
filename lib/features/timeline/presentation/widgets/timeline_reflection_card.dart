@@ -11,13 +11,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class TimelineReflectionCard extends ConsumerStatefulWidget {
   final String userId;
   final DateTime date;
-  const TimelineReflectionCard({super.key, required this.userId, required this.date});
+  const TimelineReflectionCard({
+    super.key,
+    required this.userId,
+    required this.date,
+  });
 
   @override
-  ConsumerState<TimelineReflectionCard> createState() => _TimelineReflectionCardState();
+  ConsumerState<TimelineReflectionCard> createState() =>
+      _TimelineReflectionCardState();
 }
 
-class _TimelineReflectionCardState extends ConsumerState<TimelineReflectionCard> {
+class _TimelineReflectionCardState
+    extends ConsumerState<TimelineReflectionCard> {
   Mood? _mood;
   final _noteCtrl = TextEditingController();
   bool _isSaving = false;
@@ -54,16 +60,16 @@ class _TimelineReflectionCardState extends ConsumerState<TimelineReflectionCard>
   }
 
   Widget _buildError() => Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.orange),
-        ),
-        child: const Text(
-          'Could not load reflection. Pull to refresh.',
-          style: TextStyle(color: Colors.orange),
-        ),
-      );
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: Colors.orange),
+    ),
+    child: const Text(
+      'Could not load reflection. Pull to refresh.',
+      style: TextStyle(color: Colors.orange),
+    ),
+  );
 
   Widget _buildExpanded() {
     return Container(
@@ -76,16 +82,18 @@ class _TimelineReflectionCardState extends ConsumerState<TimelineReflectionCard>
             EmergeColors.teal.withValues(alpha: 0.05),
           ],
         ),
-        border: Border.all(
-          color: EmergeColors.violet.withValues(alpha: 0.25),
-        ),
+        border: Border.all(color: EmergeColors.violet.withValues(alpha: 0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'REFLECT',
-            style: TextStyle(fontSize: 11, letterSpacing: 2, color: Colors.white54),
+            style: TextStyle(
+              fontSize: 11,
+              letterSpacing: 2,
+              color: Colors.white54,
+            ),
           ),
           const SizedBox(height: 8),
           const Text(
@@ -109,12 +117,17 @@ class _TimelineReflectionCardState extends ConsumerState<TimelineReflectionCard>
                               ? EmergeColors.teal.withValues(alpha: 0.2)
                               : Colors.white.withValues(alpha: 0.06),
                           border: Border.all(
-                            color: _mood == m ? EmergeColors.teal : Colors.transparent,
+                            color: _mood == m
+                                ? EmergeColors.teal
+                                : Colors.transparent,
                             width: 2,
                           ),
                         ),
                         child: Center(
-                          child: Text(m.emoji, style: const TextStyle(fontSize: 22)),
+                          child: Text(
+                            m.emoji,
+                            style: const TextStyle(fontSize: 22),
+                          ),
                         ),
                       ),
                     ),
@@ -145,7 +158,9 @@ class _TimelineReflectionCardState extends ConsumerState<TimelineReflectionCard>
               const Spacer(),
               FilledButton(
                 onPressed: _mood == null || _isSaving ? null : _save,
-                style: FilledButton.styleFrom(backgroundColor: EmergeColors.teal),
+                style: FilledButton.styleFrom(
+                  backgroundColor: EmergeColors.teal,
+                ),
                 child: _isSaving
                     ? const SizedBox(
                         width: 14,
@@ -203,7 +218,9 @@ class _TimelineReflectionCardState extends ConsumerState<TimelineReflectionCard>
   Future<void> _save() async {
     if (_mood == null) return;
     setState(() => _isSaving = true);
-    final result = await ref.read(reflectionRepositoryProvider).save(
+    final result = await ref
+        .read(reflectionRepositoryProvider)
+        .save(
           userId: widget.userId,
           localDate: widget.date,
           mood: _mood!,
@@ -213,6 +230,8 @@ class _TimelineReflectionCardState extends ConsumerState<TimelineReflectionCard>
       _isSaving = false;
       _collapsedAfterSave = result.isRight();
     });
-    ref.invalidate(dailyReflectionProvider(userId: widget.userId, date: widget.date));
+    ref.invalidate(
+      dailyReflectionProvider(userId: widget.userId, date: widget.date),
+    );
   }
 }

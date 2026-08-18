@@ -16,11 +16,13 @@ class AttributeDetailScreen extends ConsumerWidget {
     final progress = ref.watch(attributeProgressProvider(attribute.name));
     final level = progress?.currentLevel ?? 1;
     final progressPercent = progress?.progressPercent ?? 0.0;
-    
+
     final config = WorldTypeConfig.forAttribute(attribute);
-    
+
     final habitsAsync = ref.watch(habitsProvider);
-    final habits = habitsAsync.value?.where((h) => h.attribute == attribute).toList() ?? [];
+    final habits =
+        habitsAsync.value?.where((h) => h.attribute == attribute).toList() ??
+        [];
 
     return Scaffold(
       body: Stack(
@@ -30,14 +32,13 @@ class AttributeDetailScreen extends ConsumerWidget {
             child: Image.asset(
               config.backgroundAssetPath(level),
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(color: config.primaryColor),
+              errorBuilder: (context, error, stackTrace) =>
+                  Container(color: config.primaryColor),
             ),
           ),
           // Layer 1: Dark gradient/overlay
           Positioned.fill(
-            child: Container(
-              color: Colors.black.withValues(alpha: 0.7),
-            ),
+            child: Container(color: Colors.black.withValues(alpha: 0.7)),
           ),
           // Layer 2: CustomScrollView
           CustomScrollView(
@@ -81,7 +82,9 @@ class AttributeDetailScreen extends ConsumerWidget {
                           LinearProgressIndicator(
                             value: progressPercent,
                             backgroundColor: Colors.white24,
-                            valueColor: AlwaysStoppedAnimation<Color>(config.primaryColor),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              config.primaryColor,
+                            ),
                           ),
                         ],
                       ),
@@ -94,7 +97,10 @@ class AttributeDetailScreen extends ConsumerWidget {
               ),
               const SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 8.0,
+                  ),
                   child: Text(
                     'Habits',
                     style: TextStyle(
@@ -106,28 +112,28 @@ class AttributeDetailScreen extends ConsumerWidget {
                 ),
               ),
               SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final habit = habits[index];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-                      child: Card(
-                        color: Colors.black.withValues(alpha: 0.5),
-                        child: ListTile(
-                          title: Text(
-                            habit.title,
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                          leading: Icon(
-                            config.fallbackIcon,
-                            color: config.primaryColor,
-                          ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final habit = habits[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 4.0,
+                    ),
+                    child: Card(
+                      color: Colors.black.withValues(alpha: 0.5),
+                      child: ListTile(
+                        title: Text(
+                          habit.title,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        leading: Icon(
+                          config.fallbackIcon,
+                          color: config.primaryColor,
                         ),
                       ),
-                    );
-                  },
-                  childCount: habits.length,
-                ),
+                    ),
+                  );
+                }, childCount: habits.length),
               ),
             ],
           ),

@@ -8,8 +8,6 @@ Widget createScreenUnderTest({
 }) {
   return ProviderScope(
     overrides: overrides,
-    child: MaterialApp(
-      home: screen,
-    ),
+    child: MaterialApp(home: screen),
   );
 }

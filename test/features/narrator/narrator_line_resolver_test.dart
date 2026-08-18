@@ -16,10 +16,7 @@ class _FakeResolver extends NarratorLineResolver {
     required NarratorTrigger trigger,
     required NarratorUserStats stats,
   }) async {
-    return PersonalLine(
-      text: 'personal: ${trigger.name}',
-      dataBasis: 'fake',
-    );
+    return PersonalLine(text: 'personal: ${trigger.name}', dataBasis: 'fake');
   }
 
   @override
@@ -29,20 +26,20 @@ class _FakeResolver extends NarratorLineResolver {
 }
 
 NarratorUserStats _stats() => const NarratorUserStats(
-      momentumScore: 0.5,
-      consecutiveActiveDays: 1,
-      totalHabitsToday: 3,
-      completedHabitsToday: 1,
-      currentLevel: 1,
-      previousLevel: 1,
-      hasStreakBreak: false,
-      currentStreak: 5,
-      longestStreak: 5,
-      consecutiveMisses: 0,
-      hasCompletedEveningReflectionToday: false,
-      hasCompletedOnboarding: true,
-      archetypeSelected: true,
-    );
+  momentumScore: 0.5,
+  consecutiveActiveDays: 1,
+  totalHabitsToday: 3,
+  completedHabitsToday: 1,
+  currentLevel: 1,
+  previousLevel: 1,
+  hasStreakBreak: false,
+  currentStreak: 5,
+  longestStreak: 5,
+  consecutiveMisses: 0,
+  hasCompletedEveningReflectionToday: false,
+  hasCompletedOnboarding: true,
+  archetypeSelected: true,
+);
 
 void main() {
   group('NarratorLineResolver', () {

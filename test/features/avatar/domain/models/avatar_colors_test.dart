@@ -58,9 +58,18 @@ void main() {
     });
 
     test('forArchetype returns correct colors', () {
-      expect(AvatarColors.forArchetype('athlete').outline, const Color(0xFFFF6B35));
-      expect(AvatarColors.forArchetype('hero').outline, const Color(0xFF35E0FF));
-      expect(AvatarColors.forArchetype('unknown').outline, const Color(0xFF35E0FF)); // falls back to hero
+      expect(
+        AvatarColors.forArchetype('athlete').outline,
+        const Color(0xFFFF6B35),
+      );
+      expect(
+        AvatarColors.forArchetype('hero').outline,
+        const Color(0xFF35E0FF),
+      );
+      expect(
+        AvatarColors.forArchetype('unknown').outline,
+        const Color(0xFF35E0FF),
+      ); // falls back to hero
     });
   });
 }

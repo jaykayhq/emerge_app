@@ -10,10 +10,7 @@ Widget buildTest() {
       routerConfig: GoRouter(
         initialLocation: '/',
         routes: [
-          GoRoute(
-            path: '/',
-            builder: (_, _) => const SocialContactsScreen(),
-          ),
+          GoRoute(path: '/', builder: (_, _) => const SocialContactsScreen()),
         ],
       ),
     ),
@@ -21,8 +18,9 @@ Widget buildTest() {
 }
 
 void main() {
-  testWidgets('SocialContactsScreen renders permission gate initially',
-      (tester) async {
+  testWidgets('SocialContactsScreen renders permission gate initially', (
+    tester,
+  ) async {
     await tester.pumpWidget(buildTest());
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));

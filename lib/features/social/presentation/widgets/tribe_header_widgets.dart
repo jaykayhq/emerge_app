@@ -274,9 +274,7 @@ class ContributorsSection extends ConsumerWidget {
       data: (contributors) {
         final visible = members.isEmpty
             ? contributors
-            : contributors
-                .where((c) => members.contains(c['userId']))
-                .toList();
+            : contributors.where((c) => members.contains(c['userId'])).toList();
         if (visible.isEmpty) {
           return const SizedBox.shrink();
         }

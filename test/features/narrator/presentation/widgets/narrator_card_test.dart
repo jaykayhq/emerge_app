@@ -191,9 +191,9 @@ void main() {
     expect(find.byType(TextField), findsOneWidget);
   });
 
-  testWidgets(
-      'quota hint stays "X of 3" regardless of how many habits exist',
-      (tester) async {
+  testWidgets('quota hint stays "X of 3" regardless of how many habits exist', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({
       'coach_asks_${CoachAskQuota.dateKeyFor(DateTime.now())}': 0,
     });

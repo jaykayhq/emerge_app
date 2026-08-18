@@ -77,8 +77,7 @@ class _CreateSoloChallengeDialogState
             'assets/images/challenges/quest_cat_productivity.webp',
           ChallengeCategory.mindfulness =>
             'assets/images/challenges/quest_cat_mindfulness.webp',
-          _ =>
-            'assets/images/challenges/quest_cat_creation.webp',
+          _ => 'assets/images/challenges/quest_cat_creation.webp',
         },
         reward: '${_durationDays * 10} XP',
         participants: 1, // You are the first participant

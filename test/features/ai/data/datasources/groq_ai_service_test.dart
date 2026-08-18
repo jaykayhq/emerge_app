@@ -22,7 +22,9 @@ void main() {
     mockFunctions = MockFirebaseFunctions();
     mockHttpsCallable = MockHttpsCallable();
     service = GroqAiService(functions: mockFunctions);
-    when(() => mockFunctions.httpsCallable(any())).thenReturn(mockHttpsCallable);
+    when(
+      () => mockFunctions.httpsCallable(any()),
+    ).thenReturn(mockHttpsCallable);
   });
 
   group('getCoachAdvice', () {
@@ -30,7 +32,9 @@ void main() {
       // Arrange
       final mockResult = _MockHttpsCallableResult();
       when(() => mockResult.data).thenReturn({'advice': '  You can do it!  '});
-      when(() => mockHttpsCallable.call(any())).thenAnswer((_) async => mockResult);
+      when(
+        () => mockHttpsCallable.call(any()),
+      ).thenAnswer((_) async => mockResult);
 
       // Act
       final result = await service.getCoachAdvice("context", "message");
@@ -43,7 +47,9 @@ void main() {
       // Arrange
       final mockResult = _MockHttpsCallableResult();
       when(() => mockResult.data).thenReturn(null);
-      when(() => mockHttpsCallable.call(any())).thenAnswer((_) async => mockResult);
+      when(
+        () => mockHttpsCallable.call(any()),
+      ).thenAnswer((_) async => mockResult);
 
       // Act & Assert
       expect(
@@ -62,7 +68,9 @@ void main() {
       // Arrange
       final mockResult = _MockHttpsCallableResult();
       when(() => mockResult.data).thenReturn({});
-      when(() => mockHttpsCallable.call(any())).thenAnswer((_) async => mockResult);
+      when(
+        () => mockHttpsCallable.call(any()),
+      ).thenAnswer((_) async => mockResult);
 
       // Act & Assert
       expect(
@@ -77,24 +85,27 @@ void main() {
       );
     });
 
-    test('should throw with the error code on FirebaseFunctionsException', () async {
-      // Arrange
-      when(() => mockHttpsCallable.call(any())).thenThrow(
-        FirebaseFunctionsException(code: 'internal', message: 'Server error'),
-      );
+    test(
+      'should throw with the error code on FirebaseFunctionsException',
+      () async {
+        // Arrange
+        when(() => mockHttpsCallable.call(any())).thenThrow(
+          FirebaseFunctionsException(code: 'internal', message: 'Server error'),
+        );
 
-      // Act & Assert
-      expect(
-        () => service.getCoachAdvice("context", "message"),
-        throwsA(
-          isA<Exception>().having(
-            (e) => e.toString(),
-            'toString',
-            contains('AI Coach Service Error: internal'),
+        // Act & Assert
+        expect(
+          () => service.getCoachAdvice("context", "message"),
+          throwsA(
+            isA<Exception>().having(
+              (e) => e.toString(),
+              'toString',
+              contains('AI Coach Service Error: internal'),
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
 
     test('should rethrow generic exceptions', () async {
       // Arrange
@@ -119,13 +130,17 @@ void main() {
       // Arrange
       final mockResult = _MockHttpsCallableResult();
       when(() => mockResult.data).thenReturn({'advice': 'ok'});
-      when(() => mockHttpsCallable.call(any())).thenAnswer((_) async => mockResult);
+      when(
+        () => mockHttpsCallable.call(any()),
+      ).thenAnswer((_) async => mockResult);
 
       // Act
       await service.getCoachAdvice('test_context', 'test_message');
 
       // Assert
-      final captured = verify(() => mockHttpsCallable.call(captureAny())).captured;
+      final captured = verify(
+        () => mockHttpsCallable.call(captureAny()),
+      ).captured;
       final args = captured.first as Map<String, dynamic>;
       expect(args['userContext'], 'test_context');
       expect(args['userMessage'], 'test_message');
@@ -137,7 +152,9 @@ void main() {
       // Arrange
       final mockResult = _MockHttpsCallableResult();
       when(() => mockResult.data).thenReturn(null);
-      when(() => mockHttpsCallable.call(any())).thenAnswer((_) async => mockResult);
+      when(
+        () => mockHttpsCallable.call(any()),
+      ).thenAnswer((_) async => mockResult);
 
       // Act
       final slots = await service.fillNarratorSlots(
@@ -153,7 +170,9 @@ void main() {
       // Arrange
       final mockResult = _MockHttpsCallableResult();
       when(() => mockResult.data).thenReturn({'other': 'data'});
-      when(() => mockHttpsCallable.call(any())).thenAnswer((_) async => mockResult);
+      when(
+        () => mockHttpsCallable.call(any()),
+      ).thenAnswer((_) async => mockResult);
 
       // Act
       final slots = await service.fillNarratorSlots(
@@ -171,7 +190,9 @@ void main() {
       when(() => mockResult.data).thenReturn({
         'slots': {'greeting': 'Hello there', 'streak': 7},
       });
-      when(() => mockHttpsCallable.call(any())).thenAnswer((_) async => mockResult);
+      when(
+        () => mockHttpsCallable.call(any()),
+      ).thenAnswer((_) async => mockResult);
 
       // Act
       final slots = await service.fillNarratorSlots(
@@ -186,8 +207,12 @@ void main() {
     test('should pass trigger and context to the callable', () async {
       // Arrange
       final mockResult = _MockHttpsCallableResult();
-      when(() => mockResult.data).thenReturn({'slots': {'a': 'b'}});
-      when(() => mockHttpsCallable.call(any())).thenAnswer((_) async => mockResult);
+      when(() => mockResult.data).thenReturn({
+        'slots': {'a': 'b'},
+      });
+      when(
+        () => mockHttpsCallable.call(any()),
+      ).thenAnswer((_) async => mockResult);
 
       // Act
       await service.fillNarratorSlots(
@@ -196,7 +221,9 @@ void main() {
       );
 
       // Assert
-      final captured = verify(() => mockHttpsCallable.call(captureAny())).captured;
+      final captured = verify(
+        () => mockHttpsCallable.call(captureAny()),
+      ).captured;
       final args = captured.first as Map<String, dynamic>;
       expect(args['trigger'], 'levelUp');
       expect(args['context'], {'currentStreak': 7, 'momentumScore': 0.8});

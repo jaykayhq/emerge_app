@@ -76,17 +76,13 @@ final testUser = AuthUser(
 Widget _buildTest() {
   return ProviderScope(
     overrides: [
-      authStateChangesProvider.overrideWith(
-        (ref) => Stream.value(testUser),
-      ),
+      authStateChangesProvider.overrideWith((ref) => Stream.value(testUser)),
       isPremiumProvider.overrideWith(() => _MockIsPremium()),
       blueprintDetailControllerProvider.overrideWith(
         () => MockBlueprintDetailController(),
       ),
     ],
-    child: MaterialApp(
-      home: BlueprintDetailScreen(blueprint: testBlueprint),
-    ),
+    child: MaterialApp(home: BlueprintDetailScreen(blueprint: testBlueprint)),
   );
 }
 
@@ -101,8 +97,7 @@ void main() {
     expect(find.text('ABOUT THIS BLUEPRINT'), findsOneWidget);
   });
 
-  testWidgets('BlueprintDetailScreen shows adopt button',
-      (tester) async {
+  testWidgets('BlueprintDetailScreen shows adopt button', (tester) async {
     await tester.pumpWidget(_buildTest());
     await tester.pump(const Duration(milliseconds: 100));
 
@@ -127,8 +122,9 @@ void main() {
       );
     }
 
-    testWidgets('shows timer badge when habit has timerDurationMinutes > 0',
-        (tester) async {
+    testWidgets('shows timer badge when habit has timerDurationMinutes > 0', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildTestWithTimerHealth());
       await tester.pump(const Duration(milliseconds: 100));
 
@@ -138,24 +134,27 @@ void main() {
       expect(find.text('5M'), findsOneWidget);
     });
 
-    testWidgets('shows health steps badge when integration is healthSteps',
-        (tester) async {
+    testWidgets('shows health steps badge when integration is healthSteps', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildTestWithTimerHealth());
       await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.text('Steps'), findsOneWidget);
     });
 
-    testWidgets('shows screen time badge when integration is screenTimeLimit',
-        (tester) async {
+    testWidgets('shows screen time badge when integration is screenTimeLimit', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildTestWithTimerHealth());
       await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.text('Screen Time'), findsOneWidget);
     });
 
-    testWidgets('hides timer badge when timerDurationMinutes is 0',
-        (tester) async {
+    testWidgets('hides timer badge when timerDurationMinutes is 0', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildTestWithTimerHealth());
       await tester.pump(const Duration(milliseconds: 100));
 
@@ -164,15 +163,17 @@ void main() {
       expect(find.text('0M'), findsNothing);
     });
 
-    testWidgets('shows health integration badges for habits with non-none integration',
-        (tester) async {
-      await tester.pumpWidget(buildTestWithTimerHealth());
-      await tester.pump(const Duration(milliseconds: 100));
+    testWidgets(
+      'shows health integration badges for habits with non-none integration',
+      (tester) async {
+        await tester.pumpWidget(buildTestWithTimerHealth());
+        await tester.pump(const Duration(milliseconds: 100));
 
-      // Morning Run has healthSteps → shows 'Steps' badge
-      // Screen Limit has screenTimeLimit → shows 'Screen Time' badge
-      expect(find.text('Steps'), findsOneWidget);
-      expect(find.text('Screen Time'), findsOneWidget);
-    });
+        // Morning Run has healthSteps → shows 'Steps' badge
+        // Screen Limit has screenTimeLimit → shows 'Screen Time' badge
+        expect(find.text('Steps'), findsOneWidget);
+        expect(find.text('Screen Time'), findsOneWidget);
+      },
+    );
   });
 }

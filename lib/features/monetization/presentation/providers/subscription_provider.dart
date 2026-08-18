@@ -31,12 +31,15 @@ class IsPremium extends _$IsPremium {
   /// Injectable `users/{uid}` doc-data stream (test seam). Production
   /// default follows the live snapshot data; tests drive emissions and
   /// stream errors without Firebase.
-  Stream<Map<String, dynamic>?> Function(FirebaseFirestore firestore, String uid)
-      docDataStream = (firestore, uid) => firestore
-          .collection('users')
-          .doc(uid)
-          .snapshots()
-          .map((snap) => snap.data());
+  Stream<Map<String, dynamic>?> Function(
+    FirebaseFirestore firestore,
+    String uid,
+  )
+  docDataStream = (firestore, uid) => firestore
+      .collection('users')
+      .doc(uid)
+      .snapshots()
+      .map((snap) => snap.data());
 
   Timer? _pauseEndTimer;
   PremiumState? _latestPremiumState;
@@ -259,8 +262,7 @@ class IsPremium extends _$IsPremium {
       final cachedTime = prefs.getInt(_cacheTimestampKey) ?? 0;
       final cacheAge = DateTime.now().millisecondsSinceEpoch - cachedTime;
 
-      if (cachedStatus &&
-          cacheAge < const Duration(days: 7).inMilliseconds) {
+      if (cachedStatus && cacheAge < const Duration(days: 7).inMilliseconds) {
         AppLogger.i('Using cached premium status (age: ${cacheAge ~/ 1000}s)');
         return cachedStatus;
       }

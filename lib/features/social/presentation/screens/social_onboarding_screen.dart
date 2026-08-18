@@ -33,7 +33,11 @@ class SocialOnboardingScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                child: const Icon(Icons.hub_rounded, size: 64, color: EmergeColors.nebulaPrimary),
+                child: const Icon(
+                  Icons.hub_rounded,
+                  size: 64,
+                  color: EmergeColors.nebulaPrimary,
+                ),
               ),
             ),
             const Gap(32),
@@ -52,18 +56,25 @@ class SocialOnboardingScreen extends ConsumerWidget {
             const Text(
               "Every legend belongs to a collective.\nSync to your network.",
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white70, fontSize: 16, height: 1.5),
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 16,
+                height: 1.5,
+              ),
             ),
             const Gap(48),
             _buildOptionCard(
               context,
               title: "ARCHETYPE COLLECTIVE",
-              description: "Join millions in the global pool.\n✓ Identity-matched network\n✓ Broad gamified objectives",
+              description:
+                  "Join millions in the global pool.\n✓ Identity-matched network\n✓ Broad gamified objectives",
               buttonText: "INITIALIZE ARCHETYPE",
               accentColor: EmergeColors.nebulaPrimary,
               icon: Icons.public_rounded,
               onTap: () {
-                ref.read(socialOnboardingCompletedProvider.notifier).completeOnboarding();
+                ref
+                    .read(socialOnboardingCompletedProvider.notifier)
+                    .completeOnboarding();
                 context.go('/social');
               },
             ),
@@ -71,12 +82,15 @@ class SocialOnboardingScreen extends ConsumerWidget {
             _buildOptionCard(
               context,
               title: "CREATOR CIRCLE",
-              description: "Follow an elite creator.\n✓ Curated mission blueprints\n✓ Exclusive tight-knit squad",
+              description:
+                  "Follow an elite creator.\n✓ Curated mission blueprints\n✓ Exclusive tight-knit squad",
               buttonText: "BROWSE CREATORS",
               accentColor: EmergeColors.nebulaSecondary,
               icon: Icons.electric_bolt_rounded,
               onTap: () {
-                ref.read(socialOnboardingCompletedProvider.notifier).completeOnboarding();
+                ref
+                    .read(socialOnboardingCompletedProvider.notifier)
+                    .completeOnboarding();
                 // Navigate directly to Discover tab so user can find and follow a creator
                 context.go('/social');
               },
@@ -131,7 +145,11 @@ class SocialOnboardingScreen extends ConsumerWidget {
           const Gap(16),
           Text(
             description,
-            style: const TextStyle(color: Colors.white70, height: 1.6, fontSize: 14),
+            style: const TextStyle(
+              color: Colors.white70,
+              height: 1.6,
+              fontSize: 14,
+            ),
           ),
           const Gap(24),
           SizedBox(
@@ -142,12 +160,17 @@ class SocialOnboardingScreen extends ConsumerWidget {
                 foregroundColor: accentColor,
                 side: BorderSide(color: accentColor.withValues(alpha: 0.5)),
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               onPressed: onTap,
               child: Text(
                 buttonText,
-                style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
               ),
             ),
           ),

@@ -75,9 +75,9 @@ class TribeActivityDao extends DatabaseAccessor<AppDatabase>
   }
 
   Future<void> deleteActivity(String id, String userId) async {
-    await (delete(tribeActivityTable)
-          ..where((t) => t.id.equals(id) & t.userId.equals(userId)))
-        .go();
+    await (delete(
+      tribeActivityTable,
+    )..where((t) => t.id.equals(id) & t.userId.equals(userId))).go();
   }
 
   Future<void> clearSynced() async {

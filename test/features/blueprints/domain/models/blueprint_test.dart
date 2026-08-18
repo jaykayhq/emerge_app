@@ -39,10 +39,7 @@ void main() {
       expect(restored.habits.length, blueprint.habits.length);
       expect(restored.habits[0].title, blueprint.habits[0].title);
       expect(restored.habits[1].attribute, blueprint.habits[1].attribute);
-      expect(
-        restored.recommendedArchetypes,
-        blueprint.recommendedArchetypes,
-      );
+      expect(restored.recommendedArchetypes, blueprint.recommendedArchetypes);
     });
 
     test('default values for new blueprint', () {
@@ -65,26 +62,29 @@ void main() {
       expect(blueprint.difficulty, BlueprintDifficulty.beginner);
     });
 
-    test('copyWith preserves unchanged fields and overrides specified ones', () {
-      final blueprint = Blueprint(
-        id: 'test_3',
-        title: 'Original',
-        description: 'Original description',
-        category: 'Fitness',
-        creatorName: 'Creator',
-        creatorUserId: 'user_1',
-        creatorArchetype: 'Athlete',
-        createdAt: DateTime.now(),
-        habits: [const BlueprintHabit(title: 'Run')],
-        adoptionCount: 10,
-      );
+    test(
+      'copyWith preserves unchanged fields and overrides specified ones',
+      () {
+        final blueprint = Blueprint(
+          id: 'test_3',
+          title: 'Original',
+          description: 'Original description',
+          category: 'Fitness',
+          creatorName: 'Creator',
+          creatorUserId: 'user_1',
+          creatorArchetype: 'Athlete',
+          createdAt: DateTime.now(),
+          habits: [const BlueprintHabit(title: 'Run')],
+          adoptionCount: 10,
+        );
 
-      final copy = blueprint.copyWith(title: 'Updated');
-      expect(copy.title, 'Updated');
-      expect(copy.description, 'Original description');
-      expect(copy.adoptionCount, 10);
-      expect(copy.id, blueprint.id);
-    });
+        final copy = blueprint.copyWith(title: 'Updated');
+        expect(copy.title, 'Updated');
+        expect(copy.description, 'Original description');
+        expect(copy.adoptionCount, 10);
+        expect(copy.id, blueprint.id);
+      },
+    );
 
     test('fromMap without recommendedArchetypes key returns empty list', () {
       final map = {
@@ -149,27 +149,28 @@ void main() {
     });
 
     test(
-        'BlueprintHabit round-trips timeOfDay, defaultTime, attribute, and timer',
-        () {
-      const habit = BlueprintHabit(
-        title: 'Wake Up at 6 AM',
-        timeOfDay: 'Morning',
-        defaultTime: TimeOfDay(hour: 6, minute: 0),
-        attribute: HabitAttribute.focus,
-        frequency: 'Daily',
-        timerDurationMinutes: 25,
-      );
+      'BlueprintHabit round-trips timeOfDay, defaultTime, attribute, and timer',
+      () {
+        const habit = BlueprintHabit(
+          title: 'Wake Up at 6 AM',
+          timeOfDay: 'Morning',
+          defaultTime: TimeOfDay(hour: 6, minute: 0),
+          attribute: HabitAttribute.focus,
+          frequency: 'Daily',
+          timerDurationMinutes: 25,
+        );
 
-      final map = habit.toMap();
-      final restored = BlueprintHabit.fromMap(map);
+        final map = habit.toMap();
+        final restored = BlueprintHabit.fromMap(map);
 
-      expect(restored.title, 'Wake Up at 6 AM');
-      expect(restored.timeOfDay, 'Morning');
-      expect(restored.defaultTime?.hour, 6);
-      expect(restored.defaultTime?.minute, 0);
-      expect(restored.attribute, HabitAttribute.focus);
-      expect(restored.timerDurationMinutes, 25);
-    });
+        expect(restored.title, 'Wake Up at 6 AM');
+        expect(restored.timeOfDay, 'Morning');
+        expect(restored.defaultTime?.hour, 6);
+        expect(restored.defaultTime?.minute, 0);
+        expect(restored.attribute, HabitAttribute.focus);
+        expect(restored.timerDurationMinutes, 25);
+      },
+    );
 
     group('BlueprintHabit.fromMap malformed defaultTime', () {
       test('clamps out-of-range hour and minute instead of asserting', () {
@@ -183,8 +184,7 @@ void main() {
         expect(habit.defaultTime!.minute, 59);
       });
 
-      test('treats fully non-numeric parts as unset (not a 00:00 default)',
-          () {
+      test('treats fully non-numeric parts as unset (not a 00:00 default)', () {
         final habit = BlueprintHabit.fromMap(const {
           'title': 'Bad time',
           'defaultTime': 'ab:cd',

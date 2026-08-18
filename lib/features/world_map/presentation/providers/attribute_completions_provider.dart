@@ -5,21 +5,18 @@ import 'package:emerge_app/features/habits/presentation/providers/habit_provider
 part 'attribute_completions_provider.g.dart';
 
 @riverpod
-Future<List<int>> attributeCompletions(
-  Ref ref,
-  String attributeName,
-) async {
+Future<List<int>> attributeCompletions(Ref ref, String attributeName) async {
   final user = await ref.watch(authStateChangesProvider.future);
-  
+
   if (user.isEmpty) {
     return List.filled(7, 0);
   }
 
   final repository = ref.watch(habitRepositoryProvider);
-  
+
   final now = DateTime.now();
   final start = now.subtract(const Duration(days: 6));
-  
+
   final startDay = DateTime(start.year, start.month, start.day);
   final endDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
 
@@ -30,7 +27,7 @@ Future<List<int>> attributeCompletions(
   );
 
   final List<int> xpPerDay = List.filled(7, 0);
-  
+
   completionsEither.fold(
     (failure) {
       // Do nothing, returns array of 0s

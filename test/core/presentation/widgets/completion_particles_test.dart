@@ -21,7 +21,9 @@ Widget buildTestWidget({
 
 void main() {
   group('CompletionParticles', () {
-    testWidgets('renders and starts animation with CustomPaint', (tester) async {
+    testWidgets('renders and starts animation with CustomPaint', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildTestWidget(color: Colors.green, key: const Key('particles')),
       );
@@ -39,38 +41,40 @@ void main() {
       );
     });
 
-    testWidgets('calls onComplete callback and CustomPaint disappears after animation',
-        (tester) async {
-      bool callbackFired = false;
+    testWidgets(
+      'calls onComplete callback and CustomPaint disappears after animation',
+      (tester) async {
+        bool callbackFired = false;
 
-      // We wrap CompletionParticles in a parent that removes it on onComplete,
-      // mirroring the real OneTapCompletionZone behaviour.
-      await tester.pumpWidget(
-        _RemovableParticlesHost(
-          color: Colors.green,
-          onCompleteCallback: () => callbackFired = true,
-        ),
-      );
+        // We wrap CompletionParticles in a parent that removes it on onComplete,
+        // mirroring the real OneTapCompletionZone behaviour.
+        await tester.pumpWidget(
+          _RemovableParticlesHost(
+            color: Colors.green,
+            onCompleteCallback: () => callbackFired = true,
+          ),
+        );
 
-      // Widget should be present initially with CustomPaint
-      expect(find.byType(CompletionParticles), findsOneWidget);
-      expect(
-        find.descendant(
-          of: find.byType(CompletionParticles),
-          matching: find.byType(CustomPaint),
-        ),
-        findsOneWidget,
-      );
+        // Widget should be present initially with CustomPaint
+        expect(find.byType(CompletionParticles), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byType(CompletionParticles),
+            matching: find.byType(CustomPaint),
+          ),
+          findsOneWidget,
+        );
 
-      // Advance past the 800 ms animation
-      await tester.pumpAndSettle(const Duration(seconds: 2));
+        // Advance past the 800 ms animation
+        await tester.pumpAndSettle(const Duration(seconds: 2));
 
-      // The callback should have fired
-      expect(callbackFired, isTrue);
+        // The callback should have fired
+        expect(callbackFired, isTrue);
 
-      // The parent should have removed CompletionParticles from the tree
-      expect(find.byType(CompletionParticles), findsNothing);
-    });
+        // The parent should have removed CompletionParticles from the tree
+        expect(find.byType(CompletionParticles), findsNothing);
+      },
+    );
 
     testWidgets('uses the provided color', (tester) async {
       await tester.pumpWidget(
@@ -106,14 +110,16 @@ void main() {
 
   group('ParticleBurstPainter', () {
     // Helper: generate a deterministic list of 30 particles for painter tests.
-    List<ParticleData> makeParticles() =>
-        List.generate(30, (_) => const ParticleData(
-              offsetDx: 0,
-              offsetDy: 0,
-              angle: 0,
-              speed: 1,
-              size: 3,
-            ));
+    List<ParticleData> makeParticles() => List.generate(
+      30,
+      (_) => const ParticleData(
+        offsetDx: 0,
+        offsetDy: 0,
+        angle: 0,
+        speed: 1,
+        size: 3,
+      ),
+    );
 
     test('particles have expected count', () {
       final particles = makeParticles();
@@ -127,8 +133,7 @@ void main() {
     });
 
     test('particles from ParticleData.random have positions near center', () {
-      final particles =
-          List.generate(30, (_) => ParticleData.random());
+      final particles = List.generate(30, (_) => ParticleData.random());
 
       for (final p in particles) {
         expect(p.offsetDx.abs(), lessThan(20));

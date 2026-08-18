@@ -61,8 +61,11 @@ void main() {
     test('all archetype emblems resolve to bundled assets', () {
       for (final id in ['athlete', 'creator', 'scholar', 'stoic', 'zealot']) {
         final url = clubEmblemImageUrl(archetypeId: id, clubId: 'x');
-        expect(url.startsWith('assets/images/clubs/'), isTrue,
-            reason: '$id emblem should be a bundled asset');
+        expect(
+          url.startsWith('assets/images/clubs/'),
+          isTrue,
+          reason: '$id emblem should be a bundled asset',
+        );
       }
     });
   });

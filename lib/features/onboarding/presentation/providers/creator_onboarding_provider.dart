@@ -103,23 +103,19 @@ Future<void> saveCreatorOnboardingProgress(
   final repo = ref.read(creatorRepositoryProvider);
 
   final existing = await repo.getCreatorProfile(user.uid);
-  final updated = (existing ??
-          CreatorProfile(
-            userId: user.uid,
-            role: 'creator',
-          ))
-      .copyWith(
-    // Deliberately NOT role: the rules diff-whitelist denies touching
-    // privileged fields; re-writing the same 'creator' value would trip it
-    // (SP-E D4).
-    archetype: draft.archetype,
-    bio: draft.bio ?? existing?.bio ?? '',
-    specialityTags: draft.specialityTags.isNotEmpty
-        ? draft.specialityTags
-        : (existing?.specialityTags ?? const []),
-    creatorOnboardingProgress: progress,
-    creatorOnboardingCompletedAt: progress >= 3 ? DateTime.now() : null,
-  );
+  final updated =
+      (existing ?? CreatorProfile(userId: user.uid, role: 'creator')).copyWith(
+        // Deliberately NOT role: the rules diff-whitelist denies touching
+        // privileged fields; re-writing the same 'creator' value would trip it
+        // (SP-E D4).
+        archetype: draft.archetype,
+        bio: draft.bio ?? existing?.bio ?? '',
+        specialityTags: draft.specialityTags.isNotEmpty
+            ? draft.specialityTags
+            : (existing?.specialityTags ?? const []),
+        creatorOnboardingProgress: progress,
+        creatorOnboardingCompletedAt: progress >= 3 ? DateTime.now() : null,
+      );
 
   await repo.updateCreatorProfile(updated);
   ref.invalidate(currentCreatorOnboardingProvider);

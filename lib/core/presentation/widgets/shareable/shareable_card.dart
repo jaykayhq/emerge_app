@@ -108,10 +108,7 @@ class _FlameMark extends StatelessWidget {
           ),
           CustomPaint(
             size: Size(size * 0.75, size * 0.70),
-            painter: FlamePainter(
-              color: EmergeColors.neonTeal,
-              flicker: 0.33,
-            ),
+            painter: FlamePainter(color: EmergeColors.neonTeal, flicker: 0.33),
           ),
         ],
       ),
@@ -136,7 +133,11 @@ class _StatRow extends StatelessWidget {
               color: stat.color.withValues(alpha: 0.18),
               shape: BoxShape.circle,
             ),
-            child: Icon(stat.icon ?? Icons.star_rounded, color: stat.color, size: 22),
+            child: Icon(
+              stat.icon ?? Icons.star_rounded,
+              color: stat.color,
+              size: 22,
+            ),
           ),
           const Gap(16),
           Expanded(

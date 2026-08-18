@@ -59,15 +59,15 @@ class NarratorNotesDao extends DatabaseAccessor<AppDatabase>
   /// Deletes notes older than the given date.
   Future<int> deleteOldNotes({required DateTime before}) {
     final beforeStr = before.toIso8601String();
-    return (delete(narratorNotesTable)
-          ..where((t) => t.recordedAt.isSmallerThanValue(beforeStr)))
-        .go();
+    return (delete(
+      narratorNotesTable,
+    )..where((t) => t.recordedAt.isSmallerThanValue(beforeStr))).go();
   }
 
   /// Returns the count of notes in the table.
   Future<int> countNotes() {
-    return select(narratorNotesTable).map((row) => row.id).get().then(
-      (rows) => rows.length,
-    );
+    return select(
+      narratorNotesTable,
+    ).map((row) => row.id).get().then((rows) => rows.length);
   }
 }

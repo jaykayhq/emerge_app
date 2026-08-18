@@ -163,7 +163,11 @@ class _SegmentedControl extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget pill({required bool isSelected, required String label, required VoidCallback onTap}) {
+    Widget pill({
+      required bool isSelected,
+      required String label,
+      required VoidCallback onTap,
+    }) {
       return Expanded(
         child: GestureDetector(
           onTap: onTap,
@@ -185,9 +189,7 @@ class _SegmentedControl extends StatelessWidget {
             child: Text(
               label,
               style: TextStyle(
-                color: isSelected
-                    ? EmergeColors.nebulaPrimary
-                    : Colors.white60,
+                color: isSelected ? EmergeColors.nebulaPrimary : Colors.white60,
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.4,

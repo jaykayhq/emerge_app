@@ -16,7 +16,10 @@ void main() {
   setUp(() => db = AppDatabase.withExecutor(NativeDatabase.memory()));
   tearDown(() => db.close());
 
-  EnhancedSyncEngine engine({String? Function()? currentUserId, MutationApplier? applier}) {
+  EnhancedSyncEngine engine({
+    String? Function()? currentUserId,
+    MutationApplier? applier,
+  }) {
     return EnhancedSyncEngine(
       db.mutationQueueDao,
       FakeFirebaseFirestore(),
@@ -100,7 +103,9 @@ void main() {
       operation: 'update',
     );
     await e.processMutationQueue();
-    expect(applied, ['legacy'], reason: 'pre-migration rows are this device\'s data');
+    expect(applied, [
+      'legacy',
+    ], reason: 'pre-migration rows are this device\'s data');
   });
 
   test('reviveDeadLetters is a no-op while signed out', () async {
@@ -122,36 +127,39 @@ void main() {
     expect(dead, hasLength(1), reason: 'dead rows stay dead until a sign-in');
   });
 
-  test('reviveDeadLetters revives only the current user\'s dead rows', () async {
-    final e = engine(currentUserId: () => 'user-1');
-    await db.mutationQueueDao.enqueue(
-      collectionPath: 'habits',
-      documentId: 'mine',
-      operation: 'update',
-      userId: 'user-1',
-    );
-    await db.mutationQueueDao.enqueue(
-      collectionPath: 'habits',
-      documentId: 'theirs',
-      operation: 'update',
-      userId: 'user-2',
-    );
-    for (final row in await db.mutationQueueDao.getAllPending()) {
-      await db.mutationQueueDao.markFailed(
-        id: row.id,
-        retryCount: 5,
-        lastError: 'apply failed',
-        nextRetryAt: DateTime.now().toIso8601String(),
-        status: 'dead',
+  test(
+    'reviveDeadLetters revives only the current user\'s dead rows',
+    () async {
+      final e = engine(currentUserId: () => 'user-1');
+      await db.mutationQueueDao.enqueue(
+        collectionPath: 'habits',
+        documentId: 'mine',
+        operation: 'update',
+        userId: 'user-1',
       );
-    }
-    await e.reviveDeadLetters();
-    // getAllPending returns rows of EVERY status; only the revived row may
-    // be pending again.
-    final pending = (await db.mutationQueueDao.getAllPending())
-        .where((r) => r.status == 'pending')
-        .map((r) => r.documentId)
-        .toList();
-    expect(pending, ['mine']);
-  });
+      await db.mutationQueueDao.enqueue(
+        collectionPath: 'habits',
+        documentId: 'theirs',
+        operation: 'update',
+        userId: 'user-2',
+      );
+      for (final row in await db.mutationQueueDao.getAllPending()) {
+        await db.mutationQueueDao.markFailed(
+          id: row.id,
+          retryCount: 5,
+          lastError: 'apply failed',
+          nextRetryAt: DateTime.now().toIso8601String(),
+          status: 'dead',
+        );
+      }
+      await e.reviveDeadLetters();
+      // getAllPending returns rows of EVERY status; only the revived row may
+      // be pending again.
+      final pending = (await db.mutationQueueDao.getAllPending())
+          .where((r) => r.status == 'pending')
+          .map((r) => r.documentId)
+          .toList();
+      expect(pending, ['mine']);
+    },
+  );
 }

@@ -16,7 +16,8 @@ void main() {
   setUp(() {
     mockAuthRepo = MockAuthRepository();
     when(() => mockAuthRepo.user).thenAnswer(
-      (_) => Stream.value(const AuthUser(id: 'test_uid', email: 'test@test.com')),
+      (_) =>
+          Stream.value(const AuthUser(id: 'test_uid', email: 'test@test.com')),
     );
   });
 
@@ -25,9 +26,7 @@ void main() {
       ProviderScope(
         overrides: [
           authRepositoryProvider.overrideWithValue(mockAuthRepo),
-          partnersListStreamProvider.overrideWith(
-            (ref) => Stream.value([]),
-          ),
+          partnersListStreamProvider.overrideWith((ref) => Stream.value([])),
         ],
         child: const MaterialApp(home: FriendsScreen()),
       ),

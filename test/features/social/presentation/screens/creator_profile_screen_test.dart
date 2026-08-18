@@ -11,15 +11,17 @@ void main() {
     return ProviderScope(
       overrides: [
         allBlueprintsStreamProvider.overrideWith((ref) => Stream.value([])),
-        creatorProfileProvider('creator123').overrideWith((ref) => Stream.value(
-          const CreatorProfile(
-            userId: 'creator123',
-            displayName: 'Test Creator',
-            bio: 'Test Bio',
-            specialityTags: ['Fitness'],
-            isVerifiedCreator: true,
-          )
-        )),
+        creatorProfileProvider('creator123').overrideWith(
+          (ref) => Stream.value(
+            const CreatorProfile(
+              userId: 'creator123',
+              displayName: 'Test Creator',
+              bio: 'Test Bio',
+              specialityTags: ['Fitness'],
+              isVerifiedCreator: true,
+            ),
+          ),
+        ),
       ],
       child: const MaterialApp(
         home: CreatorProfileScreen(creatorId: 'creator123'),
@@ -27,7 +29,9 @@ void main() {
     );
   }
 
-  testWidgets('renders CreatorProfileScreen and finds Share button', (WidgetTester tester) async {
+  testWidgets('renders CreatorProfileScreen and finds Share button', (
+    WidgetTester tester,
+  ) async {
     // Suppress network image load errors in test environment.
     final originalOnError = FlutterError.onError;
     FlutterError.onError = (FlutterErrorDetails details) {

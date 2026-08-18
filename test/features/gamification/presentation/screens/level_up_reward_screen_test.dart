@@ -42,8 +42,7 @@ Widget _createTestWidget({int celebratedLevel = 2}) {
       GoRoute(
         path: '/level-up/:level',
         builder: (_, state) {
-          final level =
-              int.tryParse(state.pathParameters['level'] ?? '2') ?? 2;
+          final level = int.tryParse(state.pathParameters['level'] ?? '2') ?? 2;
           return LevelUpRewardScreen(celebratedLevel: level);
         },
       ),
@@ -76,8 +75,9 @@ void main() {
       await tester.pump();
     }
 
-    testWidgets('renders celebration screen with level and stats',
-        (tester) async {
+    testWidgets('renders celebration screen with level and stats', (
+      tester,
+    ) async {
       await tester.binding.setSurfaceSize(const Size(1200, 900));
       await pumpScreen(tester, level: 2);
 
@@ -95,8 +95,9 @@ void main() {
       expect(find.text('XP Boost'), findsOneWidget);
     });
 
-    testWidgets('renders milestone unlocks for level 5 milestone',
-        (tester) async {
+    testWidgets('renders milestone unlocks for level 5 milestone', (
+      tester,
+    ) async {
       await tester.binding.setSurfaceSize(const Size(1200, 900));
       await pumpScreen(tester, level: 4);
 
@@ -124,9 +125,7 @@ void main() {
         routes: [
           GoRoute(
             path: '/level-up/:level',
-            builder: (_, state) => LevelUpRewardScreen(
-              celebratedLevel: 4,
-            ),
+            builder: (_, state) => LevelUpRewardScreen(celebratedLevel: 4),
           ),
           GoRoute(path: '/', builder: (_, _) => const SizedBox()),
           GoRoute(path: '/profile', builder: (_, _) => const SizedBox()),
@@ -140,10 +139,8 @@ void main() {
               (ref) => Stream.value(_createMockProfile(level: 4, streak: 7)),
             ),
             worldThemeProvider.overrideWith(WorldThemeNotifier.new),
-            worldHealthStreamProvider.overrideWith(
-                (ref) => Stream.value(0.5)),
-            worldEntropyStreamProvider.overrideWith(
-                (ref) => Stream.value(0.0)),
+            worldHealthStreamProvider.overrideWith((ref) => Stream.value(0.5)),
+            worldEntropyStreamProvider.overrideWith((ref) => Stream.value(0.0)),
           ],
           child: MaterialApp.router(routerConfig: goRouter),
         ),

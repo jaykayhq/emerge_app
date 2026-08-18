@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockTribeMembershipDao extends Mock implements TribeMembershipDao {}
+
 class MockChallengeRepository extends Mock implements ChallengeRepository {}
 
 const _testMembership = UserTribeTableData(
@@ -38,13 +39,11 @@ Tribe _testTribe() => Tribe(
   archetypeId: 'athlete',
 );
 
-ProviderContainer _makeContainer({
-  UserTribeTableData? membership,
-}) {
+ProviderContainer _makeContainer({UserTribeTableData? membership}) {
   final dao = MockTribeMembershipDao();
-  when(() => dao.watchActiveMembership(any())).thenAnswer(
-    (_) => Stream.value(membership),
-  );
+  when(
+    () => dao.watchActiveMembership(any()),
+  ).thenAnswer((_) => Stream.value(membership));
   return ProviderContainer(
     overrides: [
       authStateChangesProvider.overrideWithValue(
@@ -55,7 +54,10 @@ ProviderContainer _makeContainer({
   );
 }
 
-Future<T> _streamFirst<T>(StreamProvider<T> provider, ProviderContainer container) {
+Future<T> _streamFirst<T>(
+  StreamProvider<T> provider,
+  ProviderContainer container,
+) {
   final completer = Completer<T>();
   final sub = container.listen(provider, (_, next) {
     if (next.hasValue && !completer.isCompleted) {
@@ -99,12 +101,13 @@ void main() {
   group('tribeChallengesProvider', () {
     test('returns empty list when no membership', () async {
       final mockRepo = MockChallengeRepository();
-      when(() => mockRepo.getChallenges(featuredOnly: false))
-          .thenAnswer((_) async => []);
+      when(
+        () => mockRepo.getChallenges(featuredOnly: false),
+      ).thenAnswer((_) async => []);
       final dao = MockTribeMembershipDao();
-      when(() => dao.watchActiveMembership(any())).thenAnswer(
-        (_) => Stream.value(null),
-      );
+      when(
+        () => dao.watchActiveMembership(any()),
+      ).thenAnswer((_) => Stream.value(null));
       final container = ProviderContainer(
         overrides: [
           authStateChangesProvider.overrideWithValue(
@@ -173,9 +176,9 @@ void main() {
         ],
       );
       final dao = MockTribeMembershipDao();
-      when(() => dao.watchActiveMembership(any())).thenAnswer(
-        (_) => Stream.value(_testMembership),
-      );
+      when(
+        () => dao.watchActiveMembership(any()),
+      ).thenAnswer((_) => Stream.value(_testMembership));
       final container = ProviderContainer(
         overrides: [
           authStateChangesProvider.overrideWithValue(

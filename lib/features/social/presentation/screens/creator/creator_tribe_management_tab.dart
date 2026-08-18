@@ -60,8 +60,10 @@ class CreatorTribeManagementTab extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1A0A2A),
-        title: const Text('📢 Post Announcement',
-            style: TextStyle(color: Colors.white)),
+        title: const Text(
+          '📢 Post Announcement',
+          style: TextStyle(color: Colors.white),
+        ),
         content: TextField(
           controller: controller,
           maxLines: 4,
@@ -80,7 +82,10 @@ class CreatorTribeManagementTab extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.white54),
+            ),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
@@ -260,8 +265,10 @@ class _TribeManagementView extends ConsumerWidget {
             ),
             TextButton(
               onPressed: () => context.go('/creator/dashboard/analytics'),
-              child: Text('See All →',
-                  style: TextStyle(color: EmergeColors.neonTeal, fontSize: 12)),
+              child: Text(
+                'See All →',
+                style: TextStyle(color: EmergeColors.neonTeal, fontSize: 12),
+              ),
             ),
           ],
         ),
@@ -288,8 +295,10 @@ class _TribeManagementView extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1A0A2A),
-        title: const Text('📢 Post Announcement',
-            style: TextStyle(color: Colors.white)),
+        title: const Text(
+          '📢 Post Announcement',
+          style: TextStyle(color: Colors.white),
+        ),
         content: TextField(
           controller: controller,
           maxLines: 4,
@@ -308,7 +317,10 @@ class _TribeManagementView extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.white54),
+            ),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
@@ -330,6 +342,7 @@ class _TribeManagementView extends ConsumerWidget {
       ),
     );
   }
+
   void _showCreateChallengeDialog(
     BuildContext context,
     WidgetRef ref,
@@ -362,7 +375,9 @@ class _TribeManagementView extends ConsumerWidget {
         createdBy: creatorUid,
         createdAt: now,
       );
-      await ref.read(challengeRepositoryProvider).createCatalogChallenge(challenge);
+      await ref
+          .read(challengeRepositoryProvider)
+          .createCatalogChallenge(challenge);
       ref.invalidate(allChallengesProvider);
       ref.invalidate(featuredChallengesProvider);
       ref.invalidate(creatorAuthoredChallengesProvider(creatorUid));
@@ -372,8 +387,10 @@ class _TribeManagementView extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1A0A2A),
-        title: const Text('Launch a Tribe Challenge',
-            style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Launch a Tribe Challenge',
+          style: TextStyle(color: Colors.white),
+        ),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -440,10 +457,7 @@ class _TribeManagementView extends ConsumerWidget {
                 ),
                 items: const [7, 14, 21, 30]
                     .map(
-                      (d) => DropdownMenuItem(
-                        value: d,
-                        child: Text('$d days'),
-                      ),
+                      (d) => DropdownMenuItem(value: d, child: Text('$d days')),
                     )
                     .toList(),
                 onChanged: (v) {
@@ -456,7 +470,10 @@ class _TribeManagementView extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.white54),
+            ),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
@@ -473,7 +490,9 @@ class _TribeManagementView extends ConsumerWidget {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Challenge published to your tribe! 🏆'),
+                            content: Text(
+                              'Challenge published to your tribe! 🏆',
+                            ),
                             behavior: SnackBarBehavior.floating,
                           ),
                         );
@@ -491,8 +510,10 @@ class _TribeManagementView extends ConsumerWidget {
                       submitting = false;
                     }
                   },
-            child: const Text('Publish Challenge',
-                style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Publish Challenge',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -513,7 +534,11 @@ class _StatChip extends StatelessWidget {
   final String value;
   final String label;
 
-  const _StatChip({required this.icon, required this.value, required this.label});
+  const _StatChip({
+    required this.icon,
+    required this.value,
+    required this.label,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -523,19 +548,26 @@ class _StatChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: EmergeColors.neonTeal.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: EmergeColors.neonTeal.withValues(alpha: 0.2)),
+          border: Border.all(
+            color: EmergeColors.neonTeal.withValues(alpha: 0.2),
+          ),
         ),
         child: Column(
           children: [
             Icon(icon, color: EmergeColors.neonTeal, size: 20),
             const Gap(4),
-            Text(value,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16)),
-            Text(label,
-                style: const TextStyle(color: Colors.white38, fontSize: 10)),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            Text(
+              label,
+              style: const TextStyle(color: Colors.white38, fontSize: 10),
+            ),
           ],
         ),
       ),
@@ -586,13 +618,18 @@ class _ActionCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title,
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14)),
-                  Text(subtitle,
-                      style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(color: Colors.white54, fontSize: 12),
+                  ),
                 ],
               ),
             ),
@@ -616,16 +653,23 @@ class _NoTribeState extends StatelessWidget {
           children: [
             Icon(Icons.groups_outlined, size: 64, color: Colors.white24),
             const Gap(16),
-            const Text('No Tribe Yet',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold)),
+            const Text(
+              'No Tribe Yet',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const Gap(8),
             const Text(
               'Publish a blueprint to automatically create your creator tribe.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white54, fontSize: 13, height: 1.5),
+              style: TextStyle(
+                color: Colors.white54,
+                fontSize: 13,
+                height: 1.5,
+              ),
             ),
           ],
         ),
@@ -670,11 +714,14 @@ class _ChallengeCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(challenge.title,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14)),
+                Text(
+                  challenge.title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
                 Text(
                   '${challenge.totalDays} days · ${challenge.xpReward} XP',
                   style: const TextStyle(color: Colors.white54, fontSize: 12),

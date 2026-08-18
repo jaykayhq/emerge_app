@@ -8,20 +8,16 @@ part 'avatar_providers.g.dart';
 @riverpod
 Stream<AvatarData> avatarData(Ref ref, String userId) {
   final repo = AvatarRepository();
-  return repo.firestore
-      .collection('users')
-      .doc(userId)
-      .snapshots()
-      .map((doc) {
-        if (!doc.exists) return AvatarData.defaultAvatar();
-        final data = doc.data()!;
-        final avatarJson = data['avatar'] as Map<String, dynamic>?;
-        if (avatarJson == null) return AvatarData.defaultAvatar();
-        return AvatarData.defaultAvatar().copyWith(
-          archetype: avatarJson['archetype'] as String? ?? 'hero',
-          level: (avatarJson['level'] as num?)?.toInt() ?? 1,
-        );
-      });
+  return repo.firestore.collection('users').doc(userId).snapshots().map((doc) {
+    if (!doc.exists) return AvatarData.defaultAvatar();
+    final data = doc.data()!;
+    final avatarJson = data['avatar'] as Map<String, dynamic>?;
+    if (avatarJson == null) return AvatarData.defaultAvatar();
+    return AvatarData.defaultAvatar().copyWith(
+      archetype: avatarJson['archetype'] as String? ?? 'hero',
+      level: (avatarJson['level'] as num?)?.toInt() ?? 1,
+    );
+  });
 }
 
 /// Local state for unsaved customization changes (edit in customizer

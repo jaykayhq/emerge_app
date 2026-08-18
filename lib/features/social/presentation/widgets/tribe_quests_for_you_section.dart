@@ -40,10 +40,7 @@ class TribeQuestsForYouSection extends ConsumerWidget {
     final daily = ref.watch(dailyQuestFromBundleProvider);
     final weekly = ref.watch(weeklySpotlightFromBundleProvider);
 
-    final pool = <Challenge>[
-      ?daily,
-      ?weekly,
-    ];
+    final pool = <Challenge>[?daily, ?weekly];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -99,7 +96,10 @@ class _QuestRow extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.04),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08), width: 1),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.08),
+            width: 1,
+          ),
         ),
         child: Row(
           children: [

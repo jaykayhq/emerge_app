@@ -28,10 +28,7 @@ class MascotPreview extends StatelessWidget {
               // Main mascot display
               const Text(
                 'Default (Explorer)',
-                style: TextStyle(
-                  color: EmergeColors.mintMuted,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: EmergeColors.mintMuted, fontSize: 14),
               ),
               const SizedBox(height: 16),
               const KoaMascot(
@@ -190,14 +187,7 @@ enum MascotExpression {
   proud,
 }
 
-enum Archetype {
-  athlete,
-  scholar,
-  creator,
-  stoic,
-  zealot,
-  explorer,
-}
+enum Archetype { athlete, scholar, creator, stoic, zealot, explorer }
 
 // ---------------------------------------------------------------------------
 // Core Mascot Widget
@@ -348,13 +338,14 @@ class KoaPainter extends CustomPainter {
 
   void _drawShell(Canvas canvas, double cx, double cy, double s) {
     final shellPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [shellPrimary, shellAccent],
-      ).createShader(
-        Rect.fromCircle(center: Offset(cx, cy - 10 * s), radius: 70 * s),
-      );
+      ..shader =
+          LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [shellPrimary, shellAccent],
+          ).createShader(
+            Rect.fromCircle(center: Offset(cx, cy - 10 * s), radius: 70 * s),
+          );
 
     // Shell shape (rounded rectangle with dome top)
     final shellPath = Path();
@@ -362,12 +353,7 @@ class KoaPainter extends CustomPainter {
     shellPath.lineTo(cx - 50 * s, cy - 20 * s);
     shellPath.quadraticBezierTo(cx, cy - 75 * s, cx + 50 * s, cy - 20 * s);
     shellPath.lineTo(cx + 55 * s, cy + 30 * s);
-    shellPath.quadraticBezierTo(
-      cx,
-      cy + 45 * s,
-      cx - 55 * s,
-      cy + 30 * s,
-    );
+    shellPath.quadraticBezierTo(cx, cy + 45 * s, cx - 55 * s, cy + 30 * s);
     canvas.drawPath(shellPath, shellPaint);
 
     // Shell pattern (nebula swirls)
@@ -386,7 +372,12 @@ class KoaPainter extends CustomPainter {
     // Swirl 2
     final swirl2 = Path();
     swirl2.moveTo(cx + 15 * s, cy + 15 * s);
-    swirl2.quadraticBezierTo(cx + 25 * s, cy - 20 * s, cx + 10 * s, cy - 45 * s);
+    swirl2.quadraticBezierTo(
+      cx + 25 * s,
+      cy - 20 * s,
+      cx + 10 * s,
+      cy - 45 * s,
+    );
     canvas.drawPath(swirl2, patternPaint);
 
     // Shell outline
@@ -433,22 +424,14 @@ class KoaPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     // Head circle
-    canvas.drawCircle(
-      Offset(cx, cy - 45 * s),
-      35 * s,
-      headPaint,
-    );
+    canvas.drawCircle(Offset(cx, cy - 45 * s), 35 * s, headPaint);
 
     // Head outline
     final outlinePaint = Paint()
       ..color = EmergeColors.cosmicVoidDark
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3 * s;
-    canvas.drawCircle(
-      Offset(cx, cy - 45 * s),
-      35 * s,
-      outlinePaint,
-    );
+    canvas.drawCircle(Offset(cx, cy - 45 * s), 35 * s, outlinePaint);
   }
 
   void _drawEyes(Canvas canvas, double cx, double cy, double s) {
@@ -591,13 +574,23 @@ class KoaPainter extends CustomPainter {
       case MascotExpression.excited:
         // Big open smile
         mouthPath.moveTo(cx - 15 * s, mouthY - 2 * s);
-        mouthPath.quadraticBezierTo(cx, mouthY + 18 * s, cx + 15 * s, mouthY - 2 * s);
+        mouthPath.quadraticBezierTo(
+          cx,
+          mouthY + 18 * s,
+          cx + 15 * s,
+          mouthY - 2 * s,
+        );
         break;
 
       case MascotExpression.sad:
         // Downturned mouth
         mouthPath.moveTo(cx - 12 * s, mouthY + 5 * s);
-        mouthPath.quadraticBezierTo(cx, mouthY - 8 * s, cx + 12 * s, mouthY + 5 * s);
+        mouthPath.quadraticBezierTo(
+          cx,
+          mouthY - 8 * s,
+          cx + 12 * s,
+          mouthY + 5 * s,
+        );
         break;
 
       case MascotExpression.sleepy:

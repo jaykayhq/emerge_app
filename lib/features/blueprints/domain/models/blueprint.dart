@@ -240,8 +240,9 @@ class Blueprint extends Equatable {
       tribeMemberCount: map['tribeMemberCount']?.toInt() ?? 0,
       isCreatorBlueprint: map['isCreatorBlueprint'] ?? false,
       creatorTribeId: map['creatorTribeId'] as String?,
-      recommendedArchetypes:
-          List<String>.from(map['recommendedArchetypes'] ?? []),
+      recommendedArchetypes: List<String>.from(
+        map['recommendedArchetypes'] ?? [],
+      ),
     );
   }
 

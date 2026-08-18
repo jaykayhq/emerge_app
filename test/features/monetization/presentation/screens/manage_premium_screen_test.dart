@@ -18,21 +18,27 @@ class _FakeMonetizationRepository implements MonetizationRepository {
     openManageCalls++;
     return const Right(true);
   }
+
   // Unused members — fail loudly if touched.
   @override
-  Future<Either<String, Map<String, String>>> getConsumablePrices(List<String> productIds) async => const Left('unused');
+  Future<Either<String, Map<String, String>>> getConsumablePrices(
+    List<String> productIds,
+  ) async => const Left('unused');
   @override
   Future<Either<String, bool>> get isPremium async => const Right(true);
   @override
-  Future<Either<String, Offerings>> getOfferings() async => const Left('unused');
+  Future<Either<String, Offerings>> getOfferings() async =>
+      const Left('unused');
   @override
   Future<void> identify(String uid) async {}
   @override
   Future<void> initialize({String? uid}) async {}
   @override
-  Future<Either<String, bool>> purchaseConsumable(String productId) async => const Left('unused');
+  Future<Either<String, bool>> purchaseConsumable(String productId) async =>
+      const Left('unused');
   @override
-  Future<Either<String, bool>> purchasePremium([Package? package]) async => const Right(true);
+  Future<Either<String, bool>> purchasePremium([Package? package]) async =>
+      const Right(true);
   @override
   Future<Either<String, bool>> restorePurchases() async => const Right(true);
   @override
@@ -63,7 +69,10 @@ class _FakeManagePremiumService extends ManagePremiumService {
 
 class _FakeCaller implements ManagePremiumCaller {
   @override
-  Future<Map<String, dynamic>> call(String name, Map<String, dynamic> data) async {
+  Future<Map<String, dynamic>> call(
+    String name,
+    Map<String, dynamic> data,
+  ) async {
     return {'ok': true};
   }
 }
@@ -98,77 +107,88 @@ ProviderScope _pump({
 
 void main() {
   testWidgets('renders plan status and the cancel entry', (tester) async {
-    await tester.pumpWidget(_pump(
-      repo: _FakeMonetizationRepository(),
-      service: _FakeManagePremiumService(),
-    ));
+    await tester.pumpWidget(
+      _pump(
+        repo: _FakeMonetizationRepository(),
+        service: _FakeManagePremiumService(),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Manage Premium'), findsOneWidget);
     expect(find.text('Cancel subscription'), findsOneWidget);
   });
 
-  testWidgets('cancel flow: recap -> pause step -> confirm opens store manage page',
-      (tester) async {
-    final repo = _FakeMonetizationRepository();
-    final service = _FakeManagePremiumService();
-    await tester.pumpWidget(_pump(repo: repo, service: service));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'cancel flow: recap -> pause step -> confirm opens store manage page',
+    (tester) async {
+      final repo = _FakeMonetizationRepository();
+      final service = _FakeManagePremiumService();
+      await tester.pumpWidget(_pump(repo: repo, service: service));
+      await tester.pumpAndSettle();
 
-    // Step 1 — loss framing + endowment recap.
-    await tester.tap(find.text('Cancel subscription'));
-    await tester.pumpAndSettle();
-    expect(find.textContaining("You're about to lose"), findsOneWidget);
-    expect(find.text('Keep Premium'), findsOneWidget);
+      // Step 1 — loss framing + endowment recap.
+      await tester.tap(find.text('Cancel subscription'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining("You're about to lose"), findsOneWidget);
+      expect(find.text('Keep Premium'), findsOneWidget);
 
-    // Step 2 — pause/save step.
-    await tester.tap(find.text('Continue cancelling'));
-    await tester.pumpAndSettle();
-    expect(find.text('Pause instead?'), findsOneWidget);
+      // Step 2 — pause/save step.
+      await tester.tap(find.text('Continue cancelling'));
+      await tester.pumpAndSettle();
+      expect(find.text('Pause instead?'), findsOneWidget);
 
-    // Step 3 — confirm; native opens the store manage page, never a callable.
-    await tester.tap(find.text('Cancel anyway'));
-    await tester.pumpAndSettle();
-    expect(repo.openManageCalls, 1);
-    expect(service.cancelCalls, 0);
-    expect(find.textContaining('Finish cancelling in Google Play'), findsOneWidget);
-  });
+      // Step 3 — confirm; native opens the store manage page, never a callable.
+      await tester.tap(find.text('Cancel anyway'));
+      await tester.pumpAndSettle();
+      expect(repo.openManageCalls, 1);
+      expect(service.cancelCalls, 0);
+      expect(
+        find.textContaining('Finish cancelling in Google Play'),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets(
-      'native confirm CTA is inert after store-open: no second store call, no done state',
-      (tester) async {
-    final repo = _FakeMonetizationRepository();
-    final service = _FakeManagePremiumService();
-    await tester.pumpWidget(_pump(repo: repo, service: service));
-    await tester.pumpAndSettle();
+    'native confirm CTA is inert after store-open: no second store call, no done state',
+    (tester) async {
+      final repo = _FakeMonetizationRepository();
+      final service = _FakeManagePremiumService();
+      await tester.pumpWidget(_pump(repo: repo, service: service));
+      await tester.pumpAndSettle();
 
-    // Reach the confirm step the same way the flow test does.
-    await tester.tap(find.text('Cancel subscription'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Continue cancelling'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Cancel anyway'));
-    await tester.pumpAndSettle();
-    // The store page already opened — the CTA must be inert, pointing at Play.
-    final confirmButton = tester.widget<ElevatedButton>(
-      find.widgetWithText(ElevatedButton, 'Finish in Google Play'),
+      // Reach the confirm step the same way the flow test does.
+      await tester.tap(find.text('Cancel subscription'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Continue cancelling'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancel anyway'));
+      await tester.pumpAndSettle();
+      // The store page already opened — the CTA must be inert, pointing at Play.
+      final confirmButton = tester.widget<ElevatedButton>(
+        find.widgetWithText(ElevatedButton, 'Finish in Google Play'),
+      );
+      expect(confirmButton.onPressed, isNull);
+
+      // Tapping it must not re-open the store nor claim cancellation.
+      await tester.tap(find.text('Finish in Google Play'));
+      await tester.pumpAndSettle();
+      expect(repo.openManageCalls, 1);
+      expect(find.text('Premium cancelled'), findsNothing);
+    },
+  );
+
+  testWidgets('free user sees the upgrade affordance, never the cancel flow', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _pump(
+        repo: _FakeMonetizationRepository(),
+        service: _FakeManagePremiumService(),
+        isPremium: false,
+      ),
     );
-    expect(confirmButton.onPressed, isNull);
-
-    // Tapping it must not re-open the store nor claim cancellation.
-    await tester.tap(find.text('Finish in Google Play'));
-    await tester.pumpAndSettle();
-    expect(repo.openManageCalls, 1);
-    expect(find.text('Premium cancelled'), findsNothing);
-  });
-
-  testWidgets('free user sees the upgrade affordance, never the cancel flow',
-      (tester) async {
-    await tester.pumpWidget(_pump(
-      repo: _FakeMonetizationRepository(),
-      service: _FakeManagePremiumService(),
-      isPremium: false,
-    ));
     await tester.pumpAndSettle();
 
     // No billing line, no loss-framed cancel flow for a plan the user doesn't
@@ -178,17 +198,20 @@ void main() {
     expect(find.text('Go Premium'), findsOneWidget);
   });
 
-  testWidgets('paused plan shows the paused status and hides the cancel flow',
-      (tester) async {
-    await tester.pumpWidget(_pump(
-      repo: _FakeMonetizationRepository(),
-      service: _FakeManagePremiumService(),
-      premiumState: PremiumState(
-        isPremium: true,
-        isPaused: true,
-        premiumEndsAt: DateTime(2026, 8, 3),
+  testWidgets('paused plan shows the paused status and hides the cancel flow', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _pump(
+        repo: _FakeMonetizationRepository(),
+        service: _FakeManagePremiumService(),
+        premiumState: PremiumState(
+          isPremium: true,
+          isPaused: true,
+          premiumEndsAt: DateTime(2026, 8, 3),
+        ),
       ),
-    ));
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Premium paused'), findsOneWidget);

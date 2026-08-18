@@ -13,8 +13,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-const String apiKey =
-    'sk_OGhhzmGVPhl6FFdSSHKiyAnHEx48dHlj';
+const String apiKey = 'sk_OGhhzmGVPhl6FFdSSHKiyAnHEx48dHlj';
 const String baseUrl = 'https://gen.pollinations.ai';
 
 /// Logo concept prompts for EmergeArc branding.
@@ -67,8 +66,8 @@ void main(List<String> args) async {
   // Parse flags
   final onlyIndex = args.contains('--only')
       ? args.indexOf('--only') + 1 < args.length
-          ? int.tryParse(args[args.indexOf('--only') + 1])
-          : null
+            ? int.tryParse(args[args.indexOf('--only') + 1])
+            : null
       : null;
 
   final outputDir = Directory('scripts/output');
@@ -83,9 +82,7 @@ void main(List<String> args) async {
   print('╚══════════════════════════════════════════════╝');
   print('');
 
-  final toGenerate = onlyIndex != null
-      ? [concepts[onlyIndex]]
-      : concepts;
+  final toGenerate = onlyIndex != null ? [concepts[onlyIndex]] : concepts;
 
   for (var i = 0; i < toGenerate.length; i++) {
     final concept = toGenerate[i];

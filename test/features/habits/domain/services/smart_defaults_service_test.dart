@@ -44,16 +44,29 @@ void main() {
       expect(defaults.time, equals(const TimeOfDay(hour: 7, minute: 0)));
     });
 
-    test('returns archetype default time when existing habits have no reminderTime', () {
-      final defaults = computeSmartDefaults(
-        existingHabits: [
-          Habit(id: '1', userId: 'u', title: 'No time', createdAt: DateTime.now()),
-          Habit(id: '2', userId: 'u', title: 'No time 2', createdAt: DateTime.now()),
-        ],
-        archetype: UserArchetype.creator,
-      );
-      expect(defaults.time, equals(const TimeOfDay(hour: 10, minute: 0)));
-    });
+    test(
+      'returns archetype default time when existing habits have no reminderTime',
+      () {
+        final defaults = computeSmartDefaults(
+          existingHabits: [
+            Habit(
+              id: '1',
+              userId: 'u',
+              title: 'No time',
+              createdAt: DateTime.now(),
+            ),
+            Habit(
+              id: '2',
+              userId: 'u',
+              title: 'No time 2',
+              createdAt: DateTime.now(),
+            ),
+          ],
+          archetype: UserArchetype.creator,
+        );
+        expect(defaults.time, equals(const TimeOfDay(hour: 10, minute: 0)));
+      },
+    );
 
     test('returns Easy difficulty when fewer than 3 active habits', () {
       final defaults = computeSmartDefaults(
@@ -86,9 +99,27 @@ void main() {
     test('returns median timer from existing habits', () {
       final defaults = computeSmartDefaults(
         existingHabits: [
-          Habit(id: '1', userId: 'u', title: 'A', createdAt: DateTime.now(), timerDurationMinutes: 10),
-          Habit(id: '2', userId: 'u', title: 'B', createdAt: DateTime.now(), timerDurationMinutes: 20),
-          Habit(id: '3', userId: 'u', title: 'C', createdAt: DateTime.now(), timerDurationMinutes: 30),
+          Habit(
+            id: '1',
+            userId: 'u',
+            title: 'A',
+            createdAt: DateTime.now(),
+            timerDurationMinutes: 10,
+          ),
+          Habit(
+            id: '2',
+            userId: 'u',
+            title: 'B',
+            createdAt: DateTime.now(),
+            timerDurationMinutes: 20,
+          ),
+          Habit(
+            id: '3',
+            userId: 'u',
+            title: 'C',
+            createdAt: DateTime.now(),
+            timerDurationMinutes: 30,
+          ),
         ],
         archetype: UserArchetype.athlete,
       );
@@ -113,7 +144,10 @@ void main() {
         existingHabits: [],
         archetype: UserArchetype.creator,
       );
-      expect(athleteDefaults.attribute, isNot(equals(creatorDefaults.attribute)));
+      expect(
+        athleteDefaults.attribute,
+        isNot(equals(creatorDefaults.attribute)),
+      );
     });
 
     test('scholar archetype defaults to intellect attribute', () {

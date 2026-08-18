@@ -30,11 +30,7 @@ void main() {
         phone: '+15550142',
         email: 'sarah@example.com',
       ),
-      ResolvedContact(
-        name: 'Unknown Friend',
-        phone: '+15559999',
-        email: null,
-      ),
+      ResolvedContact(name: 'Unknown Friend', phone: '+15559999', email: null),
     ];
     final results = await resolver.resolve(contacts);
     expect(results.length, 2);

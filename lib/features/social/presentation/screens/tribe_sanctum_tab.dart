@@ -109,7 +109,11 @@ class _TribeSanctumTabState extends ConsumerState<TribeSanctumTab> {
     );
   }
 
-  Widget _buildSanctumTab(Tribe userClub, ArchetypeTheme theme, UserProfile profile) {
+  Widget _buildSanctumTab(
+    Tribe userClub,
+    ArchetypeTheme theme,
+    UserProfile profile,
+  ) {
     return RefreshIndicator(
       onRefresh: () async {
         ref.invalidate(userTribeProvider(profile.uid));
@@ -130,19 +134,16 @@ class _TribeSanctumTabState extends ConsumerState<TribeSanctumTab> {
             Text(
               userClub.name.toUpperCase(),
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: 1.5,
-                  ),
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                letterSpacing: 1.5,
+              ),
             ).animate().fadeIn(delay: 100.ms),
             const Gap(4),
             Text(
               userClub.description,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.white70,
-              ),
+              style: const TextStyle(fontSize: 14, color: Colors.white70),
             ).animate().fadeIn(delay: 150.ms),
             const Gap(16),
             RealTimeMemberCount(
@@ -179,7 +180,8 @@ class _TribeSanctumTabState extends ConsumerState<TribeSanctumTab> {
                       SanctumToggleItem(
                         label: 'Tribe',
                         isSelected: !_showGlobalActivity,
-                        onTap: () => setState(() => _showGlobalActivity = false),
+                        onTap: () =>
+                            setState(() => _showGlobalActivity = false),
                       ),
                       SanctumToggleItem(
                         label: 'Global',

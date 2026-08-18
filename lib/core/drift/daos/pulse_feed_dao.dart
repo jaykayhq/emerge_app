@@ -43,8 +43,7 @@ class PulseFeedDao extends DatabaseAccessor<AppDatabase>
   Future<void> upsertCards(List<PulseFeedCardsTableCompanion> cards) async {
     await batch((b) {
       for (final card in cards) {
-        b.insert(pulseFeedCardsTable, card,
-            mode: InsertMode.insertOrReplace);
+        b.insert(pulseFeedCardsTable, card, mode: InsertMode.insertOrReplace);
       }
     });
   }

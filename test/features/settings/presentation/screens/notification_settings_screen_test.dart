@@ -22,22 +22,12 @@ final testProfile = UserProfile(
 Widget createTest() {
   return ProviderScope(
     overrides: [
-      authStateChangesProvider.overrideWith(
-        (ref) => const Stream.empty(),
-      ),
-      userStatsStreamProvider.overrideWith(
-        (ref) => Stream.value(testProfile),
-      ),
-      worldHealthStreamProvider.overrideWith(
-        (ref) => Stream.value(0.5),
-      ),
-      worldEntropyStreamProvider.overrideWith(
-        (ref) => Stream.value(0.0),
-      ),
+      authStateChangesProvider.overrideWith((ref) => const Stream.empty()),
+      userStatsStreamProvider.overrideWith((ref) => Stream.value(testProfile)),
+      worldHealthStreamProvider.overrideWith((ref) => Stream.value(0.5)),
+      worldEntropyStreamProvider.overrideWith((ref) => Stream.value(0.0)),
     ],
-    child: const MaterialApp(
-      home: NotificationSettingsScreen(),
-    ),
+    child: const MaterialApp(home: NotificationSettingsScreen()),
   );
 }
 
@@ -59,10 +49,7 @@ void main() {
     expect(find.text('Habit Reminders'), findsOneWidget);
 
     // Scroll to General Settings section
-    await tester.drag(
-      find.byType(ListView),
-      const Offset(0, -500),
-    );
+    await tester.drag(find.byType(ListView), const Offset(0, -500));
     await tester.pump();
     await tester.pump();
 

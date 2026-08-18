@@ -272,8 +272,7 @@ class DashboardStateNotifier extends _$DashboardStateNotifier {
       final isPremium = await ref.read(isPremiumProvider.future);
       if (!isPremium) {
         final currentHabits = ref.read(habitsProvider).value ?? [];
-        final activeHabits =
-            currentHabits.where((h) => !h.isArchived).toList();
+        final activeHabits = currentHabits.where((h) => !h.isArchived).toList();
         final freeHabitLimit = ref
             .read(remoteConfigServiceProvider)
             .freeHabitLimit;

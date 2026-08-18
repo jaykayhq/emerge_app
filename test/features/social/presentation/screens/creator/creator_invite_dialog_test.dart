@@ -20,21 +20,26 @@ import 'package:emerge_app/features/social/presentation/providers/tribes_provide
 import 'package:emerge_app/features/social/presentation/screens/creator/creator_invite_dialog.dart';
 
 class _MockAppDatabase extends Mock implements AppDatabase {}
+
 class _MockSyncEngine extends Mock implements EnhancedSyncEngine {}
-class _MockSocialActivityService extends Mock implements SocialActivityService {}
+
+class _MockSocialActivityService extends Mock
+    implements SocialActivityService {}
 
 class FakeChallengeRepository extends DriftChallengeRepository {
   FakeChallengeRepository()
-      : super(
-          _MockAppDatabase(),
-          LocalGameLoopEngine(),
-          _MockSyncEngine(),
-          _MockSocialActivityService(),
-        );
+    : super(
+        _MockAppDatabase(),
+        LocalGameLoopEngine(),
+        _MockSyncEngine(),
+        _MockSocialActivityService(),
+      );
 }
 
 class _MockFunctions extends Mock implements FirebaseFunctions {}
+
 class _MockCallable extends Mock implements HttpsCallable {}
+
 class _MockResult extends Mock implements HttpsCallableResult {}
 
 class FakeMultiFactorPlatform extends MultiFactorPlatform {
@@ -43,18 +48,18 @@ class FakeMultiFactorPlatform extends MultiFactorPlatform {
 
 class FakeUserPlatform extends UserPlatform {
   FakeUserPlatform(FirebaseAuthPlatform auth, {required String uid})
-      : super(
-          auth,
-          FakeMultiFactorPlatform(auth),
-          InternalUserDetails(
-            userInfo: InternalUserInfo(
-              uid: uid,
-              isAnonymous: false,
-              isEmailVerified: true,
-            ),
-            providerData: const [],
+    : super(
+        auth,
+        FakeMultiFactorPlatform(auth),
+        InternalUserDetails(
+          userInfo: InternalUserInfo(
+            uid: uid,
+            isAnonymous: false,
+            isEmailVerified: true,
           ),
-        );
+          providerData: const [],
+        ),
+      );
 }
 
 class FakeAuthPlatform extends FirebaseAuthPlatform {
@@ -71,8 +76,7 @@ class FakeAuthPlatform extends FirebaseAuthPlatform {
   FirebaseAuthPlatform setInitialValues({
     String? languageCode,
     InternalUserDetails? currentUser,
-  }) =>
-      this;
+  }) => this;
 }
 
 void main() {
@@ -118,13 +122,15 @@ void main() {
     );
   }
 
-  testWidgets('invite creators generates and shows a copyable code',
-      (tester) async {
+  testWidgets('invite creators generates and shows a copyable code', (
+    tester,
+  ) async {
     final functions = _MockFunctions();
     final callable = _MockCallable();
     final result = _MockResult();
-    when(() => functions.httpsCallable('generateCreatorInviteCode'))
-        .thenReturn(callable);
+    when(
+      () => functions.httpsCallable('generateCreatorInviteCode'),
+    ).thenReturn(callable);
     when(() => callable.call(any())).thenAnswer((_) async => result);
     when(() => result.data).thenReturn({'code': 'ABC12345'});
 
@@ -142,20 +148,25 @@ void main() {
 
     expect(find.text('ABC12345'), findsOneWidget);
     expect(find.text('COPY CODE'), findsOneWidget);
-    verify(() => functions.httpsCallable('generateCreatorInviteCode')).called(1);
+    verify(
+      () => functions.httpsCallable('generateCreatorInviteCode'),
+    ).called(1);
   });
 
-  testWidgets('invite generation failure surfaces the error, not a code',
-      (tester) async {
+  testWidgets('invite generation failure surfaces the error, not a code', (
+    tester,
+  ) async {
     final functions = _MockFunctions();
     final callable = _MockCallable();
-    when(() => functions.httpsCallable('generateCreatorInviteCode'))
-        .thenReturn(callable);
-    when(() => callable.call(any()))
-        .thenThrow(FirebaseFunctionsException(
-      code: 'permission-denied',
-      message: 'No invite slots left',
-    ));
+    when(
+      () => functions.httpsCallable('generateCreatorInviteCode'),
+    ).thenReturn(callable);
+    when(() => callable.call(any())).thenThrow(
+      FirebaseFunctionsException(
+        code: 'permission-denied',
+        message: 'No invite slots left',
+      ),
+    );
 
     await tester.pumpWidget(
       createTest(functions: functions, repo: FakeChallengeRepository()),
@@ -169,17 +180,20 @@ void main() {
     expect(find.text('COPY CODE'), findsNothing);
   });
 
-  testWidgets('resource-exhausted surfaces the outstanding-code cap message',
-      (tester) async {
+  testWidgets('resource-exhausted surfaces the outstanding-code cap message', (
+    tester,
+  ) async {
     final functions = _MockFunctions();
     final callable = _MockCallable();
-    when(() => functions.httpsCallable('generateCreatorInviteCode'))
-        .thenReturn(callable);
-    when(() => callable.call(any()))
-        .thenThrow(FirebaseFunctionsException(
-      code: 'resource-exhausted',
-      message: 'Limit reached',
-    ));
+    when(
+      () => functions.httpsCallable('generateCreatorInviteCode'),
+    ).thenReturn(callable);
+    when(() => callable.call(any())).thenThrow(
+      FirebaseFunctionsException(
+        code: 'resource-exhausted',
+        message: 'Limit reached',
+      ),
+    );
 
     await tester.pumpWidget(
       createTest(functions: functions, repo: FakeChallengeRepository()),

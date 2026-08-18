@@ -36,8 +36,7 @@ void main() {
   const suggestions = <String>['Drink water', 'Meditate', 'Walk'];
 
   group('filterHabitRecommendations', () {
-    test('empty term returns curated suggestions first, then templates',
-        () {
+    test('empty term returns curated suggestions first, then templates', () {
       final result = filterHabitRecommendations(
         term: '',
         templates: templates,

@@ -74,8 +74,11 @@ Future<void> _killStaleServer() async {
     } catch (_) {}
   }
   try {
-    final pkill = await Process.start('pkill', ['-f', '--', 'web-port=$_port'],
-        mode: ProcessStartMode.normal);
+    final pkill = await Process.start('pkill', [
+      '-f',
+      '--',
+      'web-port=$_port',
+    ], mode: ProcessStartMode.normal);
     pkill.stdin.close();
     await pkill.exitCode;
   } catch (_) {
@@ -105,26 +108,32 @@ Future<void> _startFlutter() async {
     '--pid-file=$_pidFile',
   ];
   stdout.writeln('[dev-server] flutter ${args.join(' ')}');
-  _flutter = await Process.start('flutter', args, mode: ProcessStartMode.normal);
+  _flutter = await Process.start(
+    'flutter',
+    args,
+    mode: ProcessStartMode.normal,
+  );
   _flutter!.stdout.transform(const SystemEncoding().decoder).listen((line) {
     stdout.writeln(line.trimRight());
   });
   _flutter!.stderr.transform(const SystemEncoding().decoder).listen((line) {
     stderr.writeln(line.trimRight());
   });
-  unawaited(_flutter!.exitCode.then((code) {
-    stdout.writeln('[dev-server] flutter run exited with code $code');
-    _flutter = null;
-    // Crash-loop guard: a run that died instantly is a compile error — give
-    // the fix time to land before hammering; a long-lived run was killed
-    // externally, so come back quickly.
-    final lived = DateTime.now().difference(_startedAt);
-    final delay = lived > _minHealthyRun ? _restartDelay : _restartDelay * 3;
-    Future.delayed(delay, () {
-      stdout.writeln('[dev-server] restarting flutter run...');
-      _startFlutter();
-    });
-  }));
+  unawaited(
+    _flutter!.exitCode.then((code) {
+      stdout.writeln('[dev-server] flutter run exited with code $code');
+      _flutter = null;
+      // Crash-loop guard: a run that died instantly is a compile error — give
+      // the fix time to land before hammering; a long-lived run was killed
+      // externally, so come back quickly.
+      final lived = DateTime.now().difference(_startedAt);
+      final delay = lived > _minHealthyRun ? _restartDelay : _restartDelay * 3;
+      Future.delayed(delay, () {
+        stdout.writeln('[dev-server] restarting flutter run...');
+        _startFlutter();
+      });
+    }),
+  );
 }
 
 void _watchSources() {
@@ -132,24 +141,28 @@ void _watchSources() {
   for (final root in _watchRoots) {
     final dir = Directory(root);
     if (dir.existsSync()) {
-      dir.watch(
-          recursive: true,
-          events: FileSystemEvent.create |
-              FileSystemEvent.modify |
-              FileSystemEvent.delete).listen((event) {
-        if (!_ignored(event.path)) {
-          events.add(event);
-        }
-      });
+      dir
+          .watch(
+            recursive: true,
+            events:
+                FileSystemEvent.create |
+                FileSystemEvent.modify |
+                FileSystemEvent.delete,
+          )
+          .listen((event) {
+            if (!_ignored(event.path)) {
+              events.add(event);
+            }
+          });
     }
   }
   File('pubspec.yaml')
       .watch(events: FileSystemEvent.create | FileSystemEvent.modify)
       .listen((event) {
-    if (!_ignored(event.path)) {
-      events.add(event);
-    }
-  });
+        if (!_ignored(event.path)) {
+          events.add(event);
+        }
+      });
 
   var timer = Timer(_debounce, () {});
   var pubspecQueued = false;
@@ -166,7 +179,9 @@ void _watchSources() {
       if (pid == null) return;
       try {
         if (pubspecQueued) {
-          stdout.writeln('[dev-server] pubspec.yaml changed -> pub get + hot restart');
+          stdout.writeln(
+            '[dev-server] pubspec.yaml changed -> pub get + hot restart',
+          );
           final pubGet = await Process.start('flutter', ['pub', 'get']);
           await pubGet.exitCode;
           Process.killPid(pid, ProcessSignal.sigusr2);
@@ -193,10 +208,12 @@ Future<void> _killChild() async {
   final child = _flutter;
   if (child != null) {
     child.kill(ProcessSignal.sigterm);
-    await child.exitCode.timeout(const Duration(seconds: 5),
-        onTimeout: () {
-      child.kill(ProcessSignal.sigkill);
-      return -1;
-    });
+    await child.exitCode.timeout(
+      const Duration(seconds: 5),
+      onTimeout: () {
+        child.kill(ProcessSignal.sigkill);
+        return -1;
+      },
+    );
   }
 }

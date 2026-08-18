@@ -91,8 +91,7 @@ void main() {
       expect(testReflection.id, 'ref_1');
       expect(testReflection.date, '2025-06-16');
       expect(testReflection.title, 'Day Insight');
-      expect(testReflection.content,
-          'I noticed I work best in the morning.');
+      expect(testReflection.content, 'I noticed I work best in the morning.');
       expect(testReflection.type, 'insight');
       expect(testReflection.moodValue, 0.8);
       expect(testReflection.createdAt, now);

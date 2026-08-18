@@ -10,21 +10,20 @@ Challenge _challenge({
   required String id,
   required String title,
   required int currentDay,
-}) =>
-    Challenge(
-      id: id,
-      title: title,
-      description: '',
-      imageUrl: '',
-      reward: '',
-      participants: 0,
-      daysLeft: 0,
-      totalDays: 30,
-      currentDay: currentDay,
-      status: ChallengeStatus.featured,
-      xpReward: 0,
-      steps: const [],
-    );
+}) => Challenge(
+  id: id,
+  title: title,
+  description: '',
+  imageUrl: '',
+  reward: '',
+  participants: 0,
+  daysLeft: 0,
+  totalDays: 30,
+  currentDay: currentDay,
+  status: ChallengeStatus.featured,
+  xpReward: 0,
+  steps: const [],
+);
 
 Widget buildTest({Challenge? daily, Challenge? weekly}) {
   return ProviderScope(
@@ -55,10 +54,12 @@ void main() {
   });
 
   testWidgets('renders daily and weekly featured quests', (tester) async {
-    await tester.pumpWidget(buildTest(
-      daily: _challenge(id: 'd1', title: 'Daily Quest', currentDay: 0),
-      weekly: _challenge(id: 'w1', title: 'Weekly Spotlight', currentDay: 0),
-    ));
+    await tester.pumpWidget(
+      buildTest(
+        daily: _challenge(id: 'd1', title: 'Daily Quest', currentDay: 0),
+        weekly: _challenge(id: 'w1', title: 'Weekly Spotlight', currentDay: 0),
+      ),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
     expect(find.text('Daily Quest'), findsOneWidget);

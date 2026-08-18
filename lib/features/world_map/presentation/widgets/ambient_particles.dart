@@ -86,7 +86,7 @@ class _ParticlePainter extends CustomPainter {
     for (var p in particles) {
       final currentX = ((p.x + p.speedX * time) % 1.0 + 1.0) % 1.0;
       final currentY = ((p.y + p.speedY * time) % 1.0 + 1.0) % 1.0;
-      
+
       paint.color = Colors.white.withValues(alpha: p.opacity);
       canvas.drawCircle(
         Offset(currentX * size.width, currentY * size.height),

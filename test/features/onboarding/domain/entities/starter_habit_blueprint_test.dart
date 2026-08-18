@@ -42,8 +42,11 @@ void main() {
         final count = StarterHabitBlueprint.catalog
             .where((b) => b.archetype == archetype)
             .length;
-        expect(count, greaterThanOrEqualTo(4),
-            reason: '$archetype must have at least 4 starter blueprints');
+        expect(
+          count,
+          greaterThanOrEqualTo(4),
+          reason: '$archetype must have at least 4 starter blueprints',
+        );
       }
     });
 
@@ -54,32 +57,47 @@ void main() {
 
     test('every blueprint has a non-empty title and shortCue', () {
       for (final b in StarterHabitBlueprint.catalog) {
-        expect(b.title.trim().isNotEmpty, isTrue,
-            reason: 'blueprint ${b.id} must have a title');
-        expect(b.shortCue.trim().isNotEmpty, isTrue,
-            reason: 'blueprint ${b.id} must have a shortCue');
+        expect(
+          b.title.trim().isNotEmpty,
+          isTrue,
+          reason: 'blueprint ${b.id} must have a title',
+        );
+        expect(
+          b.shortCue.trim().isNotEmpty,
+          isTrue,
+          reason: 'blueprint ${b.id} must have a shortCue',
+        );
       }
     });
 
     test('every blueprint carries a recommended timer duration', () {
       for (final b in StarterHabitBlueprint.catalog) {
-        expect(b.timerDurationMinutes, greaterThan(0),
-            reason: 'blueprint ${b.id} must recommend a duration in minutes');
+        expect(
+          b.timerDurationMinutes,
+          greaterThan(0),
+          reason: 'blueprint ${b.id} must recommend a duration in minutes',
+        );
       }
     });
 
     test('sourceAttribution is non-empty for every blueprint', () {
       for (final b in StarterHabitBlueprint.catalog) {
-        expect(b.sourceAttribution.trim().isNotEmpty, isTrue,
-            reason: 'blueprint ${b.id} must cite its source');
+        expect(
+          b.sourceAttribution.trim().isNotEmpty,
+          isTrue,
+          reason: 'blueprint ${b.id} must cite its source',
+        );
       }
     });
 
     test('every blueprint has at least one matching archetype in its id', () {
       for (final b in StarterHabitBlueprint.catalog) {
         final prefix = '${b.archetype.name}.';
-        expect(b.id.startsWith(prefix), isTrue,
-            reason: 'blueprint ${b.id} id must start with its archetype');
+        expect(
+          b.id.startsWith(prefix),
+          isTrue,
+          reason: 'blueprint ${b.id} id must start with its archetype',
+        );
       }
     });
   });
@@ -94,44 +112,53 @@ void main() {
       expect(result, isEmpty);
     });
 
-    test('falls back to archetype-only blueprints when no signals supplied',
-        () {
-      final result = StarterHabitBlueprint.forPersonalization(
-        archetype: UserArchetype.athlete,
-        interestIds: const [],
-        clubTags: const [],
-        limit: 3,
-      );
-      expect(result, isNotEmpty);
-      expect(result.every((b) => b.archetype == UserArchetype.athlete), isTrue);
-    });
+    test(
+      'falls back to archetype-only blueprints when no signals supplied',
+      () {
+        final result = StarterHabitBlueprint.forPersonalization(
+          archetype: UserArchetype.athlete,
+          interestIds: const [],
+          clubTags: const [],
+          limit: 3,
+        );
+        expect(result, isNotEmpty);
+        expect(
+          result.every((b) => b.archetype == UserArchetype.athlete),
+          isTrue,
+        );
+      },
+    );
 
-    test('returns at least one blueprint for a real archetype with signals',
-        () {
-      final result = StarterHabitBlueprint.forPersonalization(
-        archetype: UserArchetype.athlete,
-        interestIds: const ['movement.walking'],
-        clubTags: const ['fitness'],
-      );
-      expect(result, isNotEmpty);
-    });
+    test(
+      'returns at least one blueprint for a real archetype with signals',
+      () {
+        final result = StarterHabitBlueprint.forPersonalization(
+          archetype: UserArchetype.athlete,
+          interestIds: const ['movement.walking'],
+          clubTags: const ['fitness'],
+        );
+        expect(result, isNotEmpty);
+      },
+    );
 
-    test('ranks interest-match blueprints before archetype-only blueprints',
-        () {
-      final result = StarterHabitBlueprint.forPersonalization(
-        archetype: UserArchetype.scholar,
-        interestIds: const ['learning.reading'],
-        clubTags: const [],
-        limit: 10,
-      );
-      expect(result, isNotEmpty);
-      // The top-ranked result must serve the learning category
-      // (which the 'learning.reading' interest belongs to).
-      expect(
-        result.first.interestCategories,
-        contains(InterestCategory.learning),
-      );
-    });
+    test(
+      'ranks interest-match blueprints before archetype-only blueprints',
+      () {
+        final result = StarterHabitBlueprint.forPersonalization(
+          archetype: UserArchetype.scholar,
+          interestIds: const ['learning.reading'],
+          clubTags: const [],
+          limit: 10,
+        );
+        expect(result, isNotEmpty);
+        // The top-ranked result must serve the learning category
+        // (which the 'learning.reading' interest belongs to).
+        expect(
+          result.first.interestCategories,
+          contains(InterestCategory.learning),
+        );
+      },
+    );
 
     test('club tag overlap is treated as a tiebreaker', () {
       final result = StarterHabitBlueprint.forPersonalization(
@@ -184,19 +211,24 @@ void main() {
       expect(result, isNotEmpty);
     });
 
-    test('cross-archetype blueprints are excluded from someone else\u0027s pack',
-        () {
-      final result = StarterHabitBlueprint.forPersonalization(
-        archetype: UserArchetype.athlete,
-        interestIds: const ['faith.prayer'],
-        clubTags: const [],
-      );
-      final hasNonAthlete = result.any(
-        (b) => b.archetype != UserArchetype.athlete,
-      );
-      expect(hasNonAthlete, isFalse,
-          reason: 'athlete pack must not contain zealot-only blueprints');
-    });
+    test(
+      'cross-archetype blueprints are excluded from someone else\u0027s pack',
+      () {
+        final result = StarterHabitBlueprint.forPersonalization(
+          archetype: UserArchetype.athlete,
+          interestIds: const ['faith.prayer'],
+          clubTags: const [],
+        );
+        final hasNonAthlete = result.any(
+          (b) => b.archetype != UserArchetype.athlete,
+        );
+        expect(
+          hasNonAthlete,
+          isFalse,
+          reason: 'athlete pack must not contain zealot-only blueprints',
+        );
+      },
+    );
   });
 }
 

@@ -67,7 +67,8 @@ void main() {
           expect(
             item.passes(entry.value),
             item.label != entry.key,
-            reason: 'candidate for "${entry.key}" must fail ONLY that item '
+            reason:
+                'candidate for "${entry.key}" must fail ONLY that item '
                 '(${item.label} expected ${item.label != entry.key})',
           );
         }

@@ -50,55 +50,53 @@ class ClubBoxCard extends StatelessWidget {
                 width: double.infinity,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      accent.withValues(alpha: 0.3),
-                      Colors.transparent,
-                    ],
+                    colors: [accent.withValues(alpha: 0.3), Colors.transparent],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                 ),
                 child: (imageUrl != null && imageUrl!.isNotEmpty)
                     ? (isBundledEmblem(imageUrl)
-                        ? Image.asset(
-                            imageUrl!,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            height: double.infinity,
-                            // Bundled emblems never fail; fall back anyway.
-                            errorBuilder: (context, error, stackTrace) =>
-                                _EmblemFallback(accent: accent),
-                          )
-                        : Image.network(
-                        imageUrl!,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: double.infinity,
-                        // Graceful loading: show a subtle spinner over the
-                        // gradient until the image is ready.
-                        loadingBuilder: (context, child, progress) {
-                          if (progress == null) return child;
-                          return Center(
-                            child: SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(accent),
-                                value: progress.expectedTotalBytes != null
-                                    ? progress.cumulativeBytesLoaded /
-                                          progress.expectedTotalBytes!
-                                    : null,
-                              ),
-                            ),
-                          );
-                        },
-                        // Never show a broken image: fall back to the emblem
-                        // icon on the gradient if the network image fails.
-                        errorBuilder: (context, error, stackTrace) =>
-                            _EmblemFallback(accent: accent),
-                      ))
+                          ? Image.asset(
+                              imageUrl!,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                              // Bundled emblems never fail; fall back anyway.
+                              errorBuilder: (context, error, stackTrace) =>
+                                  _EmblemFallback(accent: accent),
+                            )
+                          : Image.network(
+                              imageUrl!,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                              // Graceful loading: show a subtle spinner over the
+                              // gradient until the image is ready.
+                              loadingBuilder: (context, child, progress) {
+                                if (progress == null) return child;
+                                return Center(
+                                  child: SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        accent,
+                                      ),
+                                      value: progress.expectedTotalBytes != null
+                                          ? progress.cumulativeBytesLoaded /
+                                                progress.expectedTotalBytes!
+                                          : null,
+                                    ),
+                                  ),
+                                );
+                              },
+                              // Never show a broken image: fall back to the emblem
+                              // icon on the gradient if the network image fails.
+                              errorBuilder: (context, error, stackTrace) =>
+                                  _EmblemFallback(accent: accent),
+                            ))
                     : _EmblemFallback(accent: accent),
               ),
             ),
@@ -194,8 +192,6 @@ class _EmblemFallback extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Icon(Icons.emoji_events, size: 36, color: accent),
-    );
+    return Center(child: Icon(Icons.emoji_events, size: 36, color: accent));
   }
 }

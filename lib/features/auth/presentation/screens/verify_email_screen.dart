@@ -57,8 +57,9 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
       _error = null;
       _info = 'Verifying your email…';
     });
-    final result =
-        await ref.read(authRepositoryProvider).applyVerificationCode(oobCode);
+    final result = await ref
+        .read(authRepositoryProvider)
+        .applyVerificationCode(oobCode);
     if (!mounted) return;
     result.fold(
       (failure) => setState(() {
@@ -96,8 +97,9 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
       _error = null;
       _info = null;
     });
-    final result =
-        await ref.read(authRepositoryProvider).sendVerificationEmail();
+    final result = await ref
+        .read(authRepositoryProvider)
+        .sendVerificationEmail();
     if (!mounted) return;
     result.fold(
       (failure) => setState(() {
@@ -149,7 +151,8 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
             // _navigatedOnVerify prevents double navigation.
             _info = 'Verified — taking you to the app.';
           } else {
-            _error = 'Not verified yet — check your inbox (and spam) '
+            _error =
+                'Not verified yet — check your inbox (and spam) '
                 'for the link, then try again.';
           }
         });
@@ -196,8 +199,10 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
         leading: isLocked
             ? null
             : IconButton(
-                icon: const Icon(Icons.arrow_back,
-                    color: AppTheme.textMainDark),
+                icon: const Icon(
+                  Icons.arrow_back,
+                  color: AppTheme.textMainDark,
+                ),
                 tooltip: 'Back',
                 onPressed: () {
                   try {
@@ -221,7 +226,8 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
   }
 
   Widget _buildBody(BuildContext context, bool isLocked) {
-    final authUser = ref.watch(authStateChangesProvider).value ??
+    final authUser =
+        ref.watch(authStateChangesProvider).value ??
         const AuthUser(id: '', email: '');
 
     return SingleChildScrollView(
@@ -230,8 +236,11 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Gap(32),
-          Icon(Icons.mark_email_read_outlined,
-              size: 72, color: EmergeColors.teal),
+          Icon(
+            Icons.mark_email_read_outlined,
+            size: 72,
+            color: EmergeColors.teal,
+          ),
           const Gap(16),
           Text(
             isLocked
@@ -239,37 +248,41 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                 : 'Verify your email',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: AppTheme.textMainDark,
-                  fontWeight: FontWeight.bold,
-                ),
+              color: AppTheme.textMainDark,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const Gap(8),
           Text(
             isLocked
                 ? 'Your 7-day verification window has passed. Resend the '
-                    'link and verify to unlock your account.'
+                      'link and verify to unlock your account.'
                 : 'We sent a verification link to '
-                    '${authUser.email.isEmpty ? 'your email' : authUser.email}. '
-                    'Open it and click the link to confirm your account.',
+                      '${authUser.email.isEmpty ? 'your email' : authUser.email}. '
+                      'Open it and click the link to confirm your account.',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.textSecondaryDark,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondaryDark),
           ),
           const Gap(24),
           if (_info != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: Text(_info!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: EmergeColors.teal)),
+              child: Text(
+                _info!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: EmergeColors.teal),
+              ),
             ),
           if (_error != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: Text(_error!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.redAccent)),
+              child: Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.redAccent),
+              ),
             ),
           const Gap(16),
           Semantics(
@@ -285,10 +298,17 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                       height: 20,
                       width: 20,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.black))
-                  : const Text("I've verified — continue",
+                        strokeWidth: 2,
+                        color: Colors.black,
+                      ),
+                    )
+                  : const Text(
+                      "I've verified — continue",
                       style: TextStyle(
-                          fontWeight: FontWeight.bold, color: Colors.black)),
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
             ),
           ),
           const Gap(12),

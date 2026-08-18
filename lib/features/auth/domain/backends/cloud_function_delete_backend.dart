@@ -11,12 +11,13 @@ class CloudFunctionDeleteBackend implements DeleteAccountBackend {
   CloudFunctionDeleteBackend(this._functions);
 
   @override
-  Future<Either<Failure, Unit>> delete(
-      {required String deletionRequestId}) async {
+  Future<Either<Failure, Unit>> delete({
+    required String deletionRequestId,
+  }) async {
     try {
-      final result = await _functions
-          .httpsCallable('deleteMyAccount')
-          .call({'deletionRequestId': deletionRequestId});
+      final result = await _functions.httpsCallable('deleteMyAccount').call({
+        'deletionRequestId': deletionRequestId,
+      });
       if (result.data != null && (result.data as Map)['success'] == true) {
         return const Right(unit);
       }

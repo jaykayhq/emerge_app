@@ -10,9 +10,7 @@ class MockCueEngine extends Mock implements CueEngine {}
 
 ProviderContainer _makeContainer(CueEngine engine) {
   return ProviderContainer(
-    overrides: [
-      cueEngineProvider.overrideWithValue(engine),
-    ],
+    overrides: [cueEngineProvider.overrideWithValue(engine)],
   );
 }
 
@@ -25,22 +23,36 @@ void main() {
 
   group('cueNotifierProvider', () {
     test('calls engine.initialize on initialize', () async {
-      when(() => mockEngine.initialize(archetype: any(named: 'archetype')))
-          .thenAnswer((_) async => {});
+      when(
+        () => mockEngine.initialize(archetype: any(named: 'archetype')),
+      ).thenAnswer((_) async => {});
 
       final container = _makeContainer(mockEngine);
-      await container.read(cueNotifierProvider.notifier).initialize(UserArchetype.athlete);
-      verify(() => mockEngine.initialize(archetype: UserArchetype.athlete)).called(1);
+      await container
+          .read(cueNotifierProvider.notifier)
+          .initialize(UserArchetype.athlete);
+      verify(
+        () => mockEngine.initialize(archetype: UserArchetype.athlete),
+      ).called(1);
       container.dispose();
     });
 
     test('calls engine methods for markActionTaken', () {
-      when(() => mockEngine.markActionTaken('cue-1', timeToAction: any(named: 'timeToAction')))
-          .thenReturn(null);
+      when(
+        () => mockEngine.markActionTaken(
+          'cue-1',
+          timeToAction: any(named: 'timeToAction'),
+        ),
+      ).thenReturn(null);
 
       final container = _makeContainer(mockEngine);
       container.read(cueNotifierProvider.notifier).markActionTaken('cue-1');
-      verify(() => mockEngine.markActionTaken('cue-1', timeToAction: any(named: 'timeToAction'))).called(1);
+      verify(
+        () => mockEngine.markActionTaken(
+          'cue-1',
+          timeToAction: any(named: 'timeToAction'),
+        ),
+      ).called(1);
       container.dispose();
     });
 
@@ -56,9 +68,9 @@ void main() {
 
   group('cueMetricsProvider', () {
     test('returns metrics from engine', () {
-      when(() => mockEngine.getMetrics('cue-1')).thenReturn(
-        const CueEngagementMetrics(cueId: 'cue-1', conversions: 1),
-      );
+      when(
+        () => mockEngine.getMetrics('cue-1'),
+      ).thenReturn(const CueEngagementMetrics(cueId: 'cue-1', conversions: 1));
 
       final container = _makeContainer(mockEngine);
       final result = container.read(cueMetricsProvider('cue-1'));

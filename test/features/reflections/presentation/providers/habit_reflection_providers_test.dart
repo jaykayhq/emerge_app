@@ -22,10 +22,7 @@ class _MockLocalDatasource extends Mock
 /// the test releases the gate.
 class _GateReflectionRepo extends HabitReflectionRepository {
   _GateReflectionRepo()
-      : super(
-          local: _MockLocalDatasource(),
-          remote: _MockRemoteDatasource(),
-        );
+    : super(local: _MockLocalDatasource(), remote: _MockRemoteDatasource());
 
   final Completer<void> gate = Completer<void>();
 
@@ -34,8 +31,7 @@ class _GateReflectionRepo extends HabitReflectionRepository {
     required String userId,
     required String habitId,
     required DateTime localDate,
-  }) async =>
-      Right(null);
+  }) async => Right(null);
 
   @override
   Future<Either<Failure, HabitReflection>> save({
@@ -71,9 +67,7 @@ void main() {
       // UnmountedRefException and crashed the app.
       final repo = _GateReflectionRepo();
       final container = ProviderContainer(
-        overrides: [
-          habitReflectionRepositoryProvider.overrideWithValue(repo),
-        ],
+        overrides: [habitReflectionRepositoryProvider.overrideWithValue(repo)],
       );
 
       final save = container.read(

@@ -36,13 +36,9 @@ class RecordingLeaderboardRepository implements LeaderboardRepository {
   String? lastClubId;
   bool? lastIsIncrement;
   final List<
-      ({
-        String userId,
-        int xp,
-        int level,
-        String? clubId,
-        bool isIncrement,
-      })> updateCalls = [];
+    ({String userId, int xp, int level, String? clubId, bool isIncrement})
+  >
+  updateCalls = [];
 
   @override
   Future<Either<Failure, Unit>> updateUserScore(
@@ -74,8 +70,7 @@ class RecordingLeaderboardRepository implements LeaderboardRepository {
   @override
   Stream<List<LeaderboardEntry>> watchChallengeLeaderboard([
     String? challengeId,
-  ]) =>
-      const Stream.empty();
+  ]) => const Stream.empty();
 }
 
 class MockTransaction extends Mock implements Transaction {
@@ -190,30 +185,36 @@ void main() {
         );
       });
 
-      test('uses the provided clubId (active tribe) for the leaderboard', () async {
-        final leaderboardRepo = RecordingLeaderboardRepository();
-        final service = SocialActivityService(
-          syncEngine: mockSyncEngine,
-          activityDao: mockActivityDao,
-          leaderboardRepo: leaderboardRepo,
-        );
+      test(
+        'uses the provided clubId (active tribe) for the leaderboard',
+        () async {
+          final leaderboardRepo = RecordingLeaderboardRepository();
+          final service = SocialActivityService(
+            syncEngine: mockSyncEngine,
+            activityDao: mockActivityDao,
+            leaderboardRepo: leaderboardRepo,
+          );
 
-        await service.logHabitCompletion(
-          userId: 'u1',
-          userName: 'A',
-          archetype: 'athlete',
-          habitId: 'h1',
-          habitTitle: 'H',
-          streakDay: 1,
-          attribute: 'vitality',
-          xpGained: 10,
-          currentLevel: 2,
-          clubId: 'my_tribe',
-        );
+          await service.logHabitCompletion(
+            userId: 'u1',
+            userName: 'A',
+            archetype: 'athlete',
+            habitId: 'h1',
+            habitTitle: 'H',
+            streakDay: 1,
+            attribute: 'vitality',
+            xpGained: 10,
+            currentLevel: 2,
+            clubId: 'my_tribe',
+          );
 
-        expect(leaderboardRepo.lastClubId, 'my_tribe'); // NOT morning_warriors
-        expect(leaderboardRepo.lastIsIncrement, true);
-      });
+          expect(
+            leaderboardRepo.lastClubId,
+            'my_tribe',
+          ); // NOT morning_warriors
+          expect(leaderboardRepo.lastIsIncrement, true);
+        },
+      );
     });
 
     group('logLevelUp', () {

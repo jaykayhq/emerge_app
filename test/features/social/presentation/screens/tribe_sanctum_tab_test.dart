@@ -44,9 +44,7 @@ Widget _buildSanctum() {
   return ProviderScope(
     overrides: [
       userStatsStreamProvider.overrideWith((ref) => Stream.value(_profile)),
-      activeMembershipProvider.overrideWith(
-        (ref) => Stream.value(_membership),
-      ),
+      activeMembershipProvider.overrideWith((ref) => Stream.value(_membership)),
       userTribeProvider.overrideWith(
         (ref, userId) => Stream.value(_creatorTribe),
       ),
@@ -63,35 +61,30 @@ Widget _buildSanctum() {
       clubActivityProvider.overrideWith((ref, tribeId) => const Stream.empty()),
       globalActivityProvider.overrideWith((ref) => const Stream.empty()),
     ],
-    child: const MaterialApp(
-      home: Scaffold(body: TribeSanctumTab()),
-    ),
+    child: const MaterialApp(home: Scaffold(body: TribeSanctumTab())),
   );
 }
 
 void main() {
-  testWidgets(
-    'renders the creator tribe for its members instead of the '
-    'official-only "no clubs" fallback',
-    (tester) async {
-      tester.view.physicalSize = const Size(800, 3200);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
+  testWidgets('renders the creator tribe for its members instead of the '
+      'official-only "no clubs" fallback', (tester) async {
+    tester.view.physicalSize = const Size(800, 3200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
 
-      await tester.pumpWidget(_buildSanctum());
-      // Bounded pumps: flutter_animate effects are one-shot, but the
-      // shimmer skeletons repeat, so pumpAndSettle would never settle.
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-      await tester.pump(const Duration(milliseconds: 600));
+    await tester.pumpWidget(_buildSanctum());
+    // Bounded pumps: flutter_animate effects are one-shot, but the
+    // shimmer skeletons repeat, so pumpAndSettle would never settle.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 600));
 
-      expect(find.text('MIDNIGHT WOLVES'), findsOneWidget);
-      expect(
-        find.text('No clubs available for your archetype yet.'),
-        findsNothing,
-      );
-      expect(find.text('No active tribe'), findsNothing);
-    },
-  );
+    expect(find.text('MIDNIGHT WOLVES'), findsOneWidget);
+    expect(
+      find.text('No clubs available for your archetype yet.'),
+      findsNothing,
+    );
+    expect(find.text('No active tribe'), findsNothing);
+  });
 }

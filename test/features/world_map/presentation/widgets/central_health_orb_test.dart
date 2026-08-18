@@ -6,15 +6,17 @@ import 'package:emerge_app/features/world_map/presentation/widgets/central_healt
 void main() {
   testWidgets('CentralHealthOrb tracks 7 taps for easter egg', (tester) async {
     int easterEggCount = 0;
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: CentralHealthOrb(
-          currentHealth: 50,
-          maxHealth: 100,
-          onEasterEggTriggered: () => easterEggCount++,
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: CentralHealthOrb(
+            currentHealth: 50,
+            maxHealth: 100,
+            onEasterEggTriggered: () => easterEggCount++,
+          ),
         ),
       ),
-    ));
+    );
 
     // Wait for the shader to load and the CircularProgressIndicator to be replaced
     for (int i = 0; i < 50; i++) {
@@ -26,7 +28,7 @@ void main() {
     for (int i = 0; i < 7; i++) {
       await tester.tap(orb);
     }
-    
+
     expect(easterEggCount, 1);
   });
 }

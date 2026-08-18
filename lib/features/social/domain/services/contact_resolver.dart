@@ -66,11 +66,13 @@ class FirestoreContactResolver implements ContactResolver {
         }
       }
 
-      results.add(ContactMatch(
-        contact: c,
-        matchedUserId: userId,
-        matchedDisplayName: displayName,
-      ));
+      results.add(
+        ContactMatch(
+          contact: c,
+          matchedUserId: userId,
+          matchedDisplayName: displayName,
+        ),
+      );
     }
     return results;
   }

@@ -133,10 +133,8 @@ class _SpotifyWrappedRecapState extends ConsumerState<SpotifyWrappedRecap>
   void _openShareSheet() {
     showModalBottomSheet<void>(
       context: context,
-      builder: (_) => RecapShareSheet(
-        recap: widget.recap,
-        currentIndex: _currentPage,
-      ),
+      builder: (_) =>
+          RecapShareSheet(recap: widget.recap, currentIndex: _currentPage),
     );
   }
 

@@ -24,10 +24,7 @@ Widget _buildTest() {
         branches: [
           StatefulShellBranch(
             routes: [
-              GoRoute(
-                path: '/dashboard',
-                builder: (_, _) => const SizedBox(),
-              ),
+              GoRoute(path: '/dashboard', builder: (_, _) => const SizedBox()),
             ],
           ),
           StatefulShellBranch(
@@ -64,9 +61,7 @@ Widget _buildTestWithCompleter(Completer<bool> completer) {
         builder: (context, state, navigationShell) {
           return ProviderScope(
             overrides: [
-              isVerifiedCreatorProvider.overrideWith(
-                (ref) => completer.future,
-              ),
+              isVerifiedCreatorProvider.overrideWith((ref) => completer.future),
             ],
             child: CreatorDashboardScaffold(navigationShell: navigationShell),
           );
@@ -74,10 +69,7 @@ Widget _buildTestWithCompleter(Completer<bool> completer) {
         branches: [
           StatefulShellBranch(
             routes: [
-              GoRoute(
-                path: '/dashboard',
-                builder: (_, _) => const SizedBox(),
-              ),
+              GoRoute(path: '/dashboard', builder: (_, _) => const SizedBox()),
             ],
           ),
         ],
@@ -93,8 +85,9 @@ Widget _buildTestWithCompleter(Completer<bool> completer) {
 }
 
 void main() {
-  testWidgets('CreatorDashboardScaffold renders with navigation',
-      (tester) async {
+  testWidgets('CreatorDashboardScaffold renders with navigation', (
+    tester,
+  ) async {
     await tester.pumpWidget(_buildTest());
     await tester.pump(const Duration(milliseconds: 100));
 
@@ -104,8 +97,9 @@ void main() {
     expect(find.text('Tribe'), findsOneWidget);
   });
 
-  testWidgets('does not redirect while verification is loading',
-      (tester) async {
+  testWidgets('does not redirect while verification is loading', (
+    tester,
+  ) async {
     final completer = Completer<bool>();
     await tester.pumpWidget(_buildTestWithCompleter(completer));
     await tester.pump(const Duration(milliseconds: 100));

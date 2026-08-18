@@ -15,11 +15,7 @@ class EndowmentInterstitialScreen extends ConsumerWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF0A0A1A),
-              Color(0xFF1A0A2A),
-              Color(0xFF2A1A3A),
-            ],
+            colors: [Color(0xFF0A0A1A), Color(0xFF1A0A2A), Color(0xFF2A1A3A)],
           ),
         ),
         child: SafeArea(
@@ -36,7 +32,8 @@ class EndowmentInterstitialScreen extends ConsumerWidget {
                   children: [
                     Text(
                       '✨ Welcome, Future You',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                           ),
@@ -80,7 +77,9 @@ class EndowmentInterstitialScreen extends ConsumerWidget {
                   height: 52,
                   child: ElevatedButton(
                     onPressed: () async {
-                      final settings = ref.read(localSettingsRepositoryProvider);
+                      final settings = ref.read(
+                        localSettingsRepositoryProvider,
+                      );
                       await settings.markEndowmentSeen();
                       if (context.mounted) context.go('/signup');
                     },

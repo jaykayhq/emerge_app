@@ -22,7 +22,11 @@ class FakeIsPremium extends IsPremium {
   Future<bool> build() async => premium;
 }
 
-final testUser = AuthUser(id: 'test-uid', email: 'test@example.com', displayName: 'Test User');
+final testUser = AuthUser(
+  id: 'test-uid',
+  email: 'test@example.com',
+  displayName: 'Test User',
+);
 
 final testProfile = UserProfile(uid: 'test-uid');
 
@@ -31,19 +35,13 @@ Widget createTest({bool isPremium = true, List<Habit> habits = const []}) {
     overrides: [
       isPremiumProvider.overrideWith(() => FakeIsPremium(isPremium)),
       habitsProvider.overrideWith((ref) => Stream.value(habits)),
-      authStateChangesProvider.overrideWith(
-        (ref) => Stream.value(testUser),
-      ),
-      userProfileProvider.overrideWith(
-        (ref) => Stream.value(testProfile),
-      ),
+      authStateChangesProvider.overrideWith((ref) => Stream.value(testUser)),
+      userProfileProvider.overrideWith((ref) => Stream.value(testProfile)),
       habitContractRepositoryProvider.overrideWith(
         (ref) => MockHabitContractRepository(),
       ),
     ],
-    child: const MaterialApp(
-      home: HabitContractScreen(),
-    ),
+    child: const MaterialApp(home: HabitContractScreen()),
   );
 }
 
@@ -53,8 +51,10 @@ void main() {
     await tester.pump();
 
     expect(find.text('Premium Feature'), findsOneWidget);
-    expect(find.text('Upgrade to create accountability contracts.'),
-        findsOneWidget);
+    expect(
+      find.text('Upgrade to create accountability contracts.'),
+      findsOneWidget,
+    );
     expect(find.text('Upgrade Now'), findsOneWidget);
   });
 

@@ -34,10 +34,7 @@ Widget buildTest() {
           GoRoute(
             path: '/',
             builder: (_, _) => Scaffold(
-              body: TribeLiveCompact(
-                clubId: 'c1',
-                profile: _testProfile,
-              ),
+              body: TribeLiveCompact(clubId: 'c1', profile: _testProfile),
             ),
           ),
           GoRoute(
@@ -58,16 +55,17 @@ Widget buildTest() {
 
 void main() {
   testWidgets(
-      'View More navigates to /social/activity, not /social/accountability',
-      (tester) async {
-    await tester.pumpWidget(buildTest());
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 50));
+    'View More navigates to /social/activity, not /social/accountability',
+    (tester) async {
+      await tester.pumpWidget(buildTest());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
 
-    await tester.tap(find.textContaining('View More'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.textContaining('View More'));
+      await tester.pumpAndSettle();
 
-    expect(find.text('ACTIVITY_SCREEN'), findsOneWidget);
-    expect(find.text('FRIENDS_SCREEN'), findsNothing);
-  });
+      expect(find.text('ACTIVITY_SCREEN'), findsOneWidget);
+      expect(find.text('FRIENDS_SCREEN'), findsNothing);
+    },
+  );
 }

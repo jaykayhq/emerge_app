@@ -10,10 +10,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'paywall_provider.g.dart';
 
 /// Web plan amounts in NGN (matching the old static Payment Page prices).
-const webPlans = <String, double>{
-  'monthly': 2500.0,
-  'yearly': 15000.0,
-};
+const webPlans = <String, double>{'monthly': 2500.0, 'yearly': 15000.0};
 
 class PaywallState extends Equatable {
   final bool isLoading;

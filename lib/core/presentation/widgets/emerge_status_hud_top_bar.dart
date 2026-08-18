@@ -6,18 +6,18 @@ import 'package:emerge_app/features/gamification/presentation/providers/user_sta
 
 class EmergeStatusHudTopBar extends ConsumerWidget {
   final PreferredSizeWidget? bottom;
-  
+
   const EmergeStatusHudTopBar({super.key, this.bottom});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userProfileAsync = ref.watch(userStatsStreamProvider);
-    
+
     final profile = userProfileAsync.value;
     if (profile == null) {
       return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
-    
+
     final archetype = profile.archetype;
     final level = profile.effectiveLevel;
     final theme = ArchetypeTheme.forArchetype(archetype);
@@ -49,7 +49,10 @@ class EmergeStatusHudTopBar extends ConsumerWidget {
             ),
           ],
         ),
-        titlePadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        titlePadding: const EdgeInsets.symmetric(
+          horizontal: 16.0,
+          vertical: 12.0,
+        ),
         title: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -62,7 +65,11 @@ class EmergeStatusHudTopBar extends ConsumerWidget {
                     color: theme.primaryColor.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(theme.journeyIcon, color: theme.primaryColor, size: 18),
+                  child: Icon(
+                    theme.journeyIcon,
+                    color: theme.primaryColor,
+                    size: 18,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -89,11 +96,16 @@ class EmergeStatusHudTopBar extends ConsumerWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: theme.primaryColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: theme.primaryColor.withValues(alpha: 0.6)),
+                    border: Border.all(
+                      color: theme.primaryColor.withValues(alpha: 0.6),
+                    ),
                   ),
                   child: Text(
                     'LVL $level',
@@ -111,12 +123,21 @@ class EmergeStatusHudTopBar extends ConsumerWidget {
                     padding: const EdgeInsets.all(2),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: theme.primaryColor.withValues(alpha: 0.4), width: 1.5),
+                      border: Border.all(
+                        color: theme.primaryColor.withValues(alpha: 0.4),
+                        width: 1.5,
+                      ),
                     ),
                     child: CircleAvatar(
                       radius: 12,
-                      backgroundColor: theme.primaryColor.withValues(alpha: 0.1),
-                      child: Icon(Icons.person_outline, color: theme.primaryColor, size: 14),
+                      backgroundColor: theme.primaryColor.withValues(
+                        alpha: 0.1,
+                      ),
+                      child: Icon(
+                        Icons.person_outline,
+                        color: theme.primaryColor,
+                        size: 14,
+                      ),
                     ),
                   ),
                 ),

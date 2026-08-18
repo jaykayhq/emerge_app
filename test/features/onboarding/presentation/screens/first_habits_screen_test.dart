@@ -79,8 +79,7 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   }
 
-  testWidgets('starter cards surface the recommended duration',
-      (tester) async {
+  testWidgets('starter cards surface the recommended duration', (tester) async {
     final repo = _CapturingHabitRepository();
     final c = await container(repo);
     addTearDown(c.dispose);
@@ -92,12 +91,16 @@ void main() {
         .map((t) => t.data ?? '')
         .where((s) => RegExp(r'^\d+ MIN$').hasMatch(s))
         .toList();
-    expect(durationLabels, isNotEmpty,
-        reason: 'at least one starter card must show a duration');
+    expect(
+      durationLabels,
+      isNotEmpty,
+      reason: 'at least one starter card must show a duration',
+    );
   });
 
-  testWidgets('CTA disabled until at least one habit is selected',
-      (tester) async {
+  testWidgets('CTA disabled until at least one habit is selected', (
+    tester,
+  ) async {
     final repo = _CapturingHabitRepository();
     final c = await container(repo);
     addTearDown(c.dispose);
@@ -111,8 +114,7 @@ void main() {
     expect(tester.widget<ElevatedButton>(start).enabled, isTrue);
   });
 
-  testWidgets('creates the pack with only the selected habits',
-      (tester) async {
+  testWidgets('creates the pack with only the selected habits', (tester) async {
     final repo = _CapturingHabitRepository();
     final c = await container(repo);
     addTearDown(c.dispose);
@@ -163,7 +165,9 @@ void main() {
     );
     await tester.tap(find.text('SAVE HABIT'));
     await tester.pump(const Duration(milliseconds: 300)); // _save delay + pop
-    await tester.pump(const Duration(milliseconds: 300)); // sheet exit animation
+    await tester.pump(
+      const Duration(milliseconds: 300),
+    ); // sheet exit animation
     // Let any post-save snackbar fully expire so it can't obscure the CTA.
     await tester.pump(const Duration(seconds: 4));
     await tester.pump(const Duration(seconds: 1));

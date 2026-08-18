@@ -80,14 +80,14 @@ class ChallengeProgressDao extends DatabaseAccessor<AppDatabase>
   /// Decrements the current day count by 1 for a challenge (used on undo).
   /// Clamps at 0 and resets status to 'active' if it was 'completed'.
   Future<void> decrementDay(String challengeId) async {
-    final row = await (select(challengeProgressTable)
-          ..where((t) => t.challengeId.equals(challengeId)))
-        .getSingleOrNull();
+    final row = await (select(
+      challengeProgressTable,
+    )..where((t) => t.challengeId.equals(challengeId))).getSingleOrNull();
     if (row == null) return;
     final newDay = (row.currentDay - 1).clamp(0, row.totalDays);
-    await (update(challengeProgressTable)
-          ..where((t) => t.challengeId.equals(challengeId)))
-        .write(
+    await (update(
+      challengeProgressTable,
+    )..where((t) => t.challengeId.equals(challengeId))).write(
       ChallengeProgressTableCompanion(
         currentDay: Value(newDay),
         status: const Value('active'),

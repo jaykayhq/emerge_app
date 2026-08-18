@@ -45,7 +45,7 @@ class _CreatorLoginScreenState extends ConsumerState<CreatorLoginScreen> {
           _passwordController.text.trim(),
         ).future,
       );
-      
+
       final user = ref.read(firebaseAuthProvider).currentUser;
       if (user == null) {
         throw Exception('User not found');
@@ -56,7 +56,11 @@ class _CreatorLoginScreenState extends ConsumerState<CreatorLoginScreen> {
         await ref.read(authRepositoryProvider).signOut();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('This account is not registered as a creator. Please log out or switch accounts.')),
+            const SnackBar(
+              content: Text(
+                'This account is not registered as a creator. Please log out or switch accounts.',
+              ),
+            ),
           );
         }
         return;
@@ -79,22 +83,21 @@ class _CreatorLoginScreenState extends ConsumerState<CreatorLoginScreen> {
   Future<void> _signInWithGoogle() async {
     setState(() => _isLoading = true);
     try {
-      final result = await ref.read(authRepositoryProvider).signInWithGoogle(isLogin: true);
+      final result = await ref
+          .read(authRepositoryProvider)
+          .signInWithGoogle(isLogin: true);
 
       bool proceed = false;
-      result.fold(
-        (error) {
-          // 'redirect_initiated' is not a real error — on web the page
-          // navigates away to Google OAuth. Keep loading; do not show snackbar.
-          if (error.message == 'redirect_initiated') return;
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(error.message)),
-            );
-          }
-        },
-        (_) => proceed = true,
-      );
+      result.fold((error) {
+        // 'redirect_initiated' is not a real error — on web the page
+        // navigates away to Google OAuth. Keep loading; do not show snackbar.
+        if (error.message == 'redirect_initiated') return;
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(error.message)));
+        }
+      }, (_) => proceed = true);
 
       if (proceed) {
         final user = ref.read(firebaseAuthProvider).currentUser;
@@ -118,9 +121,9 @@ class _CreatorLoginScreenState extends ConsumerState<CreatorLoginScreen> {
     } catch (e) {
       if (mounted) {
         final errorMessage = e.toString().replaceAll('Exception: ', '');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMessage)));
       }
     } finally {
       // Don't reset loading on web redirect — the page will navigate away.
@@ -286,7 +289,9 @@ class _CreatorLoginScreenState extends ConsumerState<CreatorLoginScreen> {
         ] else ...[
           Text(
             'Creator Login',
-            style: theme.textTheme.headlineMedium?.copyWith(color: Colors.white),
+            style: theme.textTheme.headlineMedium?.copyWith(
+              color: Colors.white,
+            ),
             textAlign: TextAlign.center,
           ),
           const Gap(32),
@@ -312,7 +317,10 @@ class _CreatorLoginScreenState extends ConsumerState<CreatorLoginScreen> {
                     borderSide: const BorderSide(color: Colors.amber),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  prefixIcon: const Icon(Icons.email_outlined, color: Colors.amber),
+                  prefixIcon: const Icon(
+                    Icons.email_outlined,
+                    color: Colors.amber,
+                  ),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -339,10 +347,15 @@ class _CreatorLoginScreenState extends ConsumerState<CreatorLoginScreen> {
                     borderSide: const BorderSide(color: Colors.amber),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  prefixIcon: const Icon(Icons.lock_outline, color: Colors.amber),
+                  prefixIcon: const Icon(
+                    Icons.lock_outline,
+                    color: Colors.amber,
+                  ),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                      _obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
                       color: Colors.amber,
                     ),
                     onPressed: () {
@@ -350,7 +363,9 @@ class _CreatorLoginScreenState extends ConsumerState<CreatorLoginScreen> {
                         _obscurePassword = !_obscurePassword;
                       });
                     },
-                    tooltip: _obscurePassword ? 'Show password' : 'Hide password',
+                    tooltip: _obscurePassword
+                        ? 'Show password'
+                        : 'Hide password',
                   ),
                 ),
                 validator: (value) {
@@ -372,61 +387,67 @@ class _CreatorLoginScreenState extends ConsumerState<CreatorLoginScreen> {
               ),
               const Gap(24),
               Container(
-                height: 50,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(25),
-                  gradient: const LinearGradient(
-                    colors: [Colors.amber, Colors.orange],
-                  ),
-                ),
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _login,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
+                    height: 50,
+                    decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(25),
+                      gradient: const LinearGradient(
+                        colors: [Colors.amber, Colors.orange],
+                      ),
                     ),
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text(
-                          'Login to Creator Hub',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _login,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
                         ),
-                ),
-              ).animate(delay: 350.ms).fadeIn().scale(begin: const Offset(0.97, 0.97)),
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              'Login to Creator Hub',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                    ),
+                  )
+                  .animate(delay: 350.ms)
+                  .fadeIn()
+                  .scale(begin: const Offset(0.97, 0.97)),
               const Gap(16),
               OutlinedButton.icon(
-                onPressed: _isLoading ? null : _signInWithGoogle,
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  side: BorderSide(
-                    color: Colors.amber.withValues(alpha: 0.5),
-                  ),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                icon: SvgPicture.asset(
-                  'assets/images/google_logo.svg',
-                  width: 20,
-                  height: 20,
-                ),
-                label: const Text('Sign in with Google'),
-              ).animate(delay: 400.ms).fadeIn().scale(begin: const Offset(0.97, 0.97)),
+                    onPressed: _isLoading ? null : _signInWithGoogle,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: BorderSide(
+                        color: Colors.amber.withValues(alpha: 0.5),
+                      ),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: SvgPicture.asset(
+                      'assets/images/google_logo.svg',
+                      width: 20,
+                      height: 20,
+                    ),
+                    label: const Text('Sign in with Google'),
+                  )
+                  .animate(delay: 400.ms)
+                  .fadeIn()
+                  .scale(begin: const Offset(0.97, 0.97)),
               const Gap(24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,

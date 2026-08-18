@@ -36,20 +36,23 @@ void main() {
       );
     });
 
-    test('does not ask again in the same version even after cooldown expires', () {
-      expect(
-        RatingPromptGate.shouldAsk(
-          signal: RatingPromptSignal.sevenDayStreak,
-          now: now,
-          lastAskedAt: now.subtract(const Duration(days: 120)),
-          versionAskedFor: '1.0.7+12',
-          dontAskAgain: false,
-          currentVersion: '1.0.7+12',
-          cooldown: cooldown,
-        ),
-        isFalse,
-      );
-    });
+    test(
+      'does not ask again in the same version even after cooldown expires',
+      () {
+        expect(
+          RatingPromptGate.shouldAsk(
+            signal: RatingPromptSignal.sevenDayStreak,
+            now: now,
+            lastAskedAt: now.subtract(const Duration(days: 120)),
+            versionAskedFor: '1.0.7+12',
+            dontAskAgain: false,
+            currentVersion: '1.0.7+12',
+            cooldown: cooldown,
+          ),
+          isFalse,
+        );
+      },
+    );
 
     test('asks again in a newer version after cooldown', () {
       expect(

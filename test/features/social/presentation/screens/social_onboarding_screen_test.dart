@@ -12,9 +12,7 @@ void main() {
     addTearDown(() => tester.view.resetPhysicalSize());
 
     await tester.pumpWidget(
-      ProviderScope(
-        child: const MaterialApp(home: SocialOnboardingScreen()),
-      ),
+      ProviderScope(child: const MaterialApp(home: SocialOnboardingScreen())),
     );
 
     await tester.pump();

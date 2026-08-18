@@ -27,7 +27,8 @@ class FakePopulatedBlueprintRepository extends BlueprintRepository {
     return Stream.value([
       Blueprint(
         id: 'bp1',
-        creatorUserId: 'test_uid', // This will match the dummy auth user if we mock auth, but for now we just test UI
+        creatorUserId:
+            'test_uid', // This will match the dummy auth user if we mock auth, but for now we just test UI
         creatorName: 'Test Creator',
         creatorArchetype: 'Athlete',
         title: 'Test Blueprint',
@@ -37,13 +38,15 @@ class FakePopulatedBlueprintRepository extends BlueprintRepository {
         imageUrl: 'http://image.com',
         category: 'Morning',
         difficulty: BlueprintDifficulty.beginner,
-      )
+      ),
     ]);
   }
 }
 
 void main() {
-  testWidgets('CreatorBlueprintsTab renders empty state when no blueprints', (tester) async {
+  testWidgets('CreatorBlueprintsTab renders empty state when no blueprints', (
+    tester,
+  ) async {
     // Setup fake firebase
     final fakeFirestore = FakeFirebaseFirestore();
 
@@ -51,12 +54,16 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          blueprintRepositoryProvider.overrideWithValue(BlueprintRepository(fakeFirestore)),
-          authStateChangesProvider.overrideWith((ref) => Stream.value(const AuthUser(id: 'test_uid', email: 'test@example.com'))),
+          blueprintRepositoryProvider.overrideWithValue(
+            BlueprintRepository(fakeFirestore),
+          ),
+          authStateChangesProvider.overrideWith(
+            (ref) => Stream.value(
+              const AuthUser(id: 'test_uid', email: 'test@example.com'),
+            ),
+          ),
         ],
-        child: const MaterialApp(
-          home: CreatorBlueprintsTab(),
-        ),
+        child: const MaterialApp(home: CreatorBlueprintsTab()),
       ),
     );
 

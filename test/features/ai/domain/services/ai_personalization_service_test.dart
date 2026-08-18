@@ -26,22 +26,25 @@ void main() {
       expect(result, 'You are a disciplined creator.');
     });
 
-    test('passes archetype context in the system prompt when provided', () async {
-      String? capturedSystemPrompt;
-      when(
-        () => mockGroq.getCoachAdvice(any(), any()),
-      ).thenAnswer((invocation) async {
-        capturedSystemPrompt = invocation.positionalArguments[0] as String;
-        return 'Your archetype is strong.';
-      });
+    test(
+      'passes archetype context in the system prompt when provided',
+      () async {
+        String? capturedSystemPrompt;
+        when(() => mockGroq.getCoachAdvice(any(), any())).thenAnswer((
+          invocation,
+        ) async {
+          capturedSystemPrompt = invocation.positionalArguments[0] as String;
+          return 'Your archetype is strong.';
+        });
 
-      await service.enhanceUserWhy(
-        'I want to write daily',
-        archetype: 'Creator',
-      );
+        await service.enhanceUserWhy(
+          'I want to write daily',
+          archetype: 'Creator',
+        );
 
-      expect(capturedSystemPrompt, contains('User Archetype: Creator'));
-    });
+        expect(capturedSystemPrompt, contains('User Archetype: Creator'));
+      },
+    );
 
     test('returns fallback message when AI throws', () async {
       when(
@@ -50,10 +53,7 @@ void main() {
 
       final result = await service.enhanceUserWhy('I want to write daily');
 
-      expect(
-        result,
-        "Your motivation is powerful. Let's harness it.",
-      );
+      expect(result, "Your motivation is powerful. Let's harness it.");
     });
   });
 
@@ -94,30 +94,34 @@ void main() {
       expect(result, isEmpty);
     });
 
-    test('parses valid JSON array response into GoldilocksAdjustment list', () async {
-      final habits = [makeHabit(title: 'Read daily', currentStreak: 10)];
+    test(
+      'parses valid JSON array response into GoldilocksAdjustment list',
+      () async {
+        final habits = [makeHabit(title: 'Read daily', currentStreak: 10)];
 
-      when(
-        () => mockGroq.getCoachAdvice(any(), any()),
-      ).thenAnswer((_) async => '''[
+        when(() => mockGroq.getCoachAdvice(any(), any())).thenAnswer(
+          (_) async => '''[
         {"habitTitle": "Read daily", "type": "increase", "suggestion": "Add 10 more pages", "reason": "Strong streak shows readiness"}
-      ]''');
+      ]''',
+        );
 
-      final result = await service.analyzeHabitPerformance(habits);
+        final result = await service.analyzeHabitPerformance(habits);
 
-      expect(result.length, 1);
-      expect(result[0].habitTitle, 'Read daily');
-      expect(result[0].type, AdjustmentType.increase);
-      expect(result[0].suggestion, 'Add 10 more pages');
-      expect(result[0].reason, 'Strong streak shows readiness');
-    });
+        expect(result.length, 1);
+        expect(result[0].habitTitle, 'Read daily');
+        expect(result[0].type, AdjustmentType.increase);
+        expect(result[0].suggestion, 'Add 10 more pages');
+        expect(result[0].reason, 'Strong streak shows readiness');
+      },
+    );
 
     test('handles markdown-wrapped JSON by stripping markers', () async {
       final habits = [makeHabit(title: 'Exercise', currentStreak: 3)];
 
-      when(
-        () => mockGroq.getCoachAdvice(any(), any()),
-      ).thenAnswer((_) async => '```json\n[{"habitTitle": "Exercise", "type": "maintain", "suggestion": "Keep going", "reason": "Consistent"}]```');
+      when(() => mockGroq.getCoachAdvice(any(), any())).thenAnswer(
+        (_) async =>
+            '```json\n[{"habitTitle": "Exercise", "type": "maintain", "suggestion": "Keep going", "reason": "Consistent"}]```',
+      );
 
       final result = await service.analyzeHabitPerformance(habits);
 
@@ -168,29 +172,32 @@ void main() {
     test('parses JSON into AiInsight list with correct type mapping', () async {
       final habits = [makeHabit(title: 'Meditate', currentStreak: 5)];
 
-      when(
-        () => mockGroq.getCoachAdvice(any(), any()),
-      ).thenAnswer((_) async => '''[
+      when(() => mockGroq.getCoachAdvice(any(), any())).thenAnswer(
+        (_) async => '''[
         {"type": "identity", "title": "Becoming Disciplined", "description": "Your meditation streak shows growing discipline", "action": "Increase to 15 minutes"}
-      ]''');
+      ]''',
+      );
 
       final result = await service.generateIdentityInsights(habits);
 
       expect(result.length, 1);
       expect(result[0].type, InsightType.identity);
       expect(result[0].title, 'Becoming Disciplined');
-      expect(result[0].description, 'Your meditation streak shows growing discipline');
+      expect(
+        result[0].description,
+        'Your meditation streak shows growing discipline',
+      );
       expect(result[0].action, 'Increase to 15 minutes');
     });
 
     test('parses pattern type correctly into InsightType.pattern', () async {
       final habits = [makeHabit(title: 'Read', currentStreak: 3)];
 
-      when(
-        () => mockGroq.getCoachAdvice(any(), any()),
-      ).thenAnswer((_) async => '''[
+      when(() => mockGroq.getCoachAdvice(any(), any())).thenAnswer(
+        (_) async => '''[
         {"type": "pattern", "title": "Morning Reader", "description": "You consistently read in the morning", "action": "Add a second reading session"}
-      ]''');
+      ]''',
+      );
 
       final result = await service.generateIdentityInsights(habits);
 

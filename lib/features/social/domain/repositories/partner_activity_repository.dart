@@ -10,8 +10,7 @@ abstract class PartnerActivityRepository {
   Stream<List<Map<String, dynamic>>> watchPartnerActivity(String userId);
 }
 
-class FirestorePartnerActivityRepository
-    implements PartnerActivityRepository {
+class FirestorePartnerActivityRepository implements PartnerActivityRepository {
   final FirebaseFirestore _firestore;
 
   FirestorePartnerActivityRepository(this._firestore);

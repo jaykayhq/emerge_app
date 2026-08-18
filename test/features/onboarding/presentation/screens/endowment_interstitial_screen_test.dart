@@ -5,9 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   testWidgets('shows anonymous welcome and starter items', (tester) async {
     await tester.pumpWidget(
-      MaterialApp(
-        home: const EndowmentInterstitialScreen(),
-      ),
+      MaterialApp(home: const EndowmentInterstitialScreen()),
     );
 
     expect(find.text('✨ Welcome, Future You'), findsOneWidget);

@@ -34,16 +34,11 @@ List<String> habitSuggestions(Ref ref) {
       .map((h) => h.title)
       .toList();
 
-  final archetypeTitles = ArchetypeTheme.forArchetype(archetype)
-      .suggestedHabits
-      .map((s) => s.title)
-      .toList();
+  final archetypeTitles = ArchetypeTheme.forArchetype(
+    archetype,
+  ).suggestedHabits.map((s) => s.title).toList();
 
-  final all = <String>[
-    ...userCreated,
-    ...archetypeTitles,
-    ..._curatedFallback,
-  ];
+  final all = <String>[...userCreated, ...archetypeTitles, ..._curatedFallback];
 
   return sortedSuggestions(
     all,

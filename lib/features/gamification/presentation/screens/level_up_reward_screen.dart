@@ -280,10 +280,7 @@ class _LevelUpRewardScreenState extends ConsumerState<LevelUpRewardScreen>
             ),
             child: const Text(
               'Customize Persona',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
             ),
           ),
         ),

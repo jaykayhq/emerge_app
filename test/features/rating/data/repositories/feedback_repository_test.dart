@@ -6,10 +6,12 @@ import 'package:mocktail/mocktail.dart';
 class _MockFirestore extends Mock implements FirebaseFirestore {}
 
 // ignore: subtype_of_sealed_class
-class _MockCollection extends Mock implements CollectionReference<Map<String, dynamic>> {}
+class _MockCollection extends Mock
+    implements CollectionReference<Map<String, dynamic>> {}
 
 // ignore: subtype_of_sealed_class
-class _MockDoc extends Mock implements DocumentReference<Map<String, dynamic>> {}
+class _MockDoc extends Mock
+    implements DocumentReference<Map<String, dynamic>> {}
 
 void main() {
   test('submitFeedback writes to feedback/{uid}', () async {
@@ -28,7 +30,9 @@ void main() {
     );
 
     expect(result.isRight(), isTrue);
-    final data = verify(() => doc.set(captureAny())).captured.single as Map<String, dynamic>;
+    final data =
+        verify(() => doc.set(captureAny())).captured.single
+            as Map<String, dynamic>;
     expect(data['userId'], 'u1');
     expect(data['rating'], 2);
     expect(data['message'], 'Too hard to track');
@@ -44,7 +48,11 @@ void main() {
     when(() => doc.set(any())).thenThrow(Exception('offline'));
 
     final repo = FeedbackRepository(firestore);
-    final result = await repo.submitFeedback(userId: 'u1', rating: 1, message: 'x');
+    final result = await repo.submitFeedback(
+      userId: 'u1',
+      rating: 1,
+      message: 'x',
+    );
     expect(result.isLeft(), isTrue);
   });
 }

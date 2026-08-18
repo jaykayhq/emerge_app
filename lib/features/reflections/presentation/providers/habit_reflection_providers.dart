@@ -12,11 +12,15 @@ part 'habit_reflection_providers.g.dart';
 
 @Riverpod(keepAlive: true)
 HabitReflectionLocalDatasource habitReflectionLocalDatasource(Ref ref) =>
-    HabitReflectionLocalDatasource(dao: ref.watch(appDatabaseProvider).habitReflectionsDao);
+    HabitReflectionLocalDatasource(
+      dao: ref.watch(appDatabaseProvider).habitReflectionsDao,
+    );
 
 @Riverpod(keepAlive: true)
 HabitReflectionRemoteDatasource habitReflectionRemoteDatasource(Ref ref) =>
-    FirestoreHabitReflectionRemoteDatasource(firestore: FirebaseFirestore.instance);
+    FirestoreHabitReflectionRemoteDatasource(
+      firestore: FirebaseFirestore.instance,
+    );
 
 @Riverpod(keepAlive: true)
 HabitReflectionRepository habitReflectionRepository(Ref ref) =>
@@ -62,10 +66,8 @@ Future<void> saveHabitReflection(
   // disposing this auto-dispose provider. Ref is unusable after that, so
   // skip the invalidation — the next read fetches fresh data anyway.
   if (ref.mounted) {
-    ref.invalidate(habitReflectionProvider(
-      userId: userId,
-      habitId: habitId,
-      date: date,
-    ));
+    ref.invalidate(
+      habitReflectionProvider(userId: userId, habitId: habitId, date: date),
+    );
   }
 }

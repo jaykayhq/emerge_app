@@ -41,9 +41,9 @@ class EnhancedSyncEngine {
     // applies the CURRENT user's rows. When null (tests, legacy callers)
     // the engine keeps flush-everything behavior.
     String? Function()? currentUserId,
-  })  : _metrics = metrics ?? SyncMetrics(),
-        _currentUserIdFn = currentUserId,
-        capBackoff = maxBackoff ?? const Duration(minutes: 5);
+  }) : _metrics = metrics ?? SyncMetrics(),
+       _currentUserIdFn = currentUserId,
+       capBackoff = maxBackoff ?? const Duration(minutes: 5);
 
   SyncMetrics get metrics => _metrics;
 
@@ -86,27 +86,25 @@ class EnhancedSyncEngine {
     required String collectionPath,
     required String documentId,
     required Map<String, dynamic> data,
-  }) =>
-      enqueueMutation(
-        collectionPath: collectionPath,
-        documentId: documentId,
-        operation: 'set',
-        data: data,
-      );
+  }) => enqueueMutation(
+    collectionPath: collectionPath,
+    documentId: documentId,
+    operation: 'set',
+    data: data,
+  );
 
   Future<void> enqueueUpdate({
     required String collectionPath,
     required String documentId,
     required Map<String, dynamic> data,
     String? idempotencyKey,
-  }) =>
-      enqueueMutation(
-        collectionPath: collectionPath,
-        documentId: documentId,
-        operation: 'update',
-        data: data,
-        idempotencyKey: idempotencyKey,
-      );
+  }) => enqueueMutation(
+    collectionPath: collectionPath,
+    documentId: documentId,
+    operation: 'update',
+    data: data,
+    idempotencyKey: idempotencyKey,
+  );
 
   Future<void> processMutationQueue() async {
     if (_isProcessing) {
@@ -152,13 +150,17 @@ class EnhancedSyncEngine {
             nextRetryAt: nextRetry.toIso8601String(),
             status: status,
           );
-          AppLogger.w('SyncEngine: Mutation ${mutation.id} failed '
-              '(attempt $nextCount/$maxRetries) -> $status');
+          AppLogger.w(
+            'SyncEngine: Mutation ${mutation.id} failed '
+            '(attempt $nextCount/$maxRetries) -> $status',
+          );
         }
       }
-      _setStatus(_consecutiveFailures >= breakerThreshold
-          ? SyncStatus.degraded
-          : SyncStatus.idle);
+      _setStatus(
+        _consecutiveFailures >= breakerThreshold
+            ? SyncStatus.degraded
+            : SyncStatus.idle,
+      );
     } catch (e) {
       AppLogger.e('SyncEngine: processing error', e);
       _setStatus(SyncStatus.degraded);
@@ -193,7 +195,8 @@ class EnhancedSyncEngine {
     if (deadMutations.isEmpty) return;
 
     AppLogger.d(
-        '[SyncEngine] Reviving ${deadMutations.length} dead-lettered mutations');
+      '[SyncEngine] Reviving ${deadMutations.length} dead-lettered mutations',
+    );
     for (final mutation in deadMutations) {
       await _mutationQueue.updateStatus(mutation.id, 'pending');
       await _mutationQueue.updateRetryCount(mutation.id, 0);

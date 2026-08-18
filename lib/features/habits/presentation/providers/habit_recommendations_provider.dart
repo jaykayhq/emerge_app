@@ -44,21 +44,23 @@ List<HabitRecommendation> filterHabitRecommendations({
     int? timerMinutes,
   }) {
     if (!seen.add(title.toLowerCase())) return;
-    out.add(HabitRecommendation(
-      title: title,
-      emoji: emoji,
-      attribute: attribute,
-      timerMinutes: timerMinutes,
-    ));
+    out.add(
+      HabitRecommendation(
+        title: title,
+        emoji: emoji,
+        attribute: attribute,
+        timerMinutes: timerMinutes,
+      ),
+    );
   }
 
   void addSuggestion(String title) => add(title: title);
   void addTemplate(HabitTemplate t) => add(
-        title: t.title,
-        emoji: t.emoji,
-        attribute: t.attribute,
-        timerMinutes: t.timerDurationMinutes > 0 ? t.timerDurationMinutes : null,
-      );
+    title: t.title,
+    emoji: t.emoji,
+    attribute: t.attribute,
+    timerMinutes: t.timerDurationMinutes > 0 ? t.timerDurationMinutes : null,
+  );
 
   if (query.isEmpty) {
     // Nothing typed yet: the user's/archetype/curated suggestions first, then
@@ -85,8 +87,7 @@ List<HabitRecommendation> filterHabitRecommendations({
     }
   }
   for (final s in suggestions) {
-    if (!s.toLowerCase().startsWith(query) &&
-        s.toLowerCase().contains(query)) {
+    if (!s.toLowerCase().startsWith(query) && s.toLowerCase().contains(query)) {
       addSuggestion(s);
     }
   }

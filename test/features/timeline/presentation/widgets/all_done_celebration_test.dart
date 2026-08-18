@@ -8,7 +8,9 @@ void main() {
   ) async {
     final key = GlobalKey<AllDoneCelebrationState>();
     await tester.pumpWidget(
-      MaterialApp(home: Scaffold(body: AllDoneCelebration(key: key))),
+      MaterialApp(
+        home: Scaffold(body: AllDoneCelebration(key: key)),
+      ),
     );
 
     final fadeFinder = find.descendant(

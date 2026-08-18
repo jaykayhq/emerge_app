@@ -4,10 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('CompanionMessage', () {
     test('constructor sets message and tone', () {
-      const message = CompanionMessage(
-        message: 'Hello!',
-        tone: 'encouraging',
-      );
+      const message = CompanionMessage(message: 'Hello!', tone: 'encouraging');
 
       expect(message.message, 'Hello!');
       expect(message.tone, 'encouraging');

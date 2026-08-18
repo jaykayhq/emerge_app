@@ -26,8 +26,8 @@ class CompletionXpSplit {
   const CompletionXpSplit._undo({
     required int xpGained,
     required int challengeXp,
-  })  : xpGained = -xpGained,
-        challengeXp = -challengeXp;
+  }) : xpGained = -xpGained,
+       challengeXp = -challengeXp;
 }
 
 /// The single `user_stats` enqueue shape used by the credit path
@@ -40,14 +40,10 @@ Map<String, dynamic> buildUserStatsXpPayload({
   required int level,
   required int streak,
   required String updatedAt,
-}) =>
-    {
-      'avatarStats.totalXp': {'__type__': 'increment', 'value': totalDelta},
-      'avatarStats.level': level,
-      'avatarStats.streak': streak,
-      'avatarStats.${attr}Xp': {
-        '__type__': 'increment',
-        'value': totalDelta,
-      },
-      'updatedAt': updatedAt,
-    };
+}) => {
+  'avatarStats.totalXp': {'__type__': 'increment', 'value': totalDelta},
+  'avatarStats.level': level,
+  'avatarStats.streak': streak,
+  'avatarStats.${attr}Xp': {'__type__': 'increment', 'value': totalDelta},
+  'updatedAt': updatedAt,
+};

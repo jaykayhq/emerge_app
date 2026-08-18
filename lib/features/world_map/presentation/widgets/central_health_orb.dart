@@ -21,7 +21,8 @@ class CentralHealthOrb extends StatefulWidget {
   State<CentralHealthOrb> createState() => _CentralHealthOrbState();
 }
 
-class _CentralHealthOrbState extends State<CentralHealthOrb> with SingleTickerProviderStateMixin {
+class _CentralHealthOrbState extends State<CentralHealthOrb>
+    with SingleTickerProviderStateMixin {
   FragmentProgram? _program;
   bool _shaderError = false;
   late Ticker _ticker;
@@ -41,7 +42,9 @@ class _CentralHealthOrbState extends State<CentralHealthOrb> with SingleTickerPr
 
   Future<void> _loadShader() async {
     try {
-      final program = await FragmentProgram.fromAsset('shaders/cracked_orb.frag');
+      final program = await FragmentProgram.fromAsset(
+        'shaders/cracked_orb.frag',
+      );
       if (mounted) setState(() => _program = program);
     } catch (e) {
       if (mounted) setState(() => _shaderError = true);
@@ -50,7 +53,8 @@ class _CentralHealthOrbState extends State<CentralHealthOrb> with SingleTickerPr
 
   void _handleTap() {
     final now = DateTime.now();
-    if (_lastTapTime == null || now.difference(_lastTapTime!) > const Duration(seconds: 1)) {
+    if (_lastTapTime == null ||
+        now.difference(_lastTapTime!) > const Duration(seconds: 1)) {
       _tapCount = 1;
     } else {
       _tapCount++;
@@ -95,8 +99,8 @@ class _CentralHealthOrbState extends State<CentralHealthOrb> with SingleTickerPr
       },
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final size = constraints.maxWidth < double.infinity 
-              ? constraints.maxWidth * 0.4 
+          final size = constraints.maxWidth < double.infinity
+              ? constraints.maxWidth * 0.4
               : 140.0;
           final clampedSize = size.clamp(100.0, 200.0);
 
@@ -137,7 +141,7 @@ class _OrbPainter extends CustomPainter {
     shader.setFloat(3, pan.value.dx);
     shader.setFloat(4, pan.value.dy);
     shader.setFloat(5, healthPct);
-    
+
     canvas.drawRect(Offset.zero & size, Paint()..shader = shader);
   }
 

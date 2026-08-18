@@ -14,8 +14,9 @@ Widget buildTest({
   return ProviderScope(
     overrides: [
       partnersListStreamProvider.overrideWith((ref) => Stream.value(partners)),
-      pendingPartnerRequestsStreamProvider
-          .overrideWith((ref) => Stream.value(requests)),
+      pendingPartnerRequestsStreamProvider.overrideWith(
+        (ref) => Stream.value(requests),
+      ),
     ],
     child: MaterialApp.router(
       routerConfig: GoRouter(
@@ -38,11 +39,8 @@ Widget buildTest({
   );
 }
 
-Friend _friend(String id, String name) => Friend(
-      id: id,
-      name: name,
-      archetype: FriendArchetype.creator,
-    );
+Friend _friend(String id, String name) =>
+    Friend(id: id, name: name, archetype: FriendArchetype.creator);
 
 void main() {
   testWidgets('header reads YOUR CIRCLE', (tester) async {
@@ -53,10 +51,9 @@ void main() {
   });
 
   testWidgets('renders partner avatars', (tester) async {
-    await tester.pumpWidget(buildTest(partners: [
-      _friend('p1', 'Alex'),
-      _friend('p2', 'Sam'),
-    ]));
+    await tester.pumpWidget(
+      buildTest(partners: [_friend('p1', 'Alex'), _friend('p2', 'Sam')]),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
     expect(find.text('Alex'), findsOneWidget);
@@ -64,20 +61,22 @@ void main() {
   });
 
   testWidgets('shows request badge when requests pending', (tester) async {
-    await tester.pumpWidget(buildTest(
-      requests: [
-        PartnerRequest(
-          id: 'r1',
-          senderId: 's1',
-          senderName: 'Pat',
-          senderArchetype: 'creator',
-          senderLevel: 1,
-          recipientId: 'me',
-          status: 'pending',
-          createdAt: DateTime.now(),
-        ),
-      ],
-    ));
+    await tester.pumpWidget(
+      buildTest(
+        requests: [
+          PartnerRequest(
+            id: 'r1',
+            senderId: 's1',
+            senderName: 'Pat',
+            senderArchetype: 'creator',
+            senderLevel: 1,
+            recipientId: 'me',
+            status: 'pending',
+            createdAt: DateTime.now(),
+          ),
+        ],
+      ),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
     // The badge shows the request count as text "1".

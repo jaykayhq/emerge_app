@@ -43,12 +43,15 @@ class TribeMembershipService {
       // SP-G D1/B2: the Drift-only guard above misses users whose Firestore
       // membership survived a reinstall. Check Firestore first.
       final existingDocs = await _firestore
-          .collection('users').doc(userId).collection('tribes')
+          .collection('users')
+          .doc(userId)
+          .collection('tribes')
           .limit(1)
           .get();
       if (existingDocs.docs.isNotEmpty) {
-        return Left(UnknownFailure(
-            'Already in tribe ${existingDocs.docs.first.id}'));
+        return Left(
+          UnknownFailure('Already in tribe ${existingDocs.docs.first.id}'),
+        );
       }
 
       // 2. Firestore transaction FIRST (authoritative source of truth).
@@ -65,12 +68,19 @@ class TribeMembershipService {
         // SP-G D3/B11: rejoining must never wipe previously contributed
         // totals — read the contributor doc now, branch on existence below.
         final contributorRef = _firestore
-            .collection('tribes').doc(tribeId).collection('contributors').doc(userId);
+            .collection('tribes')
+            .doc(tribeId)
+            .collection('contributors')
+            .doc(userId);
         final contributorSnap = await transaction.get(contributorRef);
 
         // Write the user's membership subcollection atomically
         transaction.set(
-          _firestore.collection('users').doc(userId).collection('tribes').doc(tribeId),
+          _firestore
+              .collection('users')
+              .doc(userId)
+              .collection('tribes')
+              .doc(tribeId),
           {
             'tribeId': tribeId,
             'joinedAt': FieldValue.serverTimestamp(),
@@ -102,13 +112,15 @@ class TribeMembershipService {
 
       // 3. Drift write AFTER Firestore succeeds (local cache)
       await _dao.deactivateAll(userId);
-      await _dao.upsertMembership(UserTribeTableCompanion(
-        userId: Value(userId),
-        tribeId: Value(tribeId),
-        membershipType: Value(type),
-        joinedAt: Value(DateTime.now().toIso8601String()),
-        isActive: const Value(true),
-      ));
+      await _dao.upsertMembership(
+        UserTribeTableCompanion(
+          userId: Value(userId),
+          tribeId: Value(tribeId),
+          membershipType: Value(type),
+          joinedAt: Value(DateTime.now().toIso8601String()),
+          isActive: const Value(true),
+        ),
+      );
       // Reflect the +1 locally until the server trigger's count arrives via
       // the sync/stream path.
       await _tribeStatsDao.incrementMemberCount(tribeId, delta: 1);
@@ -141,7 +153,11 @@ class TribeMembershipService {
       await _firestore.runTransaction((transaction) async {
         // Remove the user's membership subcollection doc
         transaction.delete(
-          _firestore.collection('users').doc(userId).collection('tribes').doc(tribeId),
+          _firestore
+              .collection('users')
+              .doc(userId)
+              .collection('tribes')
+              .doc(tribeId),
         );
       });
 
@@ -175,5 +191,12 @@ final tribeMembershipServiceProvider = Provider<TribeMembershipService>((ref) {
   final dao = ref.watch(tribeMembershipDaoProvider);
   final tribeStatsDao = ref.watch(tribeStatsDaoProvider);
   final syncEngine = ref.watch(enhancedSyncEngineProvider);
-  return TribeMembershipService(repository, dao, tribeStatsDao, syncEngine, FirebaseFirestore.instance, ref);
+  return TribeMembershipService(
+    repository,
+    dao,
+    tribeStatsDao,
+    syncEngine,
+    FirebaseFirestore.instance,
+    ref,
+  );
 });

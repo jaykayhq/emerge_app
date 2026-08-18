@@ -47,23 +47,26 @@ void main() {
     expect(tempDir.listSync(), isEmpty);
   });
 
-  test('native branch writes temp files and returns path-based XFiles', () async {
-    final files = await buildShareFiles(
-      fileNames: const ['a.png', 'b.png'],
-      images: [bytes, bytes],
-      web: false,
-    );
+  test(
+    'native branch writes temp files and returns path-based XFiles',
+    () async {
+      final files = await buildShareFiles(
+        fileNames: const ['a.png', 'b.png'],
+        images: [bytes, bytes],
+        web: false,
+      );
 
-    expect(files, hasLength(2));
-    expect(files[0].mimeType, 'image/png');
-    final written = tempDir
-        .listSync()
-        .whereType<File>()
-        .map((f) => f.path.split('/').last)
-        .toList();
-    expect(written.toSet(), {'a.png', 'b.png'});
-    expect(await files[0].readAsBytes(), bytes);
-  });
+      expect(files, hasLength(2));
+      expect(files[0].mimeType, 'image/png');
+      final written = tempDir
+          .listSync()
+          .whereType<File>()
+          .map((f) => f.path.split('/').last)
+          .toList();
+      expect(written.toSet(), {'a.png', 'b.png'});
+      expect(await files[0].readAsBytes(), bytes);
+    },
+  );
 
   test('maps share_plus results to our outcome enum', () {
     expect(

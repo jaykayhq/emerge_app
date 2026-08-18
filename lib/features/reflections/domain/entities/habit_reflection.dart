@@ -24,11 +24,7 @@ class HabitReflection extends Equatable {
     required this.updatedAt,
   });
 
-  HabitReflection copyWith({
-    Mood? mood,
-    String? note,
-    DateTime? updatedAt,
-  }) {
+  HabitReflection copyWith({Mood? mood, String? note, DateTime? updatedAt}) {
     return HabitReflection(
       id: id,
       userId: userId,

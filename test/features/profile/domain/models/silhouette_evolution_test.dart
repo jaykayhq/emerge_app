@@ -266,28 +266,38 @@ void main() {
   group('SilhouetteEvolutionState.phaseName', () {
     test('returns correct name for each of the 5 phases', () {
       expect(
-        SilhouetteEvolutionState(phase: EvolutionPhase.phantom, level: 1)
-            .phaseName,
+        SilhouetteEvolutionState(
+          phase: EvolutionPhase.phantom,
+          level: 1,
+        ).phaseName,
         'The Phantom',
       );
       expect(
-        SilhouetteEvolutionState(phase: EvolutionPhase.construct, level: 6)
-            .phaseName,
+        SilhouetteEvolutionState(
+          phase: EvolutionPhase.construct,
+          level: 6,
+        ).phaseName,
         'The Construct',
       );
       expect(
-        SilhouetteEvolutionState(phase: EvolutionPhase.incarnate, level: 16)
-            .phaseName,
+        SilhouetteEvolutionState(
+          phase: EvolutionPhase.incarnate,
+          level: 16,
+        ).phaseName,
         'The Incarnate',
       );
       expect(
-        SilhouetteEvolutionState(phase: EvolutionPhase.radiant, level: 31)
-            .phaseName,
+        SilhouetteEvolutionState(
+          phase: EvolutionPhase.radiant,
+          level: 31,
+        ).phaseName,
         'The Radiant',
       );
       expect(
-        SilhouetteEvolutionState(phase: EvolutionPhase.ascended, level: 50)
-            .phaseName,
+        SilhouetteEvolutionState(
+          phase: EvolutionPhase.ascended,
+          level: 50,
+        ).phaseName,
         'The Ascended',
       );
     });
@@ -296,28 +306,38 @@ void main() {
   group('SilhouetteEvolutionState.phaseDescription', () {
     test('returns correct description for each of the 5 phases', () {
       expect(
-        SilhouetteEvolutionState(phase: EvolutionPhase.phantom, level: 1)
-            .phaseDescription,
+        SilhouetteEvolutionState(
+          phase: EvolutionPhase.phantom,
+          level: 1,
+        ).phaseDescription,
         'I am potential, but undefined.',
       );
       expect(
-        SilhouetteEvolutionState(phase: EvolutionPhase.construct, level: 6)
-            .phaseDescription,
+        SilhouetteEvolutionState(
+          phase: EvolutionPhase.construct,
+          level: 6,
+        ).phaseDescription,
         'I am building the framework.',
       );
       expect(
-        SilhouetteEvolutionState(phase: EvolutionPhase.incarnate, level: 16)
-            .phaseDescription,
+        SilhouetteEvolutionState(
+          phase: EvolutionPhase.incarnate,
+          level: 16,
+        ).phaseDescription,
         'I am here. I am consistent.',
       );
       expect(
-        SilhouetteEvolutionState(phase: EvolutionPhase.radiant, level: 31)
-            .phaseDescription,
+        SilhouetteEvolutionState(
+          phase: EvolutionPhase.radiant,
+          level: 31,
+        ).phaseDescription,
         'I am powerful. My habits are fueling me.',
       );
       expect(
-        SilhouetteEvolutionState(phase: EvolutionPhase.ascended, level: 50)
-            .phaseDescription,
+        SilhouetteEvolutionState(
+          phase: EvolutionPhase.ascended,
+          level: 50,
+        ).phaseDescription,
         'I have transcended. The habit is my identity.',
       );
     });

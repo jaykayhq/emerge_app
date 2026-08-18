@@ -15,7 +15,7 @@ void widgetSyncService(Ref ref) {
     _syncHabitStack(next);
   });
 
-  // Listen to completion rate 
+  // Listen to completion rate
   ref.listen(todayCompletionRateProvider, (prev, next) {
     _syncWorldHealth(ref.read(userStreakProvider).value ?? 0, next);
   });
@@ -23,14 +23,14 @@ void widgetSyncService(Ref ref) {
   // Listen to streak
   ref.listen(userStreakProvider, (prev, next) {
     next.whenData((streak) {
-       _syncWorldHealth(streak, ref.read(todayCompletionRateProvider));
+      _syncWorldHealth(streak, ref.read(todayCompletionRateProvider));
     });
   });
-  
+
   // Initial sync
   final habits = ref.read(todaysHabitsProvider);
   _syncHabitStack(habits);
-  
+
   final streak = ref.read(userStreakProvider).value ?? 0;
   final rate = ref.read(todayCompletionRateProvider);
   _syncWorldHealth(streak, rate);
@@ -42,11 +42,13 @@ Future<void> _syncHabitStack(List<Habit> habits) async {
     final uncompleted = habits.where((h) {
       final last = h.lastCompletedDate;
       if (last == null) return true;
-      return !(last.year == now.year && last.month == now.month && last.day == now.day);
+      return !(last.year == now.year &&
+          last.month == now.month &&
+          last.day == now.day);
     }).toList();
-    
+
     final top3 = uncompleted.take(3).map((h) => h.title).toList();
-    
+
     await HomeWidget.saveWidgetData<String>('top_habits', jsonEncode(top3));
     await HomeWidget.updateWidget(
       name: 'HabitStackWidgetProvider',
@@ -60,9 +62,15 @@ Future<void> _syncHabitStack(List<Habit> habits) async {
 Future<void> _syncWorldHealth(int streak, double rate) async {
   try {
     final ratePercentage = (rate * 100).toInt();
-    await HomeWidget.saveWidgetData<String>('world_health_percentage', '$ratePercentage%');
-    await HomeWidget.saveWidgetData<String>('momentum_streak', 'Streak: $streak');
-    
+    await HomeWidget.saveWidgetData<String>(
+      'world_health_percentage',
+      '$ratePercentage%',
+    );
+    await HomeWidget.saveWidgetData<String>(
+      'momentum_streak',
+      'Streak: $streak',
+    );
+
     await HomeWidget.updateWidget(
       name: 'WorldHealthWidgetProvider',
       androidName: 'WorldHealthWidgetProvider',

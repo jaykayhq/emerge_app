@@ -23,9 +23,7 @@ Widget _buildTest({
     // immediately surface errors as AsyncError (rather than AsyncLoading+retry).
     // This keeps tests fast and deterministic.
     retry: (count, error) => null,
-    child: MaterialApp.router(
-      routerConfig: router,
-    ),
+    child: MaterialApp.router(routerConfig: router),
   );
 }
 
@@ -42,21 +40,17 @@ void main() {
         ),
         GoRoute(
           path: '/splash',
-          builder: (context, state) => const Scaffold(
-            body: Text('splash-page'),
-          ),
+          builder: (context, state) =>
+              const Scaffold(body: Text('splash-page')),
         ),
         GoRoute(
           path: '/creator/dashboard',
-          builder: (context, state) => const Scaffold(
-            body: Text('dashboard-page'),
-          ),
+          builder: (context, state) =>
+              const Scaffold(body: Text('dashboard-page')),
         ),
         GoRoute(
           path: '/creator/login',
-          builder: (context, state) => const Scaffold(
-            body: Text('login-page'),
-          ),
+          builder: (context, state) => const Scaffold(body: Text('login-page')),
         ),
       ],
     );
@@ -104,9 +98,9 @@ void main() {
     await setMobileViewport(tester);
 
     final mockAuth = MockAuthRepository();
-    when(() => mockAuth.checkUsernameAvailability(any())).thenAnswer(
-      (_) async => right<Failure, bool>(false),
-    );
+    when(
+      () => mockAuth.checkUsernameAvailability(any()),
+    ).thenAnswer((_) async => right<Failure, bool>(false));
 
     await tester.pumpWidget(
       _buildTest(
@@ -135,7 +129,10 @@ void main() {
     expect(find.text('Username is required'), findsOneWidget);
     expect(find.text('Email is required'), findsOneWidget);
     expect(find.text('Password is required'), findsOneWidget);
-    expect(find.text('An invite code is required to become a creator'), findsOneWidget);
+    expect(
+      find.text('An invite code is required to become a creator'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('invite code field validates format', (tester) async {
@@ -151,20 +148,27 @@ void main() {
     await tester.tap(find.text('Register as Creator'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Invite codes are 8 characters (A-Z, 2-9)'), findsOneWidget);
+    expect(
+      find.text('Invite codes are 8 characters (A-Z, 2-9)'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('successful email signup navigates to splash', (tester) async {
     await setMobileViewport(tester);
 
     final mockAuth = MockAuthRepository();
-    when(() => mockAuth.checkUsernameAvailability(any())).thenAnswer(
-      (_) async => right<Failure, bool>(true),
-    );
+    when(
+      () => mockAuth.checkUsernameAvailability(any()),
+    ).thenAnswer((_) async => right<Failure, bool>(true));
 
     final overrides = [
-      signUpCreatorProvider('test@example.com', 'Str0ngP@sswd!', 'TestUser', 'ABCDEFGH')
-          .overrideWith((ref) async {}),
+      signUpCreatorProvider(
+        'test@example.com',
+        'Str0ngP@sswd!',
+        'TestUser',
+        'ABCDEFGH',
+      ).overrideWith((ref) async {}),
       authRepositoryProvider.overrideWithValue(mockAuth),
     ];
 
@@ -172,7 +176,10 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextFormField).at(0), 'TestUser');
-    await tester.enterText(find.byType(TextFormField).at(1), 'test@example.com');
+    await tester.enterText(
+      find.byType(TextFormField).at(1),
+      'test@example.com',
+    );
     await tester.enterText(find.byType(TextFormField).at(2), 'Str0ngP@sswd!');
     await tester.enterText(find.byType(TextFormField).at(3), 'Str0ngP@sswd!');
     await tester.enterText(find.byType(TextFormField).at(4), 'ABCDEFGH');
@@ -188,16 +195,20 @@ void main() {
     await setMobileViewport(tester);
 
     final mockAuth = MockAuthRepository();
-    when(() => mockAuth.checkUsernameAvailability(any())).thenAnswer(
-      (_) async => right<Failure, bool>(true),
-    );
+    when(
+      () => mockAuth.checkUsernameAvailability(any()),
+    ).thenAnswer((_) async => right<Failure, bool>(true));
 
     final overrides = [
-      signUpCreatorProvider('test@example.com', 'Str0ngP@sswd!', 'TestUser', 'ABCDEFGH')
-          .overrideWith((ref) async {
-            await Future.value();
-            throw Exception('Sign up failed');
-          }),
+      signUpCreatorProvider(
+        'test@example.com',
+        'Str0ngP@sswd!',
+        'TestUser',
+        'ABCDEFGH',
+      ).overrideWith((ref) async {
+        await Future.value();
+        throw Exception('Sign up failed');
+      }),
       authRepositoryProvider.overrideWithValue(mockAuth),
     ];
 
@@ -205,7 +216,10 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextFormField).at(0), 'TestUser');
-    await tester.enterText(find.byType(TextFormField).at(1), 'test@example.com');
+    await tester.enterText(
+      find.byType(TextFormField).at(1),
+      'test@example.com',
+    );
     await tester.enterText(find.byType(TextFormField).at(2), 'Str0ngP@sswd!');
     await tester.enterText(find.byType(TextFormField).at(3), 'Str0ngP@sswd!');
     await tester.enterText(find.byType(TextFormField).at(4), 'ABCDEFGH');
@@ -222,13 +236,15 @@ void main() {
     await setMobileViewport(tester);
 
     final mockAuth = MockAuthRepository();
-    when(() => mockAuth.checkUsernameAvailability(any())).thenAnswer(
-      (_) async => right<Failure, bool>(true),
-    );
+    when(
+      () => mockAuth.checkUsernameAvailability(any()),
+    ).thenAnswer((_) async => right<Failure, bool>(true));
 
     final overrides = [
-      signUpCreatorWithGoogleProvider('ABCDEFGH', 'TestUser')
-          .overrideWith((ref) async {}),
+      signUpCreatorWithGoogleProvider(
+        'ABCDEFGH',
+        'TestUser',
+      ).overrideWith((ref) async {}),
       authRepositoryProvider.overrideWithValue(mockAuth),
     ];
 
@@ -250,8 +266,7 @@ void main() {
     await setMobileViewport(tester);
 
     final overrides = [
-      signUpCreatorWithGoogleProvider('ABCDEFGH', '')
-          .overrideWith((ref) async {
+      signUpCreatorWithGoogleProvider('ABCDEFGH', '').overrideWith((ref) async {
         await Future<void>.value();
         throw Exception('Google sign-up failed');
       }),
@@ -271,8 +286,9 @@ void main() {
     expect(find.text('Google sign-up failed'), findsOneWidget);
   });
 
-  testWidgets('errors appear only after interacting with a field',
-      (tester) async {
+  testWidgets('errors appear only after interacting with a field', (
+    tester,
+  ) async {
     await setMobileViewport(tester);
 
     await tester.pumpWidget(_buildTest(router: router));
@@ -288,8 +304,9 @@ void main() {
     );
   });
 
-  testWidgets('password checklist appears while typing, not on confirm field',
-      (tester) async {
+  testWidgets('password checklist appears while typing, not on confirm field', (
+    tester,
+  ) async {
     await setMobileViewport(tester);
 
     await tester.pumpWidget(_buildTest(router: router));

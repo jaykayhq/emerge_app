@@ -63,7 +63,9 @@ class StreakWatchdog {
         }
         await _markChecked(partner.id);
 
-        final lastCompletion = await habitCompletionsDao.getLastCompletion(partner.id);
+        final lastCompletion = await habitCompletionsDao.getLastCompletion(
+          partner.id,
+        );
         if (lastCompletion == null) continue;
 
         final completedAt = DateTime.parse(lastCompletion.completedAt);

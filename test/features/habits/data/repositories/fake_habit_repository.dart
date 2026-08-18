@@ -106,7 +106,8 @@ class FakeHabitRepository implements HabitRepository {
   }
 
   @override
-  Future<Either<Failure, List<HabitCompletionEntity>>> getCompletionsBetweenDates(
+  Future<Either<Failure, List<HabitCompletionEntity>>>
+  getCompletionsBetweenDates(
     String userId,
     DateTime start,
     DateTime end,

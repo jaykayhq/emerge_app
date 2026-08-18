@@ -58,9 +58,7 @@ Tribe _tribe({String id = 'tribe_1', String? archetypeId}) {
 
 Widget _harness(Tribe tribe, BlueprintRepository repo) {
   return ProviderScope(
-    overrides: [
-      blueprintRepositoryProvider.overrideWithValue(repo),
-    ],
+    overrides: [blueprintRepositoryProvider.overrideWithValue(repo)],
     child: MaterialApp(
       home: Scaffold(body: TribeBlueprintsSection(tribe: tribe)),
     ),
@@ -112,8 +110,9 @@ void main() {
     expect(find.text('BLUEPRINTS'), findsOneWidget);
   });
 
-  testWidgets('creator tribe renders its own published blueprints',
-      (tester) async {
+  testWidgets('creator tribe renders its own published blueprints', (
+    tester,
+  ) async {
     final firestore = FakeFirebaseFirestore();
     await _seedBlueprints(firestore, [
       _blueprint(id: 'tribe_x_bp', creatorTribeId: 'tribe_x'),
@@ -133,8 +132,9 @@ void main() {
     expect(find.text('tribe_y_bp'), findsNothing);
   });
 
-  testWidgets('creator tribe with no pinned blueprints shows empty state',
-      (tester) async {
+  testWidgets('creator tribe with no pinned blueprints shows empty state', (
+    tester,
+  ) async {
     final firestore = FakeFirebaseFirestore();
     await _seedBlueprints(firestore, [
       _blueprint(id: 'other_tribe_bp', creatorTribeId: 'tribe_y'),

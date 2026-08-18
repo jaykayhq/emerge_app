@@ -181,8 +181,7 @@ void main() {
     int mergedChallenges({
       required int localChallenges,
       int? remoteChallenges,
-    }) =>
-        remoteChallenges ?? localChallenges;
+    }) => remoteChallenges ?? localChallenges;
     int mergedMemberCount({int? localMembers, int? remoteMembers}) =>
         remoteMembers ?? localMembers ?? 0;
 
@@ -195,7 +194,10 @@ void main() {
     test('remote totalHabitsCompleted wins over inflated local', () {
       const localHabits = 30;
       const remoteHabits = 20;
-      expect(mergedHabits(localHabits: localHabits, remoteHabits: remoteHabits), 20);
+      expect(
+        mergedHabits(localHabits: localHabits, remoteHabits: remoteHabits),
+        20,
+      );
     });
 
     test('remote totalChallengesCompleted wins over inflated local', () {

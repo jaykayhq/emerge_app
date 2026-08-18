@@ -15,7 +15,10 @@ void main() {
 
     test('undo debits are exact mirrors of credit deltas', () {
       const credit = CompletionXpSplit(xpGained: 10, challengeXp: 5);
-      const undo = CompletionXpSplit.fromStoredRow(xpGained: 10, challengeXp: 5);
+      const undo = CompletionXpSplit.fromStoredRow(
+        xpGained: 10,
+        challengeXp: 5,
+      );
       expect(undo.userStatsDelta, -credit.userStatsDelta);
       expect(undo.tribeDelta, -credit.tribeDelta);
     });
@@ -36,10 +39,14 @@ void main() {
         streak: 4,
         updatedAt: '2026-08-01T12:00:00.000',
       );
-      expect(payload['avatarStats.totalXp'],
-          {'__type__': 'increment', 'value': 15});
-      expect(payload['avatarStats.vitalityXp'],
-          {'__type__': 'increment', 'value': 15});
+      expect(payload['avatarStats.totalXp'], {
+        '__type__': 'increment',
+        'value': 15,
+      });
+      expect(payload['avatarStats.vitalityXp'], {
+        '__type__': 'increment',
+        'value': 15,
+      });
       expect(payload['avatarStats.level'], 3);
       expect(payload['avatarStats.streak'], 4);
       expect(payload['updatedAt'], '2026-08-01T12:00:00.000');

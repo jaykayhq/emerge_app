@@ -74,9 +74,7 @@ class _LevelUpListenerState extends ConsumerState<LevelUpListener> {
       final updatedStats = currentProfile.avatarStats.copyWith(
         lastCelebratedLevel: level,
       );
-      final updatedProfile = currentProfile.copyWith(
-        avatarStats: updatedStats,
-      );
+      final updatedProfile = currentProfile.copyWith(avatarStats: updatedStats);
       await repository.saveUserStats(updatedProfile);
     } catch (e) {
       // Log error but don't block the user experience

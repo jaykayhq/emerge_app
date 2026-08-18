@@ -163,12 +163,18 @@ void main() {
       expect(reconstructed.members, original.members);
       expect(reconstructed.affiliatePartnerId, original.affiliatePartnerId);
       expect(reconstructed.brandLogoUrl, original.brandLogoUrl);
-      expect(reconstructed.brandSponsorshipStart, original.brandSponsorshipStart);
+      expect(
+        reconstructed.brandSponsorshipStart,
+        original.brandSponsorshipStart,
+      );
       expect(reconstructed.brandSponsorshipEnd, original.brandSponsorshipEnd);
       expect(reconstructed.isFeatured, original.isFeatured);
       expect(reconstructed.maxMembers, original.maxMembers);
       expect(reconstructed.totalHabitsCompleted, original.totalHabitsCompleted);
-      expect(reconstructed.totalChallengesCompleted, original.totalChallengesCompleted);
+      expect(
+        reconstructed.totalChallengesCompleted,
+        original.totalChallengesCompleted,
+      );
     });
 
     test('fromMap handles null optional fields', () {

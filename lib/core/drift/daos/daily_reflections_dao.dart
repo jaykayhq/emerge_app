@@ -26,7 +26,10 @@ class DailyReflectionsDao extends DatabaseAccessor<AppDatabase>
 
   /// Returns the row for (userId, localDate), or null if none.
   /// Time component of [localDate] is ignored — only the calendar day matters.
-  Future<DailyReflectionsTableData?> getByDate(String userId, DateTime localDate) {
+  Future<DailyReflectionsTableData?> getByDate(
+    String userId,
+    DateTime localDate,
+  ) {
     final day = _dayOnly(localDate);
     return (select(dailyReflectionsTable)
           ..where((t) => t.userId.equals(userId) & t.localDate.equals(day))
@@ -58,8 +61,9 @@ class DailyReflectionsDao extends DatabaseAccessor<AppDatabase>
         ),
       );
     } else {
-      await (update(dailyReflectionsTable)..where((t) => t.id.equals(existing.id)))
-          .write(
+      await (update(
+        dailyReflectionsTable,
+      )..where((t) => t.id.equals(existing.id))).write(
         DailyReflectionsTableCompanion(
           mood: Value(mood.value),
           note: Value(note),

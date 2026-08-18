@@ -111,7 +111,9 @@ class AdManagerService {
 
       if (_rewardedAd == null) {
         // Still no ad — grant the reward as fallback (better UX than blocking)
-        debugPrint('[AdManager] Rewarded ad unavailable, granting reward as fallback');
+        debugPrint(
+          '[AdManager] Rewarded ad unavailable, granting reward as fallback',
+        );
         onRewarded();
         return;
       }

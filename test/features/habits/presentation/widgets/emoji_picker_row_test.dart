@@ -3,8 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:emerge_app/features/habits/presentation/widgets/emoji_picker_row.dart';
 
 void main() {
-  testWidgets('EmojiPickerRow shows recent emojis and the + chip',
-      (WidgetTester tester) async {
+  testWidgets('EmojiPickerRow shows recent emojis and the + chip', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(

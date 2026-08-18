@@ -81,7 +81,10 @@ class BlueprintCard extends StatelessWidget {
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [Colors.transparent, Colors.black.withValues(alpha: 0.5)],
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withValues(alpha: 0.5),
+                        ],
                       ),
                     ),
                   ),
@@ -89,14 +92,21 @@ class BlueprintCard extends StatelessWidget {
                     top: 8,
                     right: 8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black54,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         blueprint.difficulty.name.toUpperCase(),
-                        style: const TextStyle(color: Colors.white70, fontSize: 9, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -126,11 +136,18 @@ class BlueprintCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.favorite_border, size: 12, color: Colors.white24),
+                      const Icon(
+                        Icons.favorite_border,
+                        size: 12,
+                        color: Colors.white24,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         '${blueprint.adoptionCount}',
-                        style: const TextStyle(color: Colors.white24, fontSize: 10),
+                        style: const TextStyle(
+                          color: Colors.white24,
+                          fontSize: 10,
+                        ),
                       ),
                     ],
                   ),

@@ -11,7 +11,9 @@ part 'reflection_providers.g.dart';
 
 @Riverpod(keepAlive: true)
 ReflectionLocalDatasource reflectionLocalDatasource(Ref ref) =>
-    ReflectionLocalDatasource(dao: ref.watch(appDatabaseProvider).dailyReflectionsDao);
+    ReflectionLocalDatasource(
+      dao: ref.watch(appDatabaseProvider).dailyReflectionsDao,
+    );
 
 @Riverpod(keepAlive: true)
 ReflectionRemoteDatasource reflectionRemoteDatasource(Ref ref) =>
@@ -19,9 +21,9 @@ ReflectionRemoteDatasource reflectionRemoteDatasource(Ref ref) =>
 
 @Riverpod(keepAlive: true)
 ReflectionRepository reflectionRepository(Ref ref) => ReflectionRepository(
-      local: ref.watch(reflectionLocalDatasourceProvider),
-      remote: ref.watch(reflectionRemoteDatasourceProvider),
-    );
+  local: ref.watch(reflectionLocalDatasourceProvider),
+  remote: ref.watch(reflectionRemoteDatasourceProvider),
+);
 
 /// Loads the reflection for [date] (default = today). Returns null if none.
 @riverpod

@@ -12,9 +12,12 @@ void main() {
   group('applyCompletion', () {
     test('boosts momentum by 10 and resets consecutiveMisses', () {
       final habit = Habit(
-        id: 'h1', userId: 'u1', title: 'Test',
+        id: 'h1',
+        userId: 'u1',
+        title: 'Test',
         createdAt: DateTime.now(),
-        momentumScore: 30, consecutiveMisses: 3,
+        momentumScore: 30,
+        consecutiveMisses: 3,
       );
       final result = service.applyCompletion(habit);
       expect(result.momentumScore, 40);
@@ -23,9 +26,12 @@ void main() {
 
     test('caps momentum at 100', () {
       final habit = Habit(
-        id: 'h1', userId: 'u1', title: 'Test',
+        id: 'h1',
+        userId: 'u1',
+        title: 'Test',
         createdAt: DateTime.now(),
-        momentumScore: 95, consecutiveMisses: 0,
+        momentumScore: 95,
+        consecutiveMisses: 0,
       );
       final result = service.applyCompletion(habit);
       expect(result.momentumScore, 100);
@@ -35,9 +41,12 @@ void main() {
   group('applyDailyDecay', () {
     test('subtracts idle decay for first miss', () {
       final habit = Habit(
-        id: 'h1', userId: 'u1', title: 'Test',
+        id: 'h1',
+        userId: 'u1',
+        title: 'Test',
         createdAt: DateTime.now(),
-        momentumScore: 50, consecutiveMisses: 0,
+        momentumScore: 50,
+        consecutiveMisses: 0,
       );
       final result = service.applyDailyDecay(habit);
       expect(result.momentumScore, 48);
@@ -46,9 +55,12 @@ void main() {
 
     test('subtracts miss decay for subsequent misses', () {
       final habit = Habit(
-        id: 'h1', userId: 'u1', title: 'Test',
+        id: 'h1',
+        userId: 'u1',
+        title: 'Test',
         createdAt: DateTime.now(),
-        momentumScore: 50, consecutiveMisses: 2,
+        momentumScore: 50,
+        consecutiveMisses: 2,
       );
       final result = service.applyDailyDecay(habit);
       expect(result.momentumScore, 45);
@@ -57,9 +69,12 @@ void main() {
 
     test('caps momentum at 0', () {
       final habit = Habit(
-        id: 'h1', userId: 'u1', title: 'Test',
+        id: 'h1',
+        userId: 'u1',
+        title: 'Test',
         createdAt: DateTime.now(),
-        momentumScore: 1, consecutiveMisses: 0,
+        momentumScore: 1,
+        consecutiveMisses: 0,
       );
       final result = service.applyDailyDecay(habit);
       expect(result.momentumScore, 0);
@@ -69,9 +84,12 @@ void main() {
   group('applyMultiDayDecay', () {
     test('returns unchanged habit when daysMissed <= 0', () {
       final habit = Habit(
-        id: 'h1', userId: 'u1', title: 'Test',
+        id: 'h1',
+        userId: 'u1',
+        title: 'Test',
         createdAt: DateTime.now(),
-        momentumScore: 50, consecutiveMisses: 0,
+        momentumScore: 50,
+        consecutiveMisses: 0,
       );
       expect(service.applyMultiDayDecay(habit, 0), habit);
       expect(service.applyMultiDayDecay(habit, -1), habit);
@@ -79,9 +97,12 @@ void main() {
 
     test('applies correct decay for multiple missed days', () {
       final habit = Habit(
-        id: 'h1', userId: 'u1', title: 'Test',
+        id: 'h1',
+        userId: 'u1',
+        title: 'Test',
         createdAt: DateTime.now(),
-        momentumScore: 100, consecutiveMisses: 0,
+        momentumScore: 100,
+        consecutiveMisses: 0,
       );
       // 3 misses: first idle decay (2), then miss decay (5), then miss decay (5)
       final result = service.applyMultiDayDecay(habit, 3);
@@ -91,9 +112,12 @@ void main() {
 
     test('uses miss decay for all days when already missing', () {
       final habit = Habit(
-        id: 'h1', userId: 'u1', title: 'Test',
+        id: 'h1',
+        userId: 'u1',
+        title: 'Test',
         createdAt: DateTime.now(),
-        momentumScore: 100, consecutiveMisses: 5,
+        momentumScore: 100,
+        consecutiveMisses: 5,
       );
       final result = service.applyMultiDayDecay(habit, 2);
       expect(result.momentumScore, 90); // 100 - 5 - 5
@@ -104,16 +128,44 @@ void main() {
   group('computeWorldHealth', () {
     test('returns average momentum of active habits', () {
       final habits = [
-        Habit(id: 'h1', userId: 'u1', title: 'A', createdAt: DateTime.now(), momentumScore: 80, isArchived: false),
-        Habit(id: 'h2', userId: 'u1', title: 'B', createdAt: DateTime.now(), momentumScore: 20, isArchived: false),
+        Habit(
+          id: 'h1',
+          userId: 'u1',
+          title: 'A',
+          createdAt: DateTime.now(),
+          momentumScore: 80,
+          isArchived: false,
+        ),
+        Habit(
+          id: 'h2',
+          userId: 'u1',
+          title: 'B',
+          createdAt: DateTime.now(),
+          momentumScore: 20,
+          isArchived: false,
+        ),
       ];
       expect(service.computeWorldHealth(habits), 50);
     });
 
     test('excludes archived habits', () {
       final habits = [
-        Habit(id: 'h1', userId: 'u1', title: 'A', createdAt: DateTime.now(), momentumScore: 80, isArchived: false),
-        Habit(id: 'h2', userId: 'u1', title: 'B', createdAt: DateTime.now(), momentumScore: 20, isArchived: true),
+        Habit(
+          id: 'h1',
+          userId: 'u1',
+          title: 'A',
+          createdAt: DateTime.now(),
+          momentumScore: 80,
+          isArchived: false,
+        ),
+        Habit(
+          id: 'h2',
+          userId: 'u1',
+          title: 'B',
+          createdAt: DateTime.now(),
+          momentumScore: 20,
+          isArchived: true,
+        ),
       ];
       expect(service.computeWorldHealth(habits), 80);
     });

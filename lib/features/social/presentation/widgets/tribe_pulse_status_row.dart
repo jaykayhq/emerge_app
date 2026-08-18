@@ -67,7 +67,8 @@ class TribePulseStatusRow extends ConsumerWidget {
     final activityCount = activityAsync.value?.length ?? 0;
 
     final challengesAsync = ref.watch(userChallengesProvider);
-    final activeCount = challengesAsync.value
+    final activeCount =
+        challengesAsync.value
             ?.where((c) => c.status == ChallengeStatus.active)
             .length ??
         0;

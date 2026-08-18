@@ -326,7 +326,8 @@ class StarterHabitBlueprint {
       archetype: UserArchetype.stoic,
       interestCategories: [InterestCategory.mindfulness],
       clubTags: ['night-owl', 'stoic'],
-      sourceAttribution: 'Seneca — evening examination (5-Minute Journal format)',
+      sourceAttribution:
+          'Seneca — evening examination (5-Minute Journal format)',
     ),
     StarterHabitBlueprint(
       id: 'stoic.breath.pre',

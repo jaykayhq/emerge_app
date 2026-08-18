@@ -24,12 +24,8 @@ Widget _buildTest({bool isAdmin = true}) {
           ),
         ),
       ),
-      allBlueprintsStreamProvider.overrideWith(
-        (ref) => Stream.value([]),
-      ),
-      creatorProfileProvider.overrideWith(
-        (ref, uid) => Stream.value(null),
-      ),
+      allBlueprintsStreamProvider.overrideWith((ref) => Stream.value([])),
+      creatorProfileProvider.overrideWith((ref, uid) => Stream.value(null)),
     ],
     child: const MaterialApp(home: CreatorOverviewTab()),
   );
@@ -41,8 +37,9 @@ void main() {
     await Firebase.initializeApp();
   });
 
-  testWidgets('CreatorOverviewTab renders with welcome message',
-      (tester) async {
+  testWidgets('CreatorOverviewTab renders with welcome message', (
+    tester,
+  ) async {
     await tester.pumpWidget(_buildTest());
     await tester.pump(const Duration(milliseconds: 100));
 
@@ -63,8 +60,9 @@ void main() {
     expect(find.text('Invite Creators'), findsOneWidget);
   });
 
-  testWidgets('overview hides Invite Creators from non-admin creators',
-      (tester) async {
+  testWidgets('overview hides Invite Creators from non-admin creators', (
+    tester,
+  ) async {
     await tester.pumpWidget(_buildTest(isAdmin: false));
     await tester.pumpAndSettle();
 

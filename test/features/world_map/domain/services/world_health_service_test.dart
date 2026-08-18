@@ -22,10 +22,12 @@ void main() {
     mockHabitRepo = MockHabitRepo();
     service = WorldHealthService(mockRepo, mockHabitRepo);
 
-    when(() => mockHabitRepo.getCompletionsBetweenDates(any(), any(), any()))
-        .thenAnswer((_) async => const Right([]));
-    when(() => mockRepo.getUserStats(any()))
-        .thenAnswer((_) async => UserProfile(uid: 'test'));
+    when(
+      () => mockHabitRepo.getCompletionsBetweenDates(any(), any(), any()),
+    ).thenAnswer((_) async => const Right([]));
+    when(
+      () => mockRepo.getUserStats(any()),
+    ).thenAnswer((_) async => UserProfile(uid: 'test'));
   });
 
   group('calculateWorldHealth', () {
@@ -53,8 +55,9 @@ void main() {
         ),
       );
 
-      when(() => mockHabitRepo.getCompletionsBetweenDates(any(), any(), any()))
-          .thenAnswer((_) async => Right(activity));
+      when(
+        () => mockHabitRepo.getCompletionsBetweenDates(any(), any(), any()),
+      ).thenAnswer((_) async => Right(activity));
 
       final profile = UserProfile(
         uid: 'test',
@@ -91,7 +94,9 @@ void main() {
       );
 
       final activeHealth = await service.calculateWorldHealth(activeProfile);
-      final inactiveHealth = await service.calculateWorldHealth(inactiveProfile);
+      final inactiveHealth = await service.calculateWorldHealth(
+        inactiveProfile,
+      );
 
       expect(inactiveHealth, lessThan(activeHealth));
     });
@@ -110,10 +115,9 @@ void main() {
     });
 
     test('falls back to profile worldHealth on repository error', () async {
-      when(() => mockHabitRepo.getCompletionsBetweenDates(any(), any(), any()))
-          .thenAnswer((_) async => const Left(
-            ServerFailure('Network error'),
-          ));
+      when(
+        () => mockHabitRepo.getCompletionsBetweenDates(any(), any(), any()),
+      ).thenAnswer((_) async => const Left(ServerFailure('Network error')));
 
       final profile = UserProfile(
         uid: 'test',

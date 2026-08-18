@@ -77,8 +77,7 @@ final currentUserRoleProvider = FutureProvider<UserRole?>((ref) async {
   // 2. Firestore mirror on users/{uid}.
   try {
     final firestore = FirebaseFirestore.instance;
-    final userDoc =
-        await firestore.collection('users').doc(user.uid).get();
+    final userDoc = await firestore.collection('users').doc(user.uid).get();
     final mirror = userDoc.data()?['role'];
     if (mirror == 'user') return UserRole.user;
     if (mirror == 'creator') return UserRole.creator;
@@ -131,23 +130,24 @@ final isAdminUserProvider = FutureProvider<bool>((ref) async {
 /// Returns `null` if the user is not a creator (or not signed in).
 final currentCreatorOnboardingProvider =
     FutureProvider<CreatorOnboardingState?>((ref) async {
-  final role = await ref.watch(currentUserRoleProvider.future);
-  if (role != UserRole.creator) return null;
+      final role = await ref.watch(currentUserRoleProvider.future);
+      if (role != UserRole.creator) return null;
 
-  final authUser = await ref.watch(authStateChangesProvider.future);
-  if (authUser.isEmpty) return null;
+      final authUser = await ref.watch(authStateChangesProvider.future);
+      if (authUser.isEmpty) return null;
 
-  final repo = ref.watch(creatorRepositoryProvider);
-  final profile = await repo.getCreatorProfile(authUser.id);
-  if (profile == null) return CreatorOnboardingState.empty;
+      final repo = ref.watch(creatorRepositoryProvider);
+      final profile = await repo.getCreatorProfile(authUser.id);
+      if (profile == null) return CreatorOnboardingState.empty;
 
-  return CreatorOnboardingState(
-    progress: profile.creatorOnboardingProgress,
-    isComplete: profile.creatorOnboardingCompletedAt != null ||
-        profile.creatorOnboardingProgress >= 3,
-    completedAt: profile.creatorOnboardingCompletedAt,
-  );
-});
+      return CreatorOnboardingState(
+        progress: profile.creatorOnboardingProgress,
+        isComplete:
+            profile.creatorOnboardingCompletedAt != null ||
+            profile.creatorOnboardingProgress >= 3,
+        completedAt: profile.creatorOnboardingCompletedAt,
+      );
+    });
 
 /// Reads `users/{uid}.emailLockedAt` (server-written when the 7-day
 /// verification grace period expires). Null when not locked.

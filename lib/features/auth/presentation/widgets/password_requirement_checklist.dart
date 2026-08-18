@@ -10,7 +10,10 @@ import 'package:flutter/material.dart';
 /// never attach to the confirm-password field. When every rule passes the
 /// list collapses to a single success line so a valid field stays compact.
 class PasswordRequirementChecklist extends StatelessWidget {
-  const PasswordRequirementChecklist({super.key, required this.passwordController});
+  const PasswordRequirementChecklist({
+    super.key,
+    required this.passwordController,
+  });
 
   final TextEditingController passwordController;
 
@@ -22,22 +25,27 @@ class PasswordRequirementChecklist extends StatelessWidget {
         final value = passwordController.text;
         if (value.isEmpty) return const SizedBox.shrink();
 
-        final allPass = PasswordRules.checklistItems
-            .every((rule) => rule.passes(value));
+        final allPass = PasswordRules.checklistItems.every(
+          (rule) => rule.passes(value),
+        );
 
         if (allPass) {
           return Padding(
             padding: const EdgeInsets.only(top: 8),
             child: Row(
               children: [
-                const Icon(Icons.check_circle, size: 16, color: EmergeColors.teal),
+                const Icon(
+                  Icons.check_circle,
+                  size: 16,
+                  color: EmergeColors.teal,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   'Password looks good',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: EmergeColors.teal,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    color: EmergeColors.teal,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
@@ -67,7 +75,8 @@ class PasswordRequirementChecklist extends StatelessWidget {
                       Expanded(
                         child: Text(
                           rule.label,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
                                 color: rule.passes(value)
                                     ? AppTheme.textMainDark
                                     : AppTheme.textSecondaryDark,

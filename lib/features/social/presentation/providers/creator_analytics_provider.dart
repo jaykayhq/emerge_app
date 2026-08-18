@@ -20,7 +20,8 @@ TribeAnalyticsSnapshotService tribeAnalyticsSnapshotService(Ref ref) {
 /// Full analytics for (uid, tribeId). Refreshes on invalidation
 /// (e.g. after a share action or pull-to-refresh).
 @riverpod
-Future<CreatorAnalytics> creatorAnalytics(Ref ref, {
+Future<CreatorAnalytics> creatorAnalytics(
+  Ref ref, {
   required String uid,
   required String tribeId,
 }) async {
@@ -47,26 +48,23 @@ Future<CreatorAnalytics> creatorAnalytics(Ref ref, {
 
   // Cache the current aggregation for offline-first repeat opens. Joined
   // before the fallback read below so a subsequent cached read sees it.
-  await analyticsResult.fold(
-    (_) => Future.value(),
-    (analytics) async {
-      try {
-        await dao.upsertSnapshot(
-          userId: uid,
-          tribeId: tribeId,
-          date: TribeAnalyticsSnapshotService.dateKey(DateTime.now()),
-          memberCount: analytics.memberCount,
-          totalXp: analytics.totalXp,
-          totalHabitsCompleted: analytics.totalHabitsCompleted,
-          totalChallengesCompleted: analytics.totalChallengesCompleted,
-          activeMembers: analytics.activeMembers,
-          newMembersThisWeek: analytics.newMembersThisWeek,
-        );
-      } catch (_) {
-        // Cache misses are fine — the next successful open refills it.
-      }
-    },
-  );
+  await analyticsResult.fold((_) => Future.value(), (analytics) async {
+    try {
+      await dao.upsertSnapshot(
+        userId: uid,
+        tribeId: tribeId,
+        date: TribeAnalyticsSnapshotService.dateKey(DateTime.now()),
+        memberCount: analytics.memberCount,
+        totalXp: analytics.totalXp,
+        totalHabitsCompleted: analytics.totalHabitsCompleted,
+        totalChallengesCompleted: analytics.totalChallengesCompleted,
+        activeMembers: analytics.activeMembers,
+        newMembersThisWeek: analytics.newMembersThisWeek,
+      );
+    } catch (_) {
+      // Cache misses are fine — the next successful open refills it.
+    }
+  });
 
   // Offline-first: when Firestore is unreachable, render the last cached
   // snapshot instead of failing the whole tab.

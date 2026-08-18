@@ -150,8 +150,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
               // Add from contacts entry
               SliverToBoxAdapter(
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
                   child: OutlinedButton.icon(
                     icon: const Icon(Icons.contact_page_outlined, size: 16),
                     label: const Text('ADD FROM CONTACTS'),
@@ -1128,4 +1130,3 @@ class _PartnerCard extends StatelessWidget {
     ).animate().fadeIn();
   }
 }
-

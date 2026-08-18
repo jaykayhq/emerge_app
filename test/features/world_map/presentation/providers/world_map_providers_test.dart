@@ -10,7 +10,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockWorldHealthService extends Mock implements WorldHealthService {}
-class MockUserStatsRepository extends Mock implements DriftUserStatsRepository {}
+
+class MockUserStatsRepository extends Mock
+    implements DriftUserStatsRepository {}
 
 ProviderContainer _makeContainer({
   required WorldHealthService healthService,
@@ -20,7 +22,9 @@ ProviderContainer _makeContainer({
   return ProviderContainer(
     overrides: [
       authStateChangesProvider.overrideWithValue(
-        AsyncValue.data(authUser ?? const AuthUser(id: 'test', email: 'test@example.com')),
+        AsyncValue.data(
+          authUser ?? const AuthUser(id: 'test', email: 'test@example.com'),
+        ),
       ),
       worldHealthServiceProvider.overrideWithValue(healthService),
       if (statsRepo != null)
@@ -66,7 +70,9 @@ void main() {
     });
 
     test('returns health from service for authed user', () async {
-      when(() => mockService.getWorldHealth('test')).thenAnswer((_) async => 0.85);
+      when(
+        () => mockService.getWorldHealth('test'),
+      ).thenAnswer((_) async => 0.85);
       final container = _makeContainer(healthService: mockService);
       final result = await container.read(worldHealthProvider.future);
       expect(result, 0.85);
@@ -94,7 +100,8 @@ void main() {
 
     test('streams momentum score from user profile', () async {
       when(() => mockRepo.watchUserStats('test')).thenAnswer(
-        (_) => Stream.value(const UserProfile(uid: 'test', momentumScore: 0.75)),
+        (_) =>
+            Stream.value(const UserProfile(uid: 'test', momentumScore: 0.75)),
       );
       final container = _makeContainer(
         healthService: mockService,
@@ -129,9 +136,9 @@ void main() {
     test('streams entropy from user profile world state', () async {
       when(() => mockRepo.watchUserStats('test')).thenAnswer(
         (_) => Stream.value(
-          const UserProfile(uid: 'test').copyWith(
-            worldState: UserWorldState(entropy: 0.3),
-          ),
+          const UserProfile(
+            uid: 'test',
+          ).copyWith(worldState: UserWorldState(entropy: 0.3)),
         ),
       );
       final container = _makeContainer(

@@ -12,73 +12,71 @@ import 'package:emerge_app/features/social/presentation/screens/creator/creator_
 import 'package:go_router/go_router.dart';
 
 List<RouteBase> get creatorRoutes => [
-      // Creator auth routes
-      GoRoute(
-        path: '/creator/login',
-        builder: (context, state) => const CreatorLoginScreen(),
-      ),
-      GoRoute(
-        path: '/creator/signup',
-        builder: (context, state) => const CreatorSignUpScreen(),
-      ),
-      // Creator onboarding routes
-      GoRoute(
-        path: '/onboarding/creator/archetype',
-        builder: (context, state) => const CreatorOnboardingArchetypeScreen(),
-      ),
-      GoRoute(
-        path: '/onboarding/creator/profile',
-        builder: (context, state) => const CreatorOnboardingProfileScreen(),
-      ),
-      GoRoute(
-        path: '/onboarding/creator/reveal',
-        builder: (context, state) => const CreatorOnboardingRevealScreen(),
-      ),
-      // Creator dashboard shell with 3 tabs
-      StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) =>
-            CreatorDashboardScaffold(navigationShell: navigationShell),
-        branches: [
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/creator/dashboard',
-                builder: (context, state) => const CreatorOverviewTab(),
-              ),
-            ],
+  // Creator auth routes
+  GoRoute(
+    path: '/creator/login',
+    builder: (context, state) => const CreatorLoginScreen(),
+  ),
+  GoRoute(
+    path: '/creator/signup',
+    builder: (context, state) => const CreatorSignUpScreen(),
+  ),
+  // Creator onboarding routes
+  GoRoute(
+    path: '/onboarding/creator/archetype',
+    builder: (context, state) => const CreatorOnboardingArchetypeScreen(),
+  ),
+  GoRoute(
+    path: '/onboarding/creator/profile',
+    builder: (context, state) => const CreatorOnboardingProfileScreen(),
+  ),
+  GoRoute(
+    path: '/onboarding/creator/reveal',
+    builder: (context, state) => const CreatorOnboardingRevealScreen(),
+  ),
+  // Creator dashboard shell with 3 tabs
+  StatefulShellRoute.indexedStack(
+    builder: (context, state, navigationShell) =>
+        CreatorDashboardScaffold(navigationShell: navigationShell),
+    branches: [
+      StatefulShellBranch(
+        routes: [
+          GoRoute(
+            path: '/creator/dashboard',
+            builder: (context, state) => const CreatorOverviewTab(),
           ),
-          StatefulShellBranch(
+        ],
+      ),
+      StatefulShellBranch(
+        routes: [
+          GoRoute(
+            path: '/creator/dashboard/blueprints',
+            builder: (context, state) => const CreatorBlueprintsTab(),
             routes: [
               GoRoute(
-                path: '/creator/dashboard/blueprints',
-                builder: (context, state) => const CreatorBlueprintsTab(),
-                routes: [
-                  GoRoute(
-                    path: 'blueprint-builder',
-                    builder: (context, state) =>
-                        const BlueprintBuilderScreen(),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/creator/dashboard/tribe',
-                builder: (context, state) =>
-                    const CreatorTribeManagementTab(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/creator/dashboard/analytics',
-                builder: (context, state) => const CreatorAnalyticsTab(),
+                path: 'blueprint-builder',
+                builder: (context, state) => const BlueprintBuilderScreen(),
               ),
             ],
           ),
         ],
       ),
-    ];
+      StatefulShellBranch(
+        routes: [
+          GoRoute(
+            path: '/creator/dashboard/tribe',
+            builder: (context, state) => const CreatorTribeManagementTab(),
+          ),
+        ],
+      ),
+      StatefulShellBranch(
+        routes: [
+          GoRoute(
+            path: '/creator/dashboard/analytics',
+            builder: (context, state) => const CreatorAnalyticsTab(),
+          ),
+        ],
+      ),
+    ],
+  ),
+];

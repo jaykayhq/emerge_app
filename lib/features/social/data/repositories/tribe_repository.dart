@@ -46,7 +46,7 @@ abstract class TribeRepository {
   /// Leave a club (when user changes archetype).
   Future<void> leaveClub(String userId, String tribeId);
 
-/// Get tribes that the user is a member of.
+  /// Get tribes that the user is a member of.
   Future<List<Tribe>> getUserTribes(String userId);
 
   /// Watch tribes that the user is a member of.

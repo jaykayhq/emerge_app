@@ -17,8 +17,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
   });
 
-  testWidgets('PremiumBadge with showShimmer=false still renders',
-      (tester) async {
+  testWidgets('PremiumBadge with showShimmer=false still renders', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
@@ -30,8 +31,9 @@ void main() {
     expect(find.byIcon(Icons.star), findsOneWidget);
   });
 
-  testWidgets('PremiumThemePreview shows locked preview and reveals on tap',
-      (tester) async {
+  testWidgets('PremiumThemePreview shows locked preview and reveals on tap', (
+    tester,
+  ) async {
     final router = GoRouter(
       routes: [
         GoRoute(

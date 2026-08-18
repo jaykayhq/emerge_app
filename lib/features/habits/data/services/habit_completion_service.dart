@@ -60,7 +60,9 @@ class HabitCompletionService {
         final habit = await _habitRepo.getHabit(habitId);
         if (habit == null) return HabitCompletionResult.empty();
 
-        final newStreak = isCompleted ? habit.currentStreak + 1 : habit.currentStreak;
+        final newStreak = isCompleted
+            ? habit.currentStreak + 1
+            : habit.currentStreak;
         final wasRecovery = habit.consecutiveMisses > 0 && isCompleted;
         final newMomentumScore = _computeMomentum(isCompleted, habit);
         final isMilestone = isCompleted
@@ -148,7 +150,9 @@ class HabitCompletionService {
   ) {
     if (!isCompleted) return null;
     if (wasRecovery) return NarratorTrigger.streakBreakFirstMiss;
-    if (newStreak >= 7 && newStreak % 7 == 0) return NarratorTrigger.onFireState;
+    if (newStreak >= 7 && newStreak % 7 == 0) {
+      return NarratorTrigger.onFireState;
+    }
     return null;
   }
 }

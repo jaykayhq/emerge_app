@@ -60,7 +60,8 @@ SmartDefaults computeSmartDefaults({
   // ── Time: most common among existing, or archetype default ──
   final TimeOfDay time;
   if (existingHabits.isEmpty) {
-    time = _archetypeDefaultTimes[archetype] ??
+    time =
+        _archetypeDefaultTimes[archetype] ??
         const TimeOfDay(hour: 7, minute: 0);
   } else {
     final timeCounts = <int, int>{};
@@ -72,7 +73,8 @@ SmartDefaults computeSmartDefaults({
       }
     }
     if (timeCounts.isEmpty) {
-      time = _archetypeDefaultTimes[archetype] ??
+      time =
+          _archetypeDefaultTimes[archetype] ??
           const TimeOfDay(hour: 7, minute: 0);
     } else {
       final mostCommonMinutes = timeCounts.entries
@@ -90,8 +92,9 @@ SmartDefaults computeSmartDefaults({
       _archetypeDefaultAttributes[archetype] ?? HabitAttribute.vitality;
 
   // ── Difficulty: Easy if <3 active habits, Medium otherwise ──
-  final difficulty =
-      activeHabitCount < 3 ? HabitDifficulty.easy : HabitDifficulty.medium;
+  final difficulty = activeHabitCount < 3
+      ? HabitDifficulty.easy
+      : HabitDifficulty.medium;
 
   // ── Timer: 5 min default, median of existing if available ──
   final int timerMinutes;
@@ -141,7 +144,8 @@ List<String> sortedSuggestions(
   final archetypeLower = archetypeName?.toLowerCase() ?? '';
   for (final s in allSuggestions) {
     final sLower = s.toLowerCase();
-    final matchesArchetype = archetypeLower.isNotEmpty &&
+    final matchesArchetype =
+        archetypeLower.isNotEmpty &&
         (sLower.contains(archetypeLower) ||
             interestTags.any((t) => sLower.contains(t.toLowerCase())));
     if (matchesArchetype && !userCreatedHabits.contains(s)) {

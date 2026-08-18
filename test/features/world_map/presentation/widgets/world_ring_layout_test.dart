@@ -5,15 +5,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('WorldRingLayout positions 6 nodes around the center', (tester) async {
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: WorldRingLayout(
-          radius: 120,
-          onNodeTap: (attr) {},
+  testWidgets('WorldRingLayout positions 6 nodes around the center', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: WorldRingLayout(radius: 120, onNodeTap: (attr) {}),
         ),
       ),
-    ));
+    );
 
     expect(find.byType(WorldTypeNode), findsNWidgets(6));
   });

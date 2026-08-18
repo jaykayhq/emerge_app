@@ -420,7 +420,8 @@ class _CompositeNebulaPainter extends CustomPainter {
       final adjustedProgress =
           (progress * config.driftSpeedFactor + particle.phase) % 1.0;
       final y = (particle.y - adjustedProgress * particle.speed) % 1.0;
-      final x = particle.x +
+      final x =
+          particle.x +
           math.sin(adjustedProgress * math.pi * 4 + particle.phase * 10) * 0.02;
 
       final position = Offset(x * size.width, y * size.height);

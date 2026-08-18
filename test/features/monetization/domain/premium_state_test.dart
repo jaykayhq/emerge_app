@@ -5,10 +5,7 @@ void main() {
   final now = DateTime(2026, 8, 2, 12);
 
   test('active premium doc is premium', () {
-    final state = computePremiumState(
-      record: {'isPremium': true},
-      now: now,
-    );
+    final state = computePremiumState(record: {'isPremium': true}, now: now);
     expect(state.isPremium, isTrue);
   });
 

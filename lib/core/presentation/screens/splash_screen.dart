@@ -58,8 +58,8 @@ String determineSplashRoute({
 
   // Normal user or truly unknown role without creator profile.
   final progress = userOnboardingProgress;
-  final isComplete = userOnboardingCompletedAt != null ||
-      (progress != null && progress >= 4);
+  final isComplete =
+      userOnboardingCompletedAt != null || (progress != null && progress >= 4);
   if (isComplete) return '/world-map';
   switch (progress ?? 0) {
     case 0:
@@ -175,8 +175,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
     // Fetch creator onboarding state (needed for both known and
     // fallback-detected creators).
-    final creatorOnboarding =
-        await ref.read(currentCreatorOnboardingProvider.future);
+    final creatorOnboarding = await ref.read(
+      currentCreatorOnboardingProvider.future,
+    );
     if (!mounted) return;
 
     // For normal users, seed Drift from Firestore.
@@ -222,17 +223,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 (data['onboardingProgress'] as num?)?.toInt() ?? 0,
             'onboardingCompletedAt': data['onboardingCompletedAt'] is Timestamp
                 ? (data['onboardingCompletedAt'] as Timestamp)
-                    .toDate()
-                    .toIso8601String()
+                      .toDate()
+                      .toIso8601String()
                 : data['onboardingCompletedAt'] as String?,
             'onboardingStartedAt': data['onboardingStartedAt'] is Timestamp
                 ? (data['onboardingStartedAt'] as Timestamp)
-                    .toDate()
-                    .toIso8601String()
+                      .toDate()
+                      .toIso8601String()
                 : data['onboardingStartedAt'] as String?,
             'hasEmerged': data['hasEmerged'] as bool? ?? false,
-            'momentumScore':
-                (data['momentumScore'] as num?)?.toDouble() ?? 0.5,
+            'momentumScore': (data['momentumScore'] as num?)?.toDouble() ?? 0.5,
             'lastCelebratedLevel':
                 (data['lastCelebratedLevel'] as num?)?.toInt() ?? 0,
           };
@@ -252,12 +252,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
           if (usersDoc.exists) {
             final data = usersDoc.data()!;
-            final progress =
-                (data['onboardingProgress'] as num?)?.toInt() ?? 0;
+            final progress = (data['onboardingProgress'] as num?)?.toInt() ?? 0;
             final completedAt = data['onboardingCompletedAt'] is Timestamp
                 ? (data['onboardingCompletedAt'] as Timestamp)
-                    .toDate()
-                    .toIso8601String()
+                      .toDate()
+                      .toIso8601String()
                 : data['onboardingCompletedAt'] as String?;
 
             final repo = ref.read(userStatsRepositoryProvider);

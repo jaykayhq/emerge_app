@@ -15,7 +15,8 @@ class EmailVerificationBannerDismissed extends Notifier<bool> {
 
 final emailVerificationBannerDismissedProvider =
     NotifierProvider<EmailVerificationBannerDismissed, bool>(
-        EmailVerificationBannerDismissed.new);
+      EmailVerificationBannerDismissed.new,
+    );
 
 /// Non-blocking "verify your email" banner shown during the 7-day grace
 /// period. Sign-up never blocks on verification; this top overlay nudges
@@ -32,7 +33,8 @@ class EmailVerificationBanner extends ConsumerWidget {
     final emailLockedAt = ref.watch(currentEmailLockedAtProvider).value;
     final dismissed = ref.watch(emailVerificationBannerDismissedProvider);
 
-    final showBanner = !dismissed &&
+    final showBanner =
+        !dismissed &&
         authUser != null &&
         authUser.isNotEmpty &&
         authUser.emailVerified == false &&
@@ -116,7 +118,9 @@ class EmailVerificationBanner extends ConsumerWidget {
                     ),
                     IconButton(
                       onPressed: () => ref
-                          .read(emailVerificationBannerDismissedProvider.notifier)
+                          .read(
+                            emailVerificationBannerDismissedProvider.notifier,
+                          )
                           .dismiss(),
                       icon: const Icon(
                         Icons.close,

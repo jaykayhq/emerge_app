@@ -81,8 +81,7 @@ class EmergeHeader extends ConsumerWidget {
                 if (showToday) ...[
                   _HeaderChip(
                     label: 'Today',
-                    textColor:
-                        const Color(0xFFF6F7FB).withValues(alpha: 0.65),
+                    textColor: const Color(0xFFF6F7FB).withValues(alpha: 0.65),
                   ),
                   const SizedBox(width: 8),
                 ],
@@ -102,15 +101,13 @@ class EmergeHeader extends ConsumerWidget {
                           behavior: HitTestBehavior.opaque,
                           child: _HeaderChip(
                             label: 'Free Trial',
-                            textColor: const Color(0xFFF5A623)
-                                .withValues(alpha: 0.85),
+                            textColor: const Color(
+                              0xFFF5A623,
+                            ).withValues(alpha: 0.85),
                           ),
                         ),
                 ),
-                if (trailing != null) ...[
-                  const SizedBox(width: 8),
-                  trailing!,
-                ],
+                if (trailing != null) ...[const SizedBox(width: 8), trailing!],
               ],
             ),
           ],

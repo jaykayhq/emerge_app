@@ -3,43 +3,40 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_primary_button.dart';
 
 void main() {
-  Widget wrap(Widget child) => MaterialApp(
-        home: Scaffold(body: child),
-      );
+  Widget wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
 
   testWidgets('renders label as UPPERCASE', (tester) async {
     await tester.pumpWidget(
-      wrap(
-        EmergePrimaryButton(label: 'click me', onPressed: () {}),
-      ),
+      wrap(EmergePrimaryButton(label: 'click me', onPressed: () {})),
     );
 
     expect(find.text('CLICK ME'), findsOneWidget);
     expect(find.text('click me'), findsNothing);
   });
 
-  testWidgets('shows CircularProgressIndicator and hides label when isLoading',
-      (tester) async {
-    await tester.pumpWidget(
-      wrap(
-        EmergePrimaryButton(
-          label: 'loading button',
-          onPressed: () {},
-          isLoading: true,
+  testWidgets(
+    'shows CircularProgressIndicator and hides label when isLoading',
+    (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          EmergePrimaryButton(
+            label: 'loading button',
+            onPressed: () {},
+            isLoading: true,
+          ),
         ),
-      ),
-    );
+      );
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    expect(find.text('LOADING BUTTON'), findsNothing);
-  });
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.text('LOADING BUTTON'), findsNothing);
+    },
+  );
 
-  testWidgets('onPressed null produces non-interactive button (opacity 0.55)',
-      (tester) async {
+  testWidgets('onPressed null produces non-interactive button (opacity 0.55)', (
+    tester,
+  ) async {
     await tester.pumpWidget(
-      wrap(
-        const EmergePrimaryButton(label: 'disabled', onPressed: null),
-      ),
+      wrap(const EmergePrimaryButton(label: 'disabled', onPressed: null)),
     );
 
     final opacityWidget = tester.widget<Opacity>(
@@ -55,12 +52,12 @@ void main() {
     await tester.pump();
   });
 
-  testWidgets('onPressed provided makes the button interactive', (tester) async {
+  testWidgets('onPressed provided makes the button interactive', (
+    tester,
+  ) async {
     var taps = 0;
     await tester.pumpWidget(
-      wrap(
-        EmergePrimaryButton(label: 'tap', onPressed: () => taps++),
-      ),
+      wrap(EmergePrimaryButton(label: 'tap', onPressed: () => taps++)),
     );
 
     final opacityWidget = tester.widget<Opacity>(
@@ -77,7 +74,9 @@ void main() {
     expect(taps, 1);
   });
 
-  testWidgets('leadingIcon and trailingIcon render when provided', (tester) async {
+  testWidgets('leadingIcon and trailingIcon render when provided', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       wrap(
         const EmergePrimaryButton(
@@ -94,15 +93,11 @@ void main() {
     expect(find.text('WITH ICONS'), findsOneWidget);
   });
 
-  testWidgets('fullWidth=true wraps in SizedBox(width=double.infinity)',
-      (tester) async {
+  testWidgets('fullWidth=true wraps in SizedBox(width=double.infinity)', (
+    tester,
+  ) async {
     await tester.pumpWidget(
-      wrap(
-        const EmergePrimaryButton(
-          label: 'full width',
-          onPressed: noopFn,
-        ),
-      ),
+      wrap(const EmergePrimaryButton(label: 'full width', onPressed: noopFn)),
     );
 
     final sizedBox = tester.widget<SizedBox>(
@@ -114,8 +109,9 @@ void main() {
     expect(sizedBox.width, double.infinity);
   });
 
-  testWidgets('fullWidth=false does not constrain SizedBox width',
-      (tester) async {
+  testWidgets('fullWidth=false does not constrain SizedBox width', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       wrap(
         const EmergePrimaryButton(

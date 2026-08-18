@@ -35,7 +35,8 @@ class DriftChallengeRepository implements ChallengeRepository {
   Future<Either<Failure, Unit>> joinChallenge(
     String userId,
     String challengeId,
-  ) async {    try {
+  ) async {
+    try {
       final template = ChallengeCatalog.getChallengeById(challengeId);
       if (template == null) return Left(ServerFailure('Challenge not found'));
 
@@ -159,7 +160,8 @@ class DriftChallengeRepository implements ChallengeRepository {
           // record, mirroring the habit flow so challenge XP is attributed
           // to the user's tribe (and to the previous tribe after leaving —
           // contributor docs survive a leave by design).
-          final tribeId = activeTribeId ??
+          final tribeId =
+              activeTribeId ??
               (stats.archetype != null && stats.archetype != 'none'
                   ? await _resolveArchetypeTribe(stats.archetype!)
                   : null);
@@ -215,9 +217,15 @@ class DriftChallengeRepository implements ChallengeRepository {
   ) async {
     try {
       final challenges = await _db.challengeProgressDao.getAll(userId);
-      final progress = challenges.where((c) => c.challengeId == challengeId).firstOrNull;
+      final progress = challenges
+          .where((c) => c.challengeId == challengeId)
+          .firstOrNull;
       final totalDays = progress?.totalDays ?? 1;
-      await _db.challengeProgressDao.updateDay(challengeId, totalDays, 'completed');
+      await _db.challengeProgressDao.updateDay(
+        challengeId,
+        totalDays,
+        'completed',
+      );
 
       // Sync to Firestore
       await _syncEngine.enqueueSet(
@@ -289,9 +297,15 @@ class DriftChallengeRepository implements ChallengeRepository {
   @override
   Future<void> completeChallenge(String userId, String challengeId) async {
     final challenges = await _db.challengeProgressDao.getAll(userId);
-    final progress = challenges.where((c) => c.challengeId == challengeId).firstOrNull;
+    final progress = challenges
+        .where((c) => c.challengeId == challengeId)
+        .firstOrNull;
     final totalDays = progress?.totalDays ?? 1;
-    await _db.challengeProgressDao.updateDay(challengeId, totalDays, 'completed');
+    await _db.challengeProgressDao.updateDay(
+      challengeId,
+      totalDays,
+      'completed',
+    );
 
     // Sync to Firestore
     await _syncEngine.enqueueSet(

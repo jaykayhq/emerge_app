@@ -35,20 +35,23 @@ void main() {
 
     test('isFree returns true for items with no cost', () {
       const free = ShopItem(
-        id: 'free_item', name: 'Free', slot: EquipmentSlot.head,
+        id: 'free_item',
+        name: 'Free',
+        slot: EquipmentSlot.head,
       );
       expect(free.isFree, true);
 
       const costs = ShopItem(
-        id: 'costs', name: 'Costs', slot: EquipmentSlot.back, priceXP: 100,
+        id: 'costs',
+        name: 'Costs',
+        slot: EquipmentSlot.back,
+        priceXP: 100,
       );
       expect(costs.isFree, false);
     });
 
     test('EquipmentMap type alias works', () {
-      const hat = ShopItem(
-        id: 'hat', name: 'Hat', slot: EquipmentSlot.head,
-      );
+      const hat = ShopItem(id: 'hat', name: 'Hat', slot: EquipmentSlot.head);
       final map = EquipmentMap();
       map[EquipmentSlot.head] = hat;
       expect(map[EquipmentSlot.head], hat);

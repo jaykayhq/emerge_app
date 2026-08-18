@@ -17,18 +17,14 @@ class PulseFeedRepository {
   static const _maxCards = 30;
 
   CollectionReference _cardsRef(String userId) =>
-      _firestore
-          .collection('pulse_feed_cards')
-          .doc(userId)
-          .collection('cards');
+      _firestore.collection('pulse_feed_cards').doc(userId).collection('cards');
 
   /// Fetches the latest pulse-feed cards for [userId] (one-shot).
   Future<List<PulseFeedCard>> getPulseFeed(String userId) async {
     try {
-      final snapshot = await _cardsRef(userId)
-          .orderBy('createdAt', descending: true)
-          .limit(_maxCards)
-          .get();
+      final snapshot = await _cardsRef(
+        userId,
+      ).orderBy('createdAt', descending: true).limit(_maxCards).get();
 
       return snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
@@ -49,12 +45,12 @@ class PulseFeedRepository {
           .limit(_maxCards)
           .snapshots()
           .map((snapshot) {
-        return snapshot.docs.map((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          data['id'] = doc.id;
-          return PulseFeedCard.fromJson(data);
-        }).toList();
-      });
+            return snapshot.docs.map((doc) {
+              final data = doc.data() as Map<String, dynamic>;
+              data['id'] = doc.id;
+              return PulseFeedCard.fromJson(data);
+            }).toList();
+          });
     } catch (e) {
       AppLogger.e('PulseFeedRepository.watchPulseFeed error', e);
       return Stream.value([]);

@@ -14,18 +14,14 @@ class TestIsPremium extends IsPremium {
   Future<bool> build() async => premium;
 }
 
-Widget _createTestWidget({
-  FutureOr<List<UserWeeklyRecap>>? recapsOverride,
-}) {
+Widget _createTestWidget({FutureOr<List<UserWeeklyRecap>>? recapsOverride}) {
   return ProviderScope(
     overrides: [
       if (recapsOverride != null)
         historicalRecapsProvider.overrideWith((ref) => recapsOverride),
       isPremiumProvider.overrideWith(() => TestIsPremium(false)),
     ],
-    child: const MaterialApp(
-      home: RecapHubScreen(),
-    ),
+    child: const MaterialApp(home: RecapHubScreen()),
   );
 }
 
@@ -53,14 +49,10 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            historicalRecapsProvider.overrideWith(
-              (ref) => completer.future,
-            ),
+            historicalRecapsProvider.overrideWith((ref) => completer.future),
             isPremiumProvider.overrideWith(() => TestIsPremium(false)),
           ],
-          child: const MaterialApp(
-            home: RecapHubScreen(),
-          ),
+          child: const MaterialApp(home: RecapHubScreen()),
         ),
       );
       await tester.pump();

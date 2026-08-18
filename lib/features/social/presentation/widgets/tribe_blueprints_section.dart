@@ -88,7 +88,10 @@ class _EmptyState extends StatelessWidget {
         child: Text(
           'No blueprints for this tribe yet.',
           textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 12),
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.4),
+            fontSize: 12,
+          ),
         ),
       ),
     );

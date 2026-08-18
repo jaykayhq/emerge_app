@@ -14,7 +14,9 @@ import 'package:go_router/go_router.dart';
 
 /// Web-only "Premium since" tenure date from `users/{uid}.premium_since`.
 /// Never blocks the status step — any failure degrades to no tenure line.
-final _premiumSinceProvider = FutureProvider.autoDispose<DateTime?>((ref) async {
+final _premiumSinceProvider = FutureProvider.autoDispose<DateTime?>((
+  ref,
+) async {
   if (!kIsWeb) return null;
   final user = ref.watch(authStateChangesProvider).value;
   if (user == null) return null;
@@ -47,7 +49,8 @@ class ManagePremiumScreen extends ConsumerStatefulWidget {
   const ManagePremiumScreen({super.key});
 
   @override
-  ConsumerState<ManagePremiumScreen> createState() => _ManagePremiumScreenState();
+  ConsumerState<ManagePremiumScreen> createState() =>
+      _ManagePremiumScreenState();
 }
 
 enum _CancelStep { status, recap, pause, confirm, done }
@@ -78,7 +81,9 @@ class _ManagePremiumScreenState extends ConsumerState<ManagePremiumScreen> {
       if (!mounted) return;
       result.fold(
         (error) => messenger.showSnackBar(
-          SnackBar(content: Text('Could not open subscription settings: $error')),
+          SnackBar(
+            content: Text('Could not open subscription settings: $error'),
+          ),
         ),
         (_) => setState(() => _step = _CancelStep.confirm),
       );
@@ -122,7 +127,9 @@ class _ManagePremiumScreenState extends ConsumerState<ManagePremiumScreen> {
           ),
           (_) => messenger.showSnackBar(
             const SnackBar(
-              content: Text('Premium paused — your data stays safe. Resume anytime.'),
+              content: Text(
+                'Premium paused — your data stays safe. Resume anytime.',
+              ),
             ),
           ),
         );
@@ -136,7 +143,9 @@ class _ManagePremiumScreenState extends ConsumerState<ManagePremiumScreen> {
           ),
           (_) => messenger.showSnackBar(
             const SnackBar(
-              content: Text('Google Play pause options opened — you can pause there.'),
+              content: Text(
+                'Google Play pause options opened — you can pause there.',
+              ),
             ),
           ),
         );
@@ -179,10 +188,10 @@ class _ManagePremiumScreenState extends ConsumerState<ManagePremiumScreen> {
           isPaused
               ? 'Premium paused'
               : (isPremium ? 'Premium is active' : 'Free plan'),
-          style: Theme.of(context)
-              .textTheme
-              .headlineSmall
-              ?.copyWith(color: AppTheme.textMainDark, fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            color: AppTheme.textMainDark,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const Gap(8),
         if (isPaused)
@@ -190,10 +199,9 @@ class _ManagePremiumScreenState extends ConsumerState<ManagePremiumScreen> {
             premiumState?.premiumEndsAt != null
                 ? 'Resumes on ${_formatDate(premiumState!.premiumEndsAt!)} — no charges while paused.'
                 : 'No charges while paused. Your plan resumes automatically.',
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: AppTheme.textSecondaryDark),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondaryDark),
           )
         else if (isPremium)
           Text(
@@ -201,27 +209,24 @@ class _ManagePremiumScreenState extends ConsumerState<ManagePremiumScreen> {
               if (price != null) 'Billed at $price',
               kIsWeb ? 'via Paystack' : 'via Google Play',
             ].join(' — '),
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: AppTheme.textSecondaryDark),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondaryDark),
           )
         else
           Text(
             'Free plan — no charges, upgrade anytime',
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: AppTheme.textSecondaryDark),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondaryDark),
           ),
         if (isPremium && !isPaused && premiumSince != null) ...[
           const Gap(8),
           Text(
             'Premium since ${_formatDate(premiumSince)}',
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: AppTheme.textSecondaryDark),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondaryDark),
           ),
         ],
         const Gap(32),
@@ -230,15 +235,16 @@ class _ManagePremiumScreenState extends ConsumerState<ManagePremiumScreen> {
           // pause CTA must not be re-offered to a paused user.
           Text(
             'Your plan resumes automatically — nothing to do.',
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: AppTheme.textSecondaryDark),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondaryDark),
           )
         else if (isPremium)
           _PrimaryButton(
             label: 'Cancel subscription',
-            onPressed: _busy ? null : () => setState(() => _step = _CancelStep.recap),
+            onPressed: _busy
+                ? null
+                : () => setState(() => _step = _CancelStep.recap),
           )
         else
           _PrimaryButton(
@@ -261,20 +267,19 @@ class _ManagePremiumScreenState extends ConsumerState<ManagePremiumScreen> {
       children: [
         Text(
           "You're about to lose",
-          style: Theme.of(context)
-              .textTheme
-              .headlineSmall
-              ?.copyWith(color: AppTheme.textMainDark, fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            color: AppTheme.textMainDark,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const Gap(8),
         Text(
           isPremium
               ? 'Your Premium plan${price != null ? ' ($price)' : ''} includes:'
               : 'Your Premium plan includes:',
-          style: Theme.of(context)
-              .textTheme
-              .bodyMedium
-              ?.copyWith(color: AppTheme.textSecondaryDark),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondaryDark),
         ),
         const Gap(16),
         const _BenefitRow('Unlimited active habits'),
@@ -285,21 +290,25 @@ class _ManagePremiumScreenState extends ConsumerState<ManagePremiumScreen> {
         if (streak > 0 || activeHabits > 0) ...[
           Text(
             'What you have built',
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(color: EmergeColors.teal, fontWeight: FontWeight.w600),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: EmergeColors.teal,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const Gap(8),
           if (streak > 0)
             Text(
               'A $streak-day streak',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppTheme.textMainDark),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppTheme.textMainDark),
             ),
           if (activeHabits > 0)
             Text(
               '$activeHabits active ${activeHabits == 1 ? 'habit' : 'habits'}',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppTheme.textMainDark),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppTheme.textMainDark),
             ),
           const Gap(24),
         ],
@@ -320,22 +329,21 @@ class _ManagePremiumScreenState extends ConsumerState<ManagePremiumScreen> {
       children: [
         Text(
           'Pause instead?',
-          style: Theme.of(context)
-              .textTheme
-              .headlineSmall
-              ?.copyWith(color: AppTheme.textMainDark, fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            color: AppTheme.textMainDark,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const Gap(8),
         Text(
           isWeb
               ? 'Pause keeps everything safe — your streak, habits, and world. '
-                  'Resume anytime within 30 days.'
+                    'Resume anytime within 30 days.'
               : 'Pause keeps everything safe — your streak, habits, and world. '
-                  'Google Play pause options open next.',
-          style: Theme.of(context)
-              .textTheme
-              .bodyMedium
-              ?.copyWith(color: AppTheme.textSecondaryDark),
+                    'Google Play pause options open next.',
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondaryDark),
         ),
         const Gap(24),
         _PrimaryButton(
@@ -363,20 +371,19 @@ class _ManagePremiumScreenState extends ConsumerState<ManagePremiumScreen> {
       children: [
         Text(
           'Cancel Premium',
-          style: Theme.of(context)
-              .textTheme
-              .headlineSmall
-              ?.copyWith(color: AppTheme.textMainDark, fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            color: AppTheme.textMainDark,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const Gap(8),
         Text(
           isWeb
               ? 'Cancelling ends your premium access now. Your account stays free — your data and world are safe.'
               : 'Finish cancelling in Google Play. Your account stays free — your data and world are safe.',
-          style: Theme.of(context)
-              .textTheme
-              .bodyMedium
-              ?.copyWith(color: AppTheme.textSecondaryDark),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondaryDark),
         ),
         const Gap(24),
         _PrimaryButton(
@@ -402,19 +409,18 @@ class _ManagePremiumScreenState extends ConsumerState<ManagePremiumScreen> {
         const Gap(16),
         Text(
           'Premium cancelled',
-          style: Theme.of(context)
-              .textTheme
-              .headlineSmall
-              ?.copyWith(color: AppTheme.textMainDark, fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            color: AppTheme.textMainDark,
+            fontWeight: FontWeight.bold,
+          ),
           textAlign: TextAlign.center,
         ),
         const Gap(8),
         Text(
           'Your account stays free — your data and world are safe.',
-          style: Theme.of(context)
-              .textTheme
-              .bodyMedium
-              ?.copyWith(color: AppTheme.textSecondaryDark),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondaryDark),
           textAlign: TextAlign.center,
         ),
         const Gap(24),
@@ -446,10 +452,9 @@ class _BenefitRow extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: AppTheme.textMainDark),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppTheme.textMainDark),
             ),
           ),
         ],
@@ -472,7 +477,9 @@ class _PrimaryButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: EmergeColors.teal,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
         child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
       ),

@@ -2,11 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/emerge_colors.dart';
 
-enum GlassLevel {
-  level1,
-  level2,
-  level3,
-}
+enum GlassLevel { level1, level2, level3 }
 
 class GlassPanel extends StatefulWidget {
   final Widget child;
@@ -54,12 +50,18 @@ class _GlassPanelState extends State<GlassPanel> {
       case GlassLevel.level2:
         opacity = 0.2;
         blur = 20.0;
-        border = Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1);
+        border = Border.all(
+          color: Colors.white.withValues(alpha: 0.15),
+          width: 1,
+        );
         break;
       case GlassLevel.level3:
         opacity = 0.3;
         blur = 40.0;
-        border = Border.all(color: EmergeColors.nebulaPrimaryContainer, width: 1);
+        border = Border.all(
+          color: EmergeColors.nebulaPrimaryContainer,
+          width: 1,
+        );
         break;
     }
 
@@ -70,17 +72,21 @@ class _GlassPanelState extends State<GlassPanel> {
         BoxShadow(
           color: const Color(0xFF00D2FF).withValues(alpha: 0.3),
           blurRadius: 15,
-        )
+        ),
       ];
-      border = Border.all(color: const Color(0xFF47D6FF).withValues(alpha: 0.5));
+      border = Border.all(
+        color: const Color(0xFF47D6FF).withValues(alpha: 0.5),
+      );
     } else if (widget.isViolet) {
       shadows = [
         BoxShadow(
           color: const Color(0xFFEDB1FF).withValues(alpha: 0.3),
           blurRadius: 15,
-        )
+        ),
       ];
-      border = Border.all(color: const Color(0xFFEDB1FF).withValues(alpha: 0.5));
+      border = Border.all(
+        color: const Color(0xFFEDB1FF).withValues(alpha: 0.5),
+      );
     }
 
     Widget content = Container(

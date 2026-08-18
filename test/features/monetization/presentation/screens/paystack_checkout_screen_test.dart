@@ -11,9 +11,7 @@ class MockPaystackPaymentRepository extends Mock
 
 Widget createTest(MockPaystackPaymentRepository mock) {
   return ProviderScope(
-    overrides: [
-      paystackPaymentRepositoryProvider.overrideWith((ref) => mock),
-    ],
+    overrides: [paystackPaymentRepositoryProvider.overrideWith((ref) => mock)],
     child: const MaterialApp(
       home: PaystackCheckoutScreen(
         amount: 10.0,
@@ -55,7 +53,9 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
 
-    expect(find.text('Failed to initialize payment. Please try again.'),
-        findsOneWidget);
+    expect(
+      find.text('Failed to initialize payment. Please try again.'),
+      findsOneWidget,
+    );
   });
 }

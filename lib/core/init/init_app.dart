@@ -58,16 +58,23 @@ Future<void> initApp() async {
       final user = redirectResult.user;
       if (user != null) {
         debugPrint('✅ Google redirect result captured: ${user.email}');
-        
+
         final prefs = await SharedPreferences.getInstance();
-        final isCreatorSignup = prefs.getBool('pending_creator_signup') ?? false;
+        final isCreatorSignup =
+            prefs.getBool('pending_creator_signup') ?? false;
         final inviteCode = prefs.getString('pending_creator_invite_code');
         final typedUsername = prefs.getString('pending_creator_username');
         try {
           // Create Firestore profile if this is a first-time sign-in
           final firestore = FirebaseFirestore.instance;
-          final userDoc = await firestore.collection('users').doc(user.uid).get();
-          final creatorDoc = await firestore.collection('creator_profiles').doc(user.uid).get();
+          final userDoc = await firestore
+              .collection('users')
+              .doc(user.uid)
+              .get();
+          final creatorDoc = await firestore
+              .collection('creator_profiles')
+              .doc(user.uid)
+              .get();
 
           if (!userDoc.exists && !creatorDoc.exists) {
             final displayName = user.displayName?.isNotEmpty == true
@@ -83,17 +90,19 @@ Future<void> initApp() async {
                 // Prefer the username the user typed before the OAuth redirect
                 // (stashed by signUpCreatorWithGoogle); fall back to the Google
                 // display name when the field was left empty.
-                final redeemName =
-                    typedUsername?.trim().isNotEmpty == true
-                        ? typedUsername!.trim()
-                        : displayName;
+                final redeemName = typedUsername?.trim().isNotEmpty == true
+                    ? typedUsername!.trim()
+                    : displayName;
 
                 // Claim the username so creators are covered by the same
                 // `usernames` lock as everyone else — redeemCreatorInvite has
                 // no claim of its own (checked in functions/src/creator_invites.ts).
                 // Best-effort on the redirect return path: a collision must not
                 // block the redemption or strand the user mid-flow.
-                final candidate = deriveUsernameCandidate(redeemName, user.email);
+                final candidate = deriveUsernameCandidate(
+                  redeemName,
+                  user.email,
+                );
                 if (candidate != null) {
                   try {
                     await functions.httpsCallable('claimUsername').call(
@@ -101,17 +110,22 @@ Future<void> initApp() async {
                     );
                   } catch (claimError) {
                     debugPrint(
-                        '⚠️ claimUsername failed on creator redirect '
-                        '(non-fatal): $claimError');
+                      '⚠️ claimUsername failed on creator redirect '
+                      '(non-fatal): $claimError',
+                    );
                   }
                 }
 
-                await functions.httpsCallable('redeemCreatorInvite').call(<String, dynamic>{
-                  'code': inviteCode?.trim().toUpperCase() ?? '',
-                  'displayName': redeemName,
-                });
+                await functions
+                    .httpsCallable('redeemCreatorInvite')
+                    .call(<String, dynamic>{
+                      'code': inviteCode?.trim().toUpperCase() ?? '',
+                      'displayName': redeemName,
+                    });
                 await user.getIdToken(true);
-                AppLogger.i('Creator redeemed via invite after Google redirect');
+                AppLogger.i(
+                  'Creator redeemed via invite after Google redirect',
+                );
               } catch (e) {
                 debugPrint('⚠️ redeemCreatorInvite failed on redirect: $e');
               }
@@ -121,19 +135,27 @@ Future<void> initApp() async {
               // email signups. Best-effort: a display name that cannot map to a
               // valid username (or a collision) must not fail the redirect
               // return flow — the profile below keeps the display-name fallback.
-              final candidate = deriveUsernameCandidate(displayName, user.email);
+              final candidate = deriveUsernameCandidate(
+                displayName,
+                user.email,
+              );
               if (candidate != null) {
                 try {
                   await FirebaseFunctions.instance
                       .httpsCallable('claimUsername')
                       .call(<String, dynamic>{'username': candidate});
                 } catch (claimError) {
-                  debugPrint('⚠️ claimUsername failed on Google redirect '
-                      '(non-fatal): $claimError');
+                  debugPrint(
+                    '⚠️ claimUsername failed on Google redirect '
+                    '(non-fatal): $claimError',
+                  );
                 }
               }
 
-              final profile = UserProfile(uid: user.uid, displayName: displayName);
+              final profile = UserProfile(
+                uid: user.uid,
+                displayName: displayName,
+              );
               final profileMap = profile.toMap();
               profileMap['email'] = user.email ?? '';
               profileMap['createdAt'] = FieldValue.serverTimestamp();

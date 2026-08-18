@@ -14,7 +14,10 @@ class BlueprintDetailController extends AsyncNotifier<void> {
     // Initial state is idle
   }
 
-  Future<void> adoptBlueprint(Blueprint blueprint, {TimeOfDay? reminderTime}) async {
+  Future<void> adoptBlueprint(
+    Blueprint blueprint, {
+    TimeOfDay? reminderTime,
+  }) async {
     state = const AsyncLoading();
 
     try {
@@ -39,8 +42,12 @@ class BlueprintDetailController extends AsyncNotifier<void> {
       // (previously bypassed the 5-habit limit entirely). Same gate as
       // createHabit — active count + blueprint habits must fit the limit
       // unless premium.
-      final activeHabitCount = existingHabits.where((h) => !h.isArchived).length;
-      final freeHabitLimit = ref.read(remoteConfigServiceProvider).freeHabitLimit;
+      final activeHabitCount = existingHabits
+          .where((h) => !h.isArchived)
+          .length;
+      final freeHabitLimit = ref
+          .read(remoteConfigServiceProvider)
+          .freeHabitLimit;
       final fitsFreeTier = FreeTierHabitGate.canAddHabits(
         activeHabitCount: activeHabitCount,
         habitsToAdd: blueprint.habits.length,
@@ -64,12 +71,9 @@ class BlueprintDetailController extends AsyncNotifier<void> {
         reminderTime: reminderTimeStr,
       );
 
-      await result.fold(
-        (failure) async {
-          throw Exception(failure.message);
-        },
-        (_) async {},
-      );
+      await result.fold((failure) async {
+        throw Exception(failure.message);
+      }, (_) async {});
 
       // Adoption succeeded — flip to success BEFORE the side-effecting
       // counter write so a Firestore hiccup there can't strand the UI on
@@ -77,7 +81,9 @@ class BlueprintDetailController extends AsyncNotifier<void> {
       state = const AsyncData(null);
 
       try {
-        await ref.read(blueprintRepositoryProvider).incrementAdoptionCount(blueprint.id);
+        await ref
+            .read(blueprintRepositoryProvider)
+            .incrementAdoptionCount(blueprint.id);
         // The single-doc provider may be cached with the stale pre-increment
         // count; force a re-fetch so deep-linked detail screens show the
         // fresh number.
@@ -97,4 +103,5 @@ class BlueprintDetailController extends AsyncNotifier<void> {
 
 final blueprintDetailControllerProvider =
     AsyncNotifierProvider<BlueprintDetailController, void>(
-        () => BlueprintDetailController());
+      () => BlueprintDetailController(),
+    );

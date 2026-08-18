@@ -18,9 +18,9 @@ class TribeLoopService {
     required SocialActivityService socialActivity,
     required StreakWatchdog streakWatchdog,
     FirestoreDriftSyncer? driftSyncer,
-  })  : _socialActivity = socialActivity,
-        _streakWatchdog = streakWatchdog,
-        _driftSyncer = driftSyncer {
+  }) : _socialActivity = socialActivity,
+       _streakWatchdog = streakWatchdog,
+       _driftSyncer = driftSyncer {
     _subscription = EventBus().on<HabitCompleted>().listen(onHabitCompleted);
   }
 

@@ -15,13 +15,9 @@ class MockTribeActivityDao extends Mock implements TribeActivityDao {}
 
 class RecordingLeaderboardRepository implements LeaderboardRepository {
   final List<
-      ({
-        String userId,
-        int xp,
-        int level,
-        String? clubId,
-        bool isIncrement,
-      })> updateCalls = [];
+    ({String userId, int xp, int level, String? clubId, bool isIncrement})
+  >
+  updateCalls = [];
 
   @override
   Future<Either<Failure, Unit>> updateUserScore(
@@ -51,8 +47,7 @@ class RecordingLeaderboardRepository implements LeaderboardRepository {
   @override
   Stream<List<LeaderboardEntry>> watchChallengeLeaderboard([
     String? challengeId,
-  ]) =>
-      const Stream.empty();
+  ]) => const Stream.empty();
 }
 
 void main() {
@@ -88,7 +83,9 @@ void main() {
       when(
         () => mockActivityDao.getLatestHabitCompletion('u1', 'h1'),
       ).thenAnswer((_) async => creditRow);
-      when(() => mockActivityDao.deleteActivity(any(), any())).thenAnswer((_) async {});
+      when(
+        () => mockActivityDao.deleteActivity(any(), any()),
+      ).thenAnswer((_) async {});
 
       final service = SocialActivityService(
         syncEngine: mockSyncEngine,
@@ -129,7 +126,9 @@ void main() {
       when(
         () => mockActivityDao.getLatestHabitCompletion('u1', 'h1'),
       ).thenAnswer((_) async => creditRow);
-      when(() => mockActivityDao.deleteActivity(any(), any())).thenAnswer((_) async {});
+      when(
+        () => mockActivityDao.deleteActivity(any(), any()),
+      ).thenAnswer((_) async {});
       final leaderboardRepo = RecordingLeaderboardRepository();
 
       final service = SocialActivityService(
@@ -188,28 +187,31 @@ void main() {
       expect(leaderboardRepo.updateCalls.single.xp, -10);
     });
 
-    test('does not write the leaderboard when there is nothing to undo', () async {
-      when(
-        () => mockActivityDao.getLatestHabitCompletion('u1', 'h1'),
-      ).thenAnswer((_) async => null);
-      final leaderboardRepo = RecordingLeaderboardRepository();
+    test(
+      'does not write the leaderboard when there is nothing to undo',
+      () async {
+        when(
+          () => mockActivityDao.getLatestHabitCompletion('u1', 'h1'),
+        ).thenAnswer((_) async => null);
+        final leaderboardRepo = RecordingLeaderboardRepository();
 
-      final service = SocialActivityService(
-        syncEngine: mockSyncEngine,
-        activityDao: mockActivityDao,
-        leaderboardRepo: leaderboardRepo,
-      );
+        final service = SocialActivityService(
+          syncEngine: mockSyncEngine,
+          activityDao: mockActivityDao,
+          leaderboardRepo: leaderboardRepo,
+        );
 
-      await service.undoHabitCompletion(
-        userId: 'u1',
-        userName: 'A',
-        archetype: 'athlete',
-        habitId: 'h1',
-        xpToUndo: 0,
-        level: 1,
-      );
+        await service.undoHabitCompletion(
+          userId: 'u1',
+          userName: 'A',
+          archetype: 'athlete',
+          habitId: 'h1',
+          xpToUndo: 0,
+          level: 1,
+        );
 
-      expect(leaderboardRepo.updateCalls, isEmpty);
-    });
+        expect(leaderboardRepo.updateCalls, isEmpty);
+      },
+    );
   });
 }

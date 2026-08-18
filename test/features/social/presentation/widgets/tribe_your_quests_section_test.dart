@@ -13,21 +13,20 @@ Challenge _challenge({
   required String title,
   required int currentDay,
   required ChallengeStatus status,
-}) =>
-    Challenge(
-      id: id,
-      title: title,
-      description: '',
-      imageUrl: '',
-      reward: '',
-      participants: 0,
-      daysLeft: 0,
-      totalDays: 30,
-      currentDay: currentDay,
-      status: status,
-      xpReward: 0,
-      steps: const [],
-    );
+}) => Challenge(
+  id: id,
+  title: title,
+  description: '',
+  imageUrl: '',
+  reward: '',
+  participants: 0,
+  daysLeft: 0,
+  totalDays: 30,
+  currentDay: currentDay,
+  status: status,
+  xpReward: 0,
+  steps: const [],
+);
 
 Widget buildTest({
   List<Challenge>? userChallenges,
@@ -38,19 +37,20 @@ Widget buildTest({
     overrides: [
       userChallengesProvider.overrideWith(
         (ref) =>
-            userChallengesAsync ?? Future.value(userChallenges ?? <Challenge>[]),
+            userChallengesAsync ??
+            Future.value(userChallenges ?? <Challenge>[]),
       ),
     ],
     child: MaterialApp.router(
-      routerConfig: router ??
+      routerConfig:
+          router ??
           GoRouter(
             initialLocation: '/',
             routes: [
               GoRoute(
                 path: '/',
-                builder: (_, _) => const Scaffold(
-                  body: TribeYourQuestsSection(),
-                ),
+                builder: (_, _) =>
+                    const Scaffold(body: TribeYourQuestsSection()),
               ),
             ],
           ),
@@ -66,17 +66,27 @@ void main() {
     expect(find.text('YOUR QUESTS'), findsOneWidget);
   });
 
-  testWidgets('renders only active challenges, excludes completed/featured',
-      (tester) async {
-    await tester.pumpWidget(buildTest(userChallenges: [
-      _challenge(
-          id: 'a1', title: 'Active One', currentDay: 5, status: ChallengeStatus.active),
-      _challenge(
-          id: 'c1',
-          title: 'Completed One',
-          currentDay: 30,
-          status: ChallengeStatus.completed),
-    ]));
+  testWidgets('renders only active challenges, excludes completed/featured', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      buildTest(
+        userChallenges: [
+          _challenge(
+            id: 'a1',
+            title: 'Active One',
+            currentDay: 5,
+            status: ChallengeStatus.active,
+          ),
+          _challenge(
+            id: 'c1',
+            title: 'Completed One',
+            currentDay: 30,
+            status: ChallengeStatus.completed,
+          ),
+        ],
+      ),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
     expect(find.text('Active One'), findsOneWidget);

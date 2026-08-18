@@ -22,17 +22,29 @@ void main() {
     });
 
     test('forArchetype returns correct proportions', () {
-      expect(AvatarProportions.forArchetype('athlete').torsoWidth,
-          greaterThan(1.0));
-      expect(AvatarProportions.forArchetype('hero').torsoWidth,
-          closeTo(1.0, 0.01));
+      expect(
+        AvatarProportions.forArchetype('athlete').torsoWidth,
+        greaterThan(1.0),
+      );
+      expect(
+        AvatarProportions.forArchetype('hero').torsoWidth,
+        closeTo(1.0, 0.01),
+      );
     });
 
     test('all archetype proportions are defined', () {
-      for (final archetype in ['hero', 'athlete', 'scholar',
-                               'creator', 'stoic', 'zealot']) {
-        expect(AvatarProportions.forArchetype(archetype).torsoWidth,
-            greaterThan(0));
+      for (final archetype in [
+        'hero',
+        'athlete',
+        'scholar',
+        'creator',
+        'stoic',
+        'zealot',
+      ]) {
+        expect(
+          AvatarProportions.forArchetype(archetype).torsoWidth,
+          greaterThan(0),
+        );
       }
     });
   });

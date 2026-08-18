@@ -15,9 +15,7 @@ String _dayKey(DateTime day) =>
     '${day.day.toString().padLeft(2, '0')}';
 
 /// completionStatus entry for every day of the current month.
-Map<String, DayCompletion> _fullMonthStatus(
-  DayCompletion Function() make,
-) {
+Map<String, DayCompletion> _fullMonthStatus(DayCompletion Function() make) {
   final now = DateTime.now();
   final lastDay = DateTime(now.year, now.month + 1, 0);
   return {
@@ -27,9 +25,7 @@ Map<String, DayCompletion> _fullMonthStatus(
 }
 
 Future<void> _pumpStrip(WidgetTester tester, MonthCalendarStrip strip) async {
-  await tester.pumpWidget(
-    MaterialApp(home: Scaffold(body: strip)),
-  );
+  await tester.pumpWidget(MaterialApp(home: Scaffold(body: strip)));
   // Let the initial scroll-to-today animation and the AnimatedContainer
   // transitions settle (no pending-timer flakiness).
   await tester.pump(const Duration(milliseconds: 400));

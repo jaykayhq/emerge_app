@@ -3,8 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:emerge_app/features/habits/presentation/widgets/identity_sentence_builder.dart';
 
 void main() {
-  testWidgets('IdentitySentenceBuilder shows prefix and segments',
-      (WidgetTester tester) async {
+  testWidgets('IdentitySentenceBuilder shows prefix and segments', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(

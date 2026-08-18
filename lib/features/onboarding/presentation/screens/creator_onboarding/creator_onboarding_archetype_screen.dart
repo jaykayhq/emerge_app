@@ -42,14 +42,12 @@ class _CreatorArchetypeScreenState
         .read(creatorOnboardingDraftControllerProvider.notifier)
         .setArchetype(_selected!);
     try {
-      await ref.read(
-        saveCreatorOnboardingProgressProvider(progress: 1).future,
-      );
+      await ref.read(saveCreatorOnboardingProgressProvider(progress: 1).future);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save progress: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to save progress: $e')));
       return;
     }
     if (mounted) context.go('/onboarding/creator/profile');
@@ -80,10 +78,7 @@ class _CreatorArchetypeScreenState
           ),
           SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 16,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -120,16 +115,19 @@ class _CreatorArchetypeScreenState
                   ),
                   const Gap(32),
                   ..._choices.asMap().entries.map(
-                        (entry) => _ArchetypeCard(
-                          archetype: entry.value,
-                          selected: _selected == entry.value,
-                          onTap: () => setState(() => _selected = entry.value),
-                        ).animate().fadeIn(
-                              delay: Duration(
-                                milliseconds: 80 * entry.key,
-                              ),
-                            ).slideY(begin: 0.05),
-                      ),
+                    (entry) =>
+                        _ArchetypeCard(
+                              archetype: entry.value,
+                              selected: _selected == entry.value,
+                              onTap: () =>
+                                  setState(() => _selected = entry.value),
+                            )
+                            .animate()
+                            .fadeIn(
+                              delay: Duration(milliseconds: 80 * entry.key),
+                            )
+                            .slideY(begin: 0.05),
+                  ),
                   const Gap(32),
                   Container(
                     height: 56,
@@ -279,10 +277,7 @@ class _ArchetypeCard extends StatelessWidget {
                   ),
                 ),
                 if (selected)
-                  const Icon(
-                    Icons.check_circle,
-                    color: Colors.amber,
-                  ),
+                  const Icon(Icons.check_circle, color: Colors.amber),
               ],
             ),
           ),

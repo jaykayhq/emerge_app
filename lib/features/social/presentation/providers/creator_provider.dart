@@ -9,7 +9,10 @@ final creatorRepositoryProvider = Provider<CreatorRepository>((ref) {
   return CreatorRepository();
 });
 
-final creatorProfileProvider = StreamProvider.family<CreatorProfile?, String>((ref, userId) {
+final creatorProfileProvider = StreamProvider.family<CreatorProfile?, String>((
+  ref,
+  userId,
+) {
   final repository = ref.watch(creatorRepositoryProvider);
   return repository.watchCreatorProfile(userId);
 });
@@ -39,8 +42,8 @@ final tribeCreatorsProvider = StreamProvider<List<CreatorProfile>>((ref) {
   final repo = ref.watch(creatorRepositoryProvider);
   if (membership == null) return Stream.value([]);
   return repo.watchVerifiedCreators().map((creators) {
-    return creators.where((c) =>
-      c.tribeId == null || c.tribeId == membership.tribeId,
-    ).toList();
+    return creators
+        .where((c) => c.tribeId == null || c.tribeId == membership.tribeId)
+        .toList();
   });
 });

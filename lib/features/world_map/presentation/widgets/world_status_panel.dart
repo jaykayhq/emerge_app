@@ -1,4 +1,3 @@
-
 import 'package:emerge_app/core/presentation/widgets/glassmorphism_card.dart';
 import 'package:emerge_app/core/theme/attribute_colors.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';

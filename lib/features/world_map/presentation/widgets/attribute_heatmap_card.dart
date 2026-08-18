@@ -13,7 +13,9 @@ class AttributeHeatmapCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final completionsAsync = ref.watch(attributeCompletionsProvider(attribute.name));
+    final completionsAsync = ref.watch(
+      attributeCompletionsProvider(attribute.name),
+    );
     final config = WorldTypeConfig.forAttribute(attribute);
 
     return Card(
@@ -41,7 +43,8 @@ class AttributeHeatmapCard extends ConsumerWidget {
               height: 200,
               child: completionsAsync.when(
                 data: (data) {
-                  final maxY = (data.reduce((a, b) => a > b ? a : b) + 50).toDouble();
+                  final maxY = (data.reduce((a, b) => a > b ? a : b) + 50)
+                      .toDouble();
                   return BarChart(
                     BarChartData(
                       alignment: BarChartAlignment.spaceAround,
@@ -54,20 +57,31 @@ class AttributeHeatmapCard extends ConsumerWidget {
                             showTitles: true,
                             getTitlesWidget: (value, meta) {
                               final now = DateTime.now();
-                              final date = now.subtract(Duration(days: 6 - value.toInt()));
+                              final date = now.subtract(
+                                Duration(days: 6 - value.toInt()),
+                              );
                               return Padding(
                                 padding: const EdgeInsets.only(top: 8.0),
                                 child: Text(
                                   DateFormat('E').format(date),
-                                  style: const TextStyle(color: Colors.white70, fontSize: 10),
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 10,
+                                  ),
                                 ),
                               );
                             },
                           ),
                         ),
-                        leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        leftTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        topTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        rightTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
                       ),
                       gridData: const FlGridData(show: false),
                       borderData: FlBorderData(show: false),
@@ -97,9 +111,16 @@ class AttributeHeatmapCard extends ConsumerWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.warning_amber_rounded, color: Colors.white54, size: 32),
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        color: Colors.white54,
+                        size: 32,
+                      ),
                       SizedBox(height: 8),
-                      Text('Failed to load recent activity.', style: TextStyle(color: Colors.white70)),
+                      Text(
+                        'Failed to load recent activity.',
+                        style: TextStyle(color: Colors.white70),
+                      ),
                     ],
                   ),
                 ),

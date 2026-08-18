@@ -68,26 +68,16 @@ final _testMembership = UserTribeTableData(
 /// Overrides for everything [TribeLobbyScreen]'s subtree watches (same set
 /// as tribe_lobby_screen_test.dart).
 List<Override> _lobbyOverrides() => [
-  userStatsStreamProvider.overrideWith(
-    (ref) => Stream.value(_testProfile),
-  ),
+  userStatsStreamProvider.overrideWith((ref) => Stream.value(_testProfile)),
   allArchetypeClubsProvider.overrideWith(
     (ref) => Stream.value(<Tribe>[_athleteTribe, _stoicTribe]),
   ),
-  userChallengesProvider.overrideWith(
-    (ref) async => <Challenge>[],
-  ),
+  userChallengesProvider.overrideWith((ref) async => <Challenge>[]),
   dailyQuestFromBundleProvider.overrideWith((ref) => null),
   weeklySpotlightFromBundleProvider.overrideWith((ref) => null),
-  verifiedCreatorsStreamProvider.overrideWith(
-    (ref) => const Stream.empty(),
-  ),
-  clubActivityProvider.overrideWith(
-    (ref, _) => const Stream.empty(),
-  ),
-  worldLeaderboardProvider.overrideWith(
-    (ref) => const Stream.empty(),
-  ),
+  verifiedCreatorsStreamProvider.overrideWith((ref) => const Stream.empty()),
+  clubActivityProvider.overrideWith((ref, _) => const Stream.empty()),
+  worldLeaderboardProvider.overrideWith((ref) => const Stream.empty()),
 ];
 
 Widget _buildApp(List<Override> overrides) {
@@ -99,51 +89,58 @@ Widget _buildApp(List<Override> overrides) {
 
 void main() {
   testWidgets(
-      'renders TribeLobbyScreen for the JOINED tribe when a membership exists',
-      (tester) async {
-    await tester.pumpWidget(_buildApp([
-      activeMembershipProvider.overrideWith(
-        (ref) => Stream.value(_testMembership),
-      ),
-      ..._lobbyOverrides(),
-    ]));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+    'renders TribeLobbyScreen for the JOINED tribe when a membership exists',
+    (tester) async {
+      await tester.pumpWidget(
+        _buildApp([
+          activeMembershipProvider.overrideWith(
+            (ref) => Stream.value(_testMembership),
+          ),
+          ..._lobbyOverrides(),
+        ]),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.byType(TribeLobbyScreen), findsOneWidget);
-    expect(find.byType(PulseFeedScreen), findsNothing);
-    // The lobby shows the membership's club (stoic), not the archetype club.
-    expect(find.text('STONE COURT'), findsOneWidget);
-    expect(find.text('IRON VANGUARD'), findsNothing);
-  });
+      expect(find.byType(TribeLobbyScreen), findsOneWidget);
+      expect(find.byType(PulseFeedScreen), findsNothing);
+      // The lobby shows the membership's club (stoic), not the archetype club.
+      expect(find.text('STONE COURT'), findsOneWidget);
+      expect(find.text('IRON VANGUARD'), findsNothing);
+    },
+  );
 
-  testWidgets('renders PulseFeedScreen when there is no membership',
-      (tester) async {
-    await tester.pumpWidget(_buildApp([
-      activeMembershipProvider.overrideWith(
-        (ref) => Stream.value(null),
-      ),
-      pulseFeedProvider.overrideWith(
-        (ref) => Stream.value(<PulseFeedCard>[]),
-      ),
-    ]));
+  testWidgets('renders PulseFeedScreen when there is no membership', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _buildApp([
+        activeMembershipProvider.overrideWith((ref) => Stream.value(null)),
+        pulseFeedProvider.overrideWith(
+          (ref) => Stream.value(<PulseFeedCard>[]),
+        ),
+      ]),
+    );
     await tester.pump(); // single frame; ring animates forever, no settle
 
     expect(find.byType(PulseFeedScreen), findsOneWidget);
     expect(find.byType(TribeLobbyScreen), findsNothing);
   });
 
-  testWidgets('renders PulseFeedScreen while the membership is still loading',
-      (tester) async {
+  testWidgets('renders PulseFeedScreen while the membership is still loading', (
+    tester,
+  ) async {
     final controller = StreamController<UserTribeTableData?>();
     addTearDown(controller.close);
 
-    await tester.pumpWidget(_buildApp([
-      activeMembershipProvider.overrideWith((ref) => controller.stream),
-      pulseFeedProvider.overrideWith(
-        (ref) => Stream.value(<PulseFeedCard>[]),
-      ),
-    ]));
+    await tester.pumpWidget(
+      _buildApp([
+        activeMembershipProvider.overrideWith((ref) => controller.stream),
+        pulseFeedProvider.overrideWith(
+          (ref) => Stream.value(<PulseFeedCard>[]),
+        ),
+      ]),
+    );
     await tester.pump();
 
     expect(find.byType(PulseFeedScreen), findsOneWidget);

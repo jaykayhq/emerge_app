@@ -26,9 +26,9 @@ void main() {
   setUp(() {
     mockAuth = MockAuthRepository();
     when(() => mockAuth.user).thenAnswer((_) => const Stream.empty());
-    when(() => mockAuth.checkUsernameAvailability(any())).thenAnswer(
-      (_) async => right<Failure, bool>(true),
-    );
+    when(
+      () => mockAuth.checkUsernameAvailability(any()),
+    ).thenAnswer((_) async => right<Failure, bool>(true));
   });
 
   Future<void> setMobileViewport(WidgetTester tester) async {
@@ -71,8 +71,9 @@ void main() {
   testWidgets('flags a username already in use while typing', (tester) async {
     await setMobileViewport(tester);
 
-    when(() => mockAuth.checkUsernameAvailability('takenuser'))
-        .thenAnswer((_) async => right<Failure, bool>(false));
+    when(
+      () => mockAuth.checkUsernameAvailability('takenuser'),
+    ).thenAnswer((_) async => right<Failure, bool>(false));
 
     await tester.pumpWidget(_buildTest(mockAuth));
     await tester.pumpAndSettle();
@@ -98,8 +99,9 @@ void main() {
   ) async {
     await setMobileViewport(tester);
 
-    when(() => mockAuth.checkUsernameAvailability('takenuser'))
-        .thenAnswer((_) async => right<Failure, bool>(false));
+    when(
+      () => mockAuth.checkUsernameAvailability('takenuser'),
+    ).thenAnswer((_) async => right<Failure, bool>(false));
 
     await tester.pumpWidget(_buildTest(mockAuth));
     await tester.pumpAndSettle();
@@ -110,8 +112,9 @@ void main() {
     expect(find.text('This username is already taken'), findsOneWidget);
 
     // Editing the name clears the stale conflict; the new probe says free.
-    when(() => mockAuth.checkUsernameAvailability('takenuser2'))
-        .thenAnswer((_) async => right<Failure, bool>(true));
+    when(
+      () => mockAuth.checkUsernameAvailability('takenuser2'),
+    ).thenAnswer((_) async => right<Failure, bool>(true));
     await tester.enterText(find.byType(TextFormField).at(0), 'takenuser2');
     await tester.pump(const Duration(milliseconds: 400));
     await tester.pumpAndSettle();

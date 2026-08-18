@@ -10,6 +10,7 @@ import 'package:emerge_app/features/social/domain/repositories/friend_repository
 import 'package:emerge_app/features/auth/domain/repositories/auth_repository.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
+
 class MockFriendRepository extends Mock implements FriendRepository {}
 
 class _ProviderPump extends ConsumerWidget {
@@ -32,7 +33,8 @@ void main() {
     mockFriendRepo = MockFriendRepository();
 
     when(() => mockAuthRepo.user).thenAnswer(
-      (_) => Stream.value(const AuthUser(id: 'test_uid', email: 'test@test.com')),
+      (_) =>
+          Stream.value(const AuthUser(id: 'test_uid', email: 'test@test.com')),
     );
   });
 
@@ -42,9 +44,7 @@ void main() {
         authRepositoryProvider.overrideWithValue(mockAuthRepo),
         friendRepositoryProvider.overrideWithValue(mockFriendRepo),
       ],
-      child: _ProviderPump(
-        child: const MaterialApp(home: InviteCodeDialog()),
-      ),
+      child: _ProviderPump(child: const MaterialApp(home: InviteCodeDialog())),
     );
   }
 
@@ -71,8 +71,9 @@ void main() {
 
   testWidgets('InviteCodeDialog generates code', (tester) async {
     await setScreenSize(tester);
-    when(() => mockFriendRepo.generateInviteCode(any()))
-        .thenAnswer((_) async => 'ABC123');
+    when(
+      () => mockFriendRepo.generateInviteCode(any()),
+    ).thenAnswer((_) async => 'ABC123');
 
     await tester.pumpWidget(buildTest());
     await tester.pump();

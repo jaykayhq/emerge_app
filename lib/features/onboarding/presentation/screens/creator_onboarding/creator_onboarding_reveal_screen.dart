@@ -22,7 +22,8 @@ class CreatorOnboardingRevealScreen extends ConsumerStatefulWidget {
       _CreatorRevealScreenState();
 }
 
-class _CreatorRevealScreenState extends ConsumerState<CreatorOnboardingRevealScreen> {
+class _CreatorRevealScreenState
+    extends ConsumerState<CreatorOnboardingRevealScreen> {
   bool _isCompleting = false;
   bool _completed = false;
 
@@ -83,10 +84,7 @@ class _CreatorRevealScreenState extends ConsumerState<CreatorOnboardingRevealScr
           ),
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 32,
-                vertical: 24,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -95,15 +93,9 @@ class _CreatorRevealScreenState extends ConsumerState<CreatorOnboardingRevealScr
                   Center(
                     child: const EmergeAppIcon(size: 96)
                         .animate()
-                        .scale(
-                          duration: 600.ms,
-                          curve: Curves.easeOutBack,
-                        )
+                        .scale(duration: 600.ms, curve: Curves.easeOutBack)
                         .then()
-                        .shimmer(
-                          duration: 1500.ms,
-                          color: Colors.amber,
-                        ),
+                        .shimmer(duration: 1500.ms, color: Colors.amber),
                   ),
                   const Gap(32),
                   Text(

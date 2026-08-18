@@ -25,10 +25,7 @@ class PulseCardWidget extends ConsumerWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: typeColor.withValues(alpha: 0.25),
-          width: 1,
-        ),
+        border: Border.all(color: typeColor.withValues(alpha: 0.25), width: 1),
         boxShadow: [
           BoxShadow(
             color: typeColor.withValues(alpha: 0.08),
@@ -142,22 +139,22 @@ class PulseCardWidget extends ConsumerWidget {
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   static Color _typeColor(PulseFeedCardType type) => switch (type) {
-        PulseFeedCardType.identityVote => EmergeColors.neonTeal,
-        PulseFeedCardType.tribeActivity => const Color(0xFFFFB74D), // Amber
-        PulseFeedCardType.weeklyInsight => EmergeColors.nebulaSecondary,
-      };
+    PulseFeedCardType.identityVote => EmergeColors.neonTeal,
+    PulseFeedCardType.tribeActivity => const Color(0xFFFFB74D), // Amber
+    PulseFeedCardType.weeklyInsight => EmergeColors.nebulaSecondary,
+  };
 
   static IconData _typeIcon(PulseFeedCardType type) => switch (type) {
-        PulseFeedCardType.identityVote => Icons.favorite_outline_rounded,
-        PulseFeedCardType.tribeActivity => Icons.groups_rounded,
-        PulseFeedCardType.weeklyInsight => Icons.auto_awesome_rounded,
-      };
+    PulseFeedCardType.identityVote => Icons.favorite_outline_rounded,
+    PulseFeedCardType.tribeActivity => Icons.groups_rounded,
+    PulseFeedCardType.weeklyInsight => Icons.auto_awesome_rounded,
+  };
 
   static String _typeLabel(PulseFeedCardType type) => switch (type) {
-        PulseFeedCardType.identityVote => 'IDENTITY VOTE',
-        PulseFeedCardType.tribeActivity => 'TRIBE',
-        PulseFeedCardType.weeklyInsight => 'INSIGHT',
-      };
+    PulseFeedCardType.identityVote => 'IDENTITY VOTE',
+    PulseFeedCardType.tribeActivity => 'TRIBE',
+    PulseFeedCardType.weeklyInsight => 'INSIGHT',
+  };
 
   /// Returns a human-readable relative timestamp like "5m ago", "3h ago",
   /// "2d ago".

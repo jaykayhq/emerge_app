@@ -41,20 +41,33 @@ void main() {
       activeMembers: 8,
       activeRate: 0.67,
       blueprintStats: const [
-        BlueprintStat(id: 'b1', title: 'Morning Stack', adoptionCount: 7, habitCount: 2),
+        BlueprintStat(
+          id: 'b1',
+          title: 'Morning Stack',
+          adoptionCount: 7,
+          habitCount: 2,
+        ),
       ],
       topMembers: const [
         MemberStat(userId: 'u1', name: 'Ada', xp: 3000, habitsCompleted: 40),
       ],
       challengeStats: const [
-        ChallengeStat(id: 'c1', title: 'Read 30', participants: 5, status: 'active', xpReward: 100),
+        ChallengeStat(
+          id: 'c1',
+          title: 'Read 30',
+          participants: 5,
+          status: 'active',
+          xpReward: 100,
+        ),
       ],
     );
 
-    await tester.pumpWidget(_buildTest(
-      profile: const CreatorProfile(userId: 'creator1', tribeId: 't1'),
-      analytics: analytics,
-    ));
+    await tester.pumpWidget(
+      _buildTest(
+        profile: const CreatorProfile(userId: 'creator1', tribeId: 't1'),
+        analytics: analytics,
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('12'), findsOneWidget);
@@ -78,10 +91,12 @@ void main() {
   });
 
   testWidgets('shows empty state when creator has no tribe', (tester) async {
-    await tester.pumpWidget(_buildTest(
-      profile: const CreatorProfile(userId: 'creator1'), // tribeId null
-      analytics: const CreatorAnalytics(tribeId: 't1', tribeName: ''),
-    ));
+    await tester.pumpWidget(
+      _buildTest(
+        profile: const CreatorProfile(userId: 'creator1'), // tribeId null
+        analytics: const CreatorAnalytics(tribeId: 't1', tribeName: ''),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.text('No Analytics Yet'), findsOneWidget);
   });

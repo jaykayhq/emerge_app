@@ -13,6 +13,7 @@ import 'package:emerge_app/features/monetization/presentation/providers/subscrip
 import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 
 class MockHabitRepository extends Mock implements HabitRepository {}
+
 class MockRemoteConfigService extends Mock implements RemoteConfigService {}
 
 class TestIsPremium extends IsPremium {
@@ -63,11 +64,13 @@ void main() {
 
   group('createHabitProvider', () {
     test('creates a habit successfully', () async {
-      when(() => mockRepo.watchHabits('test'))
-          .thenAnswer((_) => Stream.value([]));
+      when(
+        () => mockRepo.watchHabits('test'),
+      ).thenAnswer((_) => Stream.value([]));
       when(() => mockRemoteConfig.freeHabitLimit).thenReturn(5);
-      when(() => mockRepo.createHabit(any()))
-          .thenAnswer((_) async => const Right(unit));
+      when(
+        () => mockRepo.createHabit(any()),
+      ).thenAnswer((_) async => const Right(unit));
 
       final container = _makeContainer(
         habitRepo: mockRepo,
@@ -97,8 +100,9 @@ void main() {
           createdAt: DateTime.now(),
         ),
       );
-      when(() => mockRepo.watchHabits('test'))
-          .thenAnswer((_) => Stream.value(existingHabits));
+      when(
+        () => mockRepo.watchHabits('test'),
+      ).thenAnswer((_) => Stream.value(existingHabits));
       when(() => mockRemoteConfig.freeHabitLimit).thenReturn(5);
 
       final container = _makeContainer(
@@ -128,8 +132,9 @@ void main() {
 
   group('completeHabitProvider', () {
     test('completes a habit and returns result', () async {
-      when(() => mockRepo.completeHabit('1', any()))
-          .thenAnswer((_) async => const Right(true));
+      when(
+        () => mockRepo.completeHabit('1', any()),
+      ).thenAnswer((_) async => const Right(true));
       when(() => mockRepo.getHabit('1')).thenAnswer(
         (_) async => Habit(
           id: '1',
@@ -139,28 +144,27 @@ void main() {
           currentStreak: 0,
         ),
       );
-      when(() => mockRepo.watchHabits('test'))
-          .thenAnswer((_) => Stream.value([]));
+      when(
+        () => mockRepo.watchHabits('test'),
+      ).thenAnswer((_) => Stream.value([]));
 
       final container = _makeContainer(habitRepo: mockRepo, premium: true);
-      final result = await container.read(
-        completeHabitProvider('1').future,
-      );
+      final result = await container.read(completeHabitProvider('1').future);
       expect(result.xpEarned, greaterThan(0));
       expect(result.newStreak, 1);
       container.dispose();
     });
 
     test('handles undo completion', () async {
-      when(() => mockRepo.completeHabit('1', any()))
-          .thenAnswer((_) async => const Right(false));
-      when(() => mockRepo.watchHabits('test'))
-          .thenAnswer((_) => Stream.value([]));
+      when(
+        () => mockRepo.completeHabit('1', any()),
+      ).thenAnswer((_) async => const Right(false));
+      when(
+        () => mockRepo.watchHabits('test'),
+      ).thenAnswer((_) => Stream.value([]));
 
       final container = _makeContainer(habitRepo: mockRepo, premium: true);
-      final result = await container.read(
-        completeHabitProvider('1').future,
-      );
+      final result = await container.read(completeHabitProvider('1').future);
       expect(result.isUndo, true);
       expect(result.xpEarned, 0);
       container.dispose();

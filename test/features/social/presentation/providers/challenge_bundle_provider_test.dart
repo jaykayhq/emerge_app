@@ -20,18 +20,19 @@ void main() {
 
   group('challengeBundleProvider', () {
     test('bundle can be read without error', () async {
-      when(() => mockRepo.getWeeklySpotlight(
-        archetypeId: any(named: 'archetypeId'),
-      )).thenAnswer((_) async => null);
-      when(() => mockRepo.getUserChallenges('test')).thenAnswer(
-        (_) async => [],
-      );
-      when(() => mockRepo.getChallengesByArchetype(any())).thenAnswer(
-        (_) async => [],
-      );
-      when(() => mockRepo.getChallenges(
-        featuredOnly: any(named: 'featuredOnly'),
-      )).thenAnswer((_) async => []);
+      when(
+        () =>
+            mockRepo.getWeeklySpotlight(archetypeId: any(named: 'archetypeId')),
+      ).thenAnswer((_) async => null);
+      when(
+        () => mockRepo.getUserChallenges('test'),
+      ).thenAnswer((_) async => []);
+      when(
+        () => mockRepo.getChallengesByArchetype(any()),
+      ).thenAnswer((_) async => []);
+      when(
+        () => mockRepo.getChallenges(featuredOnly: any(named: 'featuredOnly')),
+      ).thenAnswer((_) async => []);
 
       final container = ProviderContainer(
         overrides: [

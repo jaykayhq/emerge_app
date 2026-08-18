@@ -95,9 +95,11 @@ class ParticleBurstPainter extends CustomPainter {
 
     for (final particle in particles) {
       // Position = center + offset + velocity * progress
-      final dx = particle.offsetDx +
+      final dx =
+          particle.offsetDx +
           math.cos(particle.angle) * particle.speed * progress * 60;
-      final dy = particle.offsetDy +
+      final dy =
+          particle.offsetDy +
           math.sin(particle.angle) * particle.speed * progress * 60 +
           // Gravity pulls particles downward
           120 * progress * progress;
@@ -106,14 +108,12 @@ class ParticleBurstPainter extends CustomPainter {
       paint.color = color.withValues(alpha: fadeProgress * 0.9);
 
       // Particles shrink slightly as they fade
-      final size_ = (3 + particle.size * (1.0 - progress * 0.5))
-          .clamp(1.0, 8.0);
-
-      canvas.drawCircle(
-        Offset(center.dx + dx, center.dy + dy),
-        size_,
-        paint,
+      final size_ = (3 + particle.size * (1.0 - progress * 0.5)).clamp(
+        1.0,
+        8.0,
       );
+
+      canvas.drawCircle(Offset(center.dx + dx, center.dy + dy), size_, paint);
     }
   }
 

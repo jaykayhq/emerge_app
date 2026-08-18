@@ -79,9 +79,10 @@ void main() {
     await settings.init();
   });
 
-  testWidgets(
-      'timeline with habits renders and scrolls under semantics '
-      '(regressions: unbounded calendar height + parentDataDirty assert)', (tester) async {
+  testWidgets('timeline with habits renders and scrolls under semantics '
+      '(regressions: unbounded calendar height + parentDataDirty assert)', (
+    tester,
+  ) async {
     // Standard phone viewport — smaller than the timeline content so the
     // scroll path is exercised (sliver children churn in/out of the tree).
     tester.view.physicalSize = const Size(800, 600);
@@ -102,11 +103,7 @@ void main() {
         section: TimeOfDayPreference.evening,
         lastCompleted: DateTime.now(),
       ),
-      _habit(
-        id: 'h3',
-        title: 'Journal',
-        section: TimeOfDayPreference.anytime,
-      ),
+      _habit(id: 'h3', title: 'Journal', section: TimeOfDayPreference.anytime),
     ];
 
     await tester.pumpWidget(
@@ -115,28 +112,20 @@ void main() {
           dashboardStateProvider.overrideWithValue(
             DashboardState(habits: habits),
           ),
-          habitsProvider.overrideWith(
-            (ref) => Stream.value(habits),
-          ),
+          habitsProvider.overrideWith((ref) => Stream.value(habits)),
           userStatsStreamProvider.overrideWith(
             (ref) => Stream.value(_emptyProfile),
           ),
           worldThemeProvider.overrideWith(WorldThemeNotifier.new),
-          worldHealthStreamProvider.overrideWith(
-            (ref) => Stream.value(0.5),
-          ),
-          worldEntropyStreamProvider.overrideWith(
-            (ref) => Stream.value(0.0),
-          ),
+          worldHealthStreamProvider.overrideWith((ref) => Stream.value(0.5)),
+          worldEntropyStreamProvider.overrideWith((ref) => Stream.value(0.0)),
           companionRepositoryProvider.overrideWith(
             (ref) => CompanionRepository(),
           ),
           isPremiumProvider.overrideWith(() => TestIsPremium(false)),
           // Narrator summary card reads the local datasource (Drift); stub it
           // so the test never touches a database.
-          latestNarratorInsightProvider.overrideWith(
-            (ref) async => null,
-          ),
+          latestNarratorInsightProvider.overrideWith((ref) async => null),
         ],
         child: const MaterialApp(home: TimelineScreen()),
       ),
@@ -165,102 +154,98 @@ void main() {
           matching: find.byType(Scrollable),
         )
         .first;
-    final scrollOffset =
-        tester.state<ScrollableState>(mainScrollable).position.pixels;
+    final scrollOffset = tester
+        .state<ScrollableState>(mainScrollable)
+        .position
+        .pixels;
     expect(scrollOffset, greaterThan(0));
 
     semanticsHandle.dispose();
   });
 
   testWidgets(
-      'all-done celebration fires only on the last-completion transition '
-      '(not on first build, not on undo)', (tester) async {
-    final controller = StreamController<List<Habit>>();
-    addTearDown(controller.close);
+    'all-done celebration fires only on the last-completion transition '
+    '(not on first build, not on undo)',
+    (tester) async {
+      final controller = StreamController<List<Habit>>();
+      addTearDown(controller.close);
 
-    final h1 = _habit(
-      id: 'c1',
-      title: 'Celebrate me',
-      section: TimeOfDayPreference.morning,
-      lastCompleted: DateTime.now(),
-    );
-    final h2 = _habit(
-      id: 'c2',
-      title: 'Second habit',
-      section: TimeOfDayPreference.morning,
-    );
-    final h2Completed = _habit(
-      id: 'c2',
-      title: 'Second habit',
-      section: TimeOfDayPreference.morning,
-      lastCompleted: DateTime.now(),
-    );
+      final h1 = _habit(
+        id: 'c1',
+        title: 'Celebrate me',
+        section: TimeOfDayPreference.morning,
+        lastCompleted: DateTime.now(),
+      );
+      final h2 = _habit(
+        id: 'c2',
+        title: 'Second habit',
+        section: TimeOfDayPreference.morning,
+      );
+      final h2Completed = _habit(
+        id: 'c2',
+        title: 'Second habit',
+        section: TimeOfDayPreference.morning,
+        lastCompleted: DateTime.now(),
+      );
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          dashboardStateProvider.overrideWithValue(
-            DashboardState(habits: [h1, h2]),
-          ),
-          habitsProvider.overrideWith(
-            (ref) => controller.stream,
-          ),
-          userStatsStreamProvider.overrideWith(
-            (ref) => Stream.value(_emptyProfile),
-          ),
-          worldThemeProvider.overrideWith(WorldThemeNotifier.new),
-          worldHealthStreamProvider.overrideWith(
-            (ref) => Stream.value(0.5),
-          ),
-          worldEntropyStreamProvider.overrideWith(
-            (ref) => Stream.value(0.0),
-          ),
-          companionRepositoryProvider.overrideWith(
-            (ref) => CompanionRepository(),
-          ),
-          isPremiumProvider.overrideWith(() => TestIsPremium(false)),
-          latestNarratorInsightProvider.overrideWith(
-            (ref) async => null,
-          ),
-        ],
-        child: const MaterialApp(home: TimelineScreen()),
-      ),
-    );
-    await tester.pump();
-    controller.add([h1, h2]); // baseline: 1 of 2 complete
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            dashboardStateProvider.overrideWithValue(
+              DashboardState(habits: [h1, h2]),
+            ),
+            habitsProvider.overrideWith((ref) => controller.stream),
+            userStatsStreamProvider.overrideWith(
+              (ref) => Stream.value(_emptyProfile),
+            ),
+            worldThemeProvider.overrideWith(WorldThemeNotifier.new),
+            worldHealthStreamProvider.overrideWith((ref) => Stream.value(0.5)),
+            worldEntropyStreamProvider.overrideWith((ref) => Stream.value(0.0)),
+            companionRepositoryProvider.overrideWith(
+              (ref) => CompanionRepository(),
+            ),
+            isPremiumProvider.overrideWith(() => TestIsPremium(false)),
+            latestNarratorInsightProvider.overrideWith((ref) async => null),
+          ],
+          child: const MaterialApp(home: TimelineScreen()),
+        ),
+      );
+      await tester.pump();
+      controller.add([h1, h2]); // baseline: 1 of 2 complete
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
-    FadeTransition celebrationFade() => tester.widget<FadeTransition>(
-          find
-              .descendant(
-                of: find.byType(AllDoneCelebration),
-                matching: find.byType(FadeTransition),
-              )
-              .first,
-        );
+      FadeTransition celebrationFade() => tester.widget<FadeTransition>(
+        find
+            .descendant(
+              of: find.byType(AllDoneCelebration),
+              matching: find.byType(FadeTransition),
+            )
+            .first,
+      );
 
-    // No celebration while the last habit is still incomplete.
-    expect(celebrationFade().opacity.value, 0.0);
+      // No celebration while the last habit is still incomplete.
+      expect(celebrationFade().opacity.value, 0.0);
 
-    // Completing the final habit fires the celebration.
-    controller.add([h1, h2Completed]);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 200));
-    await tester.pump(const Duration(milliseconds: 200));
-    expect(celebrationFade().opacity.value, greaterThan(0.0));
+      // Completing the final habit fires the celebration.
+      controller.add([h1, h2Completed]);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(celebrationFade().opacity.value, greaterThan(0.0));
 
-    // Let the forward + reverse animation complete (1300ms each; the reverse
-    // only starts on the tick after the forward finishes).
-    await tester.pump(const Duration(milliseconds: 1400));
-    await tester.pump(const Duration(milliseconds: 1400));
-    await tester.pump();
-    expect(celebrationFade().opacity.value, 0.0);
+      // Let the forward + reverse animation complete (1300ms each; the reverse
+      // only starts on the tick after the forward finishes).
+      await tester.pump(const Duration(milliseconds: 1400));
+      await tester.pump(const Duration(milliseconds: 1400));
+      await tester.pump();
+      expect(celebrationFade().opacity.value, 0.0);
 
-    // Undoing the last habit must NOT re-fire the celebration.
-    controller.add([h1, h2]);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(celebrationFade().opacity.value, 0.0);
-  });
+      // Undoing the last habit must NOT re-fire the celebration.
+      controller.add([h1, h2]);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(celebrationFade().opacity.value, 0.0);
+    },
+  );
 }

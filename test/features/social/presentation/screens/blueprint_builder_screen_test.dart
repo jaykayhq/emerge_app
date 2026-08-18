@@ -5,34 +5,34 @@ import 'package:emerge_app/features/social/presentation/screens/creator/blueprin
 
 Widget createWidgetUnderTest() {
   return const ProviderScope(
-    child: MaterialApp(
-      home: BlueprintBuilderScreen(),
-    ),
+    child: MaterialApp(home: BlueprintBuilderScreen()),
   );
 }
 
 void main() {
-  testWidgets('BlueprintBuilderScreen renders correctly and shows validation errors on empty submit',
-      (WidgetTester tester) async {
-    await tester.pumpWidget(createWidgetUnderTest());
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+  testWidgets(
+    'BlueprintBuilderScreen renders correctly and shows validation errors on empty submit',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.text('FORGE BLUEPRINT'), findsOneWidget);
-    expect(find.text('Blueprint Name'), findsOneWidget);
-    expect(find.text('EMIT TO WORLD'), findsOneWidget);
+      expect(find.text('FORGE BLUEPRINT'), findsOneWidget);
+      expect(find.text('Blueprint Name'), findsOneWidget);
+      expect(find.text('EMIT TO WORLD'), findsOneWidget);
 
-    // Try to submit the form empty
-    final button = find.text('EMIT TO WORLD');
-    await tester.ensureVisible(button);
-    await tester.pump(const Duration(milliseconds: 100));
-    await tester.tap(button, warnIfMissed: false);
-    await tester.pump(const Duration(seconds: 1));
+      // Try to submit the form empty
+      final button = find.text('EMIT TO WORLD');
+      await tester.ensureVisible(button);
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tap(button, warnIfMissed: false);
+      await tester.pump(const Duration(seconds: 1));
 
-    // Verify validation triggers
-    expect(find.text('Identity requires a name'), findsOneWidget);
-    expect(find.text("Give your followers a 'why'"), findsOneWidget);
-  });
+      // Verify validation triggers
+      expect(find.text('Identity requires a name'), findsOneWidget);
+      expect(find.text("Give your followers a 'why'"), findsOneWidget);
+    },
+  );
 
   testWidgets('shows empty state with add-habit prompt', (tester) async {
     await tester.pumpWidget(createWidgetUnderTest());
@@ -51,8 +51,9 @@ void main() {
     expect(find.text('Tap to add your first habit'), findsOneWidget);
   });
 
-  testWidgets('add-habit dialog opens and shows timer picker options',
-      (tester) async {
+  testWidgets('add-habit dialog opens and shows timer picker options', (
+    tester,
+  ) async {
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
@@ -84,74 +85,77 @@ void main() {
     expect(find.text('20M'), findsOneWidget);
   });
 
-  testWidgets('add-habit dialog shows attribute and health integration dropdowns',
-      (tester) async {
-    await tester.pumpWidget(createWidgetUnderTest());
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+  testWidgets(
+    'add-habit dialog shows attribute and health integration dropdowns',
+    (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
-    // Scroll to and tap the empty state to open the dialog
-    await tester.scrollUntilVisible(
-      find.text('No actions forged yet.'),
-      200.0,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+      // Scroll to and tap the empty state to open the dialog
+      await tester.scrollUntilVisible(
+        find.text('No actions forged yet.'),
+        200.0,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
-    await tester.tap(find.text('No actions forged yet.'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 200));
+      await tester.tap(find.text('No actions forged yet.'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
 
-    // Verify attribute and health integration labels
-    expect(find.text('ATTRIBUTE'), findsOneWidget);
-    expect(find.text('HEALTH INTEGRATION'), findsOneWidget);
-  });
+      // Verify attribute and health integration labels
+      expect(find.text('ATTRIBUTE'), findsOneWidget);
+      expect(find.text('HEALTH INTEGRATION'), findsOneWidget);
+    },
+  );
 
-  testWidgets('creating a habit with timer and health fields shows in the list',
-      (tester) async {
-    await tester.pumpWidget(createWidgetUnderTest());
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+  testWidgets(
+    'creating a habit with timer and health fields shows in the list',
+    (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
-    // Scroll to the empty state and tap to open dialog
-    await tester.scrollUntilVisible(
-      find.text('No actions forged yet.'),
-      200.0,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+      // Scroll to the empty state and tap to open dialog
+      await tester.scrollUntilVisible(
+        find.text('No actions forged yet.'),
+        200.0,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
-    await tester.tap(find.text('No actions forged yet.'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 200));
+      await tester.tap(find.text('No actions forged yet.'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
 
-    // Enter a title
-    await tester.enterText(
-      find.widgetWithText(TextField, 'Action Title (e.g., Deep Work)'),
-      'Morning Stretch',
-    );
-    await tester.pump();
+      // Enter a title
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Action Title (e.g., Deep Work)'),
+        'Morning Stretch',
+      );
+      await tester.pump();
 
-    // Select 5M timer
-    await tester.tap(find.text('5M'));
-    await tester.pump();
+      // Select 5M timer
+      await tester.tap(find.text('5M'));
+      await tester.pump();
 
-    // Tap FORGE to create the habit
-    await tester.tap(find.text('FORGE'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 200));
+      // Tap FORGE to create the habit
+      await tester.tap(find.text('FORGE'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
 
-    // Verify the habit appears in the list
-    expect(find.text('Morning Stretch'), findsOneWidget);
+      // Verify the habit appears in the list
+      expect(find.text('Morning Stretch'), findsOneWidget);
 
-    // Check subtitle shows frequency and time of day
-    expect(find.textContaining('Daily'), findsOneWidget);
-  });
+      // Check subtitle shows frequency and time of day
+      expect(find.textContaining('Daily'), findsOneWidget);
+    },
+  );
 
-  testWidgets('creating multiple habits increments the list',
-      (tester) async {
+  testWidgets('creating multiple habits increments the list', (tester) async {
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
@@ -206,8 +210,7 @@ void main() {
     expect(find.text('Read 30m'), findsOneWidget);
   });
 
-  testWidgets('remove habit button works',
-      (tester) async {
+  testWidgets('remove habit button works', (tester) async {
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));

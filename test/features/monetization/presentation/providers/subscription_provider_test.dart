@@ -67,12 +67,12 @@ void main() {
     final container = makeContainer(fdb);
     addTearDown(container.dispose);
     final values = <bool>[];
-    final sub = container.listen<AsyncValue<bool>>(
-      isPremiumProvider,
-      (previous, next) {
-        if (next is AsyncData<bool>) values.add(next.value);
-      },
-    );
+    final sub = container.listen<AsyncValue<bool>>(isPremiumProvider, (
+      previous,
+      next,
+    ) {
+      if (next is AsyncData<bool>) values.add(next.value);
+    });
     addTearDown(sub.close);
 
     await pollUntil(container, (v) => v == true);
@@ -97,8 +97,7 @@ void main() {
     expect(values.last, isFalse);
   });
 
-  test('a Firestore stream error keeps the last known premium state',
-      () async {
+  test('a Firestore stream error keeps the last known premium state', () async {
     final fdb = FakeFirebaseFirestore();
     final controller = StreamController<Map<String, dynamic>?>();
     addTearDown(controller.close);
@@ -113,12 +112,12 @@ void main() {
     );
     addTearDown(container.dispose);
     final values = <bool>[];
-    final sub = container.listen<AsyncValue<bool>>(
-      isPremiumProvider,
-      (previous, next) {
-        if (next is AsyncData<bool>) values.add(next.value);
-      },
-    );
+    final sub = container.listen<AsyncValue<bool>>(isPremiumProvider, (
+      previous,
+      next,
+    ) {
+      if (next is AsyncData<bool>) values.add(next.value);
+    });
     addTearDown(sub.close);
 
     // The controller-driven stream starts empty: wait for the initial

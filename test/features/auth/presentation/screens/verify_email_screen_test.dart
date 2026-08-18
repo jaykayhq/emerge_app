@@ -13,10 +13,7 @@ import 'package:emerge_app/features/auth/presentation/screens/verify_email_scree
 import '../../../../helpers/widget_test_utils.dart';
 import '../../../../helpers/mocks/auth_mocks.dart';
 
-Widget _buildTest(
-  AuthRepository repo, {
-  List<Override> overrides = const [],
-}) {
+Widget _buildTest(AuthRepository repo, {List<Override> overrides = const []}) {
   return createScreenUnderTest(
     screen: const VerifyEmailScreen(),
     overrides: [authRepositoryProvider.overrideWithValue(repo), ...overrides],
@@ -29,10 +26,12 @@ void main() {
   setUp(() {
     mockAuth = MockAuthRepository();
     when(() => mockAuth.user).thenAnswer((_) => const Stream.empty());
-    when(() => mockAuth.sendVerificationEmail())
-        .thenAnswer((_) async => const Right<Failure, void>(null));
-    when(() => mockAuth.checkEmailVerified())
-        .thenAnswer((_) async => const Right<Failure, bool>(true));
+    when(
+      () => mockAuth.sendVerificationEmail(),
+    ).thenAnswer((_) async => const Right<Failure, void>(null));
+    when(
+      () => mockAuth.checkEmailVerified(),
+    ).thenAnswer((_) async => const Right<Failure, bool>(true));
   });
 
   testWidgets('renders check-your-email title and actions', (tester) async {
@@ -46,19 +45,23 @@ void main() {
     expect(find.text('Resend link'), findsOneWidget);
   });
 
-  testWidgets('sends the verification email on load and surfaces failures',
-      (tester) async {
+  testWidgets('sends the verification email on load and surfaces failures', (
+    tester,
+  ) async {
     when(() => mockAuth.sendVerificationEmail()).thenAnswer(
-        (_) async => Left<Failure, void>(
-            AuthFailure('Too many emails sent recently. Try again later.')));
+      (_) async => Left<Failure, void>(
+        AuthFailure('Too many emails sent recently. Try again later.'),
+      ),
+    );
     await tester.pumpWidget(_buildTest(mockAuth));
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Too many emails'), findsOneWidget);
   });
 
-  testWidgets('continue when already verified shows confirmation',
-      (tester) async {
+  testWidgets('continue when already verified shows confirmation', (
+    tester,
+  ) async {
     await tester.pumpWidget(_buildTest(mockAuth));
     await tester.pumpAndSettle();
 
@@ -69,10 +72,12 @@ void main() {
     expect(find.textContaining('taking you to the app'), findsOneWidget);
   });
 
-  testWidgets('continue when not yet verified shows retry guidance',
-      (tester) async {
-    when(() => mockAuth.checkEmailVerified())
-        .thenAnswer((_) async => const Right<Failure, bool>(false));
+  testWidgets('continue when not yet verified shows retry guidance', (
+    tester,
+  ) async {
+    when(
+      () => mockAuth.checkEmailVerified(),
+    ).thenAnswer((_) async => const Right<Failure, bool>(false));
     await tester.pumpWidget(_buildTest(mockAuth));
     await tester.pumpAndSettle();
 
@@ -82,44 +87,51 @@ void main() {
     expect(find.textContaining('Not verified yet'), findsOneWidget);
   });
 
-  testWidgets('applies the oobCode from a deep link and confirms verification',
-      (tester) async {
-    when(() => mockAuth.applyVerificationCode('abc123'))
-        .thenAnswer((_) async => const Right<Failure, void>(null));
+  testWidgets(
+    'applies the oobCode from a deep link and confirms verification',
+    (tester) async {
+      when(
+        () => mockAuth.applyVerificationCode('abc123'),
+      ).thenAnswer((_) async => const Right<Failure, void>(null));
 
-    final router = GoRouter(
-      routes: [
-        GoRoute(
-          path: '/verify-email',
-          builder: (context, state) => const VerifyEmailScreen(),
-        ),
-      ],
-      initialLocation: '/verify-email?oobCode=abc123',
-    );
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          authRepositoryProvider.overrideWithValue(mockAuth),
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/verify-email',
+            builder: (context, state) => const VerifyEmailScreen(),
+          ),
         ],
-        child: MaterialApp.router(routerConfig: router),
+        initialLocation: '/verify-email?oobCode=abc123',
+      );
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [authRepositoryProvider.overrideWithValue(mockAuth)],
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      verify(() => mockAuth.applyVerificationCode('abc123')).called(1);
+      expect(
+        find.text('Email verified — taking you to the app.'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('shows locked variant when past the grace period', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _buildTest(
+        mockAuth,
+        overrides: [
+          currentEmailLockedAtProvider.overrideWith(
+            (ref) async => DateTime(2026, 1, 8),
+          ),
+        ],
       ),
     );
-    await tester.pumpAndSettle();
-
-    verify(() => mockAuth.applyVerificationCode('abc123')).called(1);
-    expect(find.text('Email verified — taking you to the app.'),
-        findsOneWidget);
-  });
-
-  testWidgets('shows locked variant when past the grace period',
-      (tester) async {
-    await tester.pumpWidget(_buildTest(
-      mockAuth,
-      overrides: [
-        currentEmailLockedAtProvider
-            .overrideWith((ref) async => DateTime(2026, 1, 8)),
-      ],
-    ));
     await tester.pumpAndSettle();
 
     expect(find.text('Account locked — verify your email'), findsOneWidget);

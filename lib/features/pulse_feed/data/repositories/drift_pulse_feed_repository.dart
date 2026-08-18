@@ -20,13 +20,11 @@ class DriftPulseFeedRepository {
   DriftPulseFeedRepository({
     required PulseFeedDao dao,
     required FirebaseFirestore firestore,
-  })  : _dao = dao,
-        _firestore = firestore;
+  }) : _dao = dao,
+       _firestore = firestore;
 
-  CollectionReference _cardsRef(String userId) => _firestore
-      .collection('pulse_feed_cards')
-      .doc(userId)
-      .collection('cards');
+  CollectionReference _cardsRef(String userId) =>
+      _firestore.collection('pulse_feed_cards').doc(userId).collection('cards');
 
   /// Streams pulse feed cards — local first, Firestore in background.
   Stream<List<PulseFeedCard>> watchPulseFeed(String userId) {
@@ -44,10 +42,9 @@ class DriftPulseFeedRepository {
     // Bootstrap: emit local cache immediately, then start Firestore sync
     emitMerged().then((_) {
       // Listen to local changes
-      localSub = _dao.watchAll(userId).listen(
-        (_) => emitMerged(),
-        onError: controller.addError,
-      );
+      localSub = _dao
+          .watchAll(userId)
+          .listen((_) => emitMerged(), onError: controller.addError);
 
       // Remote: fetch from Firestore and cache locally
       remoteSub = _cardsRef(userId)
@@ -70,7 +67,9 @@ class DriftPulseFeedRepository {
             },
             onError: (Object err) {
               AppLogger.e(
-                  'DriftPulseFeedRepository: Firestore sync failed', err);
+                'DriftPulseFeedRepository: Firestore sync failed',
+                err,
+              );
               // UI stays on local data
             },
           );
@@ -100,16 +99,19 @@ class DriftPulseFeedRepository {
   }
 
   PulseFeedCardsTableCompanion _firestoreDocToCompanion(
-      Map<String, dynamic> data, String userId) {
+    Map<String, dynamic> data,
+    String userId,
+  ) {
     final createdAtRaw = data['createdAt'];
     final createdAtStr = createdAtRaw is String
         ? createdAtRaw
         : createdAtRaw is num
-            ? DateTime.fromMillisecondsSinceEpoch(createdAtRaw.toInt())
-                .toIso8601String()
-            : createdAtRaw is Timestamp
-                ? createdAtRaw.toDate().toIso8601String()
-                : DateTime.now().toIso8601String();
+        ? DateTime.fromMillisecondsSinceEpoch(
+            createdAtRaw.toInt(),
+          ).toIso8601String()
+        : createdAtRaw is Timestamp
+        ? createdAtRaw.toDate().toIso8601String()
+        : DateTime.now().toIso8601String();
 
     return PulseFeedCardsTableCompanion(
       id: Value(data['id'] as String? ?? ''),

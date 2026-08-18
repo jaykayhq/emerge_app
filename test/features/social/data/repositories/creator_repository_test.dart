@@ -41,7 +41,11 @@ void main() {
     });
 
     test('toMap writes ownerId matching userId', () {
-      const profile = CreatorProfile(userId: 'abc', role: 'creator', displayName: 'A');
+      const profile = CreatorProfile(
+        userId: 'abc',
+        role: 'creator',
+        displayName: 'A',
+      );
       final map = profile.toMap();
       expect(map['ownerId'], 'abc');
     });

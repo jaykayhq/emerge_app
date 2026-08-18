@@ -15,9 +15,7 @@ class TribeAnalyticsDao extends DatabaseAccessor<AppDatabase>
     required String tribeId,
   }) {
     return (select(tribeAnalyticsTable)
-          ..where(
-            (t) => t.userId.equals(userId) & t.tribeId.equals(tribeId),
-          )
+          ..where((t) => t.userId.equals(userId) & t.tribeId.equals(tribeId))
           ..orderBy([(t) => OrderingTerm.desc(t.date)])
           ..limit(1))
         .getSingleOrNull();
@@ -28,9 +26,7 @@ class TribeAnalyticsDao extends DatabaseAccessor<AppDatabase>
     required String tribeId,
   }) {
     return (select(tribeAnalyticsTable)
-          ..where(
-            (t) => t.userId.equals(userId) & t.tribeId.equals(tribeId),
-          )
+          ..where((t) => t.userId.equals(userId) & t.tribeId.equals(tribeId))
           ..orderBy([(t) => OrderingTerm.desc(t.date)])
           ..limit(1))
         .watchSingleOrNull();

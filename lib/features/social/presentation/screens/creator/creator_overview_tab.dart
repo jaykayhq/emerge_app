@@ -48,7 +48,9 @@ class CreatorOverviewTab extends ConsumerWidget {
                     ],
                   ),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: Colors.amber.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -58,7 +60,10 @@ class CreatorOverviewTab extends ConsumerWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: LinearGradient(
-                          colors: [Colors.amber.shade700, Colors.orange.shade600],
+                          colors: [
+                            Colors.amber.shade700,
+                            Colors.orange.shade600,
+                          ],
                         ),
                       ),
                       child: const Center(
@@ -120,9 +125,13 @@ class CreatorOverviewTab extends ConsumerWidget {
                       .where((b) => b.creatorUserId == uid)
                       .toList();
                   final totalAdoptions = myBlueprints.fold(
-                    0, (sum, b) => sum + b.adoptionCount);
+                    0,
+                    (sum, b) => sum + b.adoptionCount,
+                  );
                   final totalHabits = myBlueprints.fold(
-                    0, (sum, b) => sum + b.habits.length);
+                    0,
+                    (sum, b) => sum + b.habits.length,
+                  );
 
                   return Row(
                     children: [
@@ -150,9 +159,10 @@ class CreatorOverviewTab extends ConsumerWidget {
                   );
                 },
                 loading: () => const EmergeLoadingSkeleton(itemCount: 2),
-                error: (e, st) =>
-                    const Text('Analytics unavailable.',
-                        style: TextStyle(color: Colors.white38)),
+                error: (e, st) => const Text(
+                  'Analytics unavailable.',
+                  style: TextStyle(color: Colors.white38),
+                ),
               ),
 
               const Gap(28),
@@ -223,8 +233,10 @@ class CreatorOverviewTab extends ConsumerWidget {
         },
         loading: () => const EmergeLoadingSkeleton(itemCount: 6),
         error: (e, st) => const Center(
-          child: Text('Could not load profile.',
-              style: TextStyle(color: Colors.white54)),
+          child: Text(
+            'Could not load profile.',
+            style: TextStyle(color: Colors.white54),
+          ),
         ),
       ),
     );

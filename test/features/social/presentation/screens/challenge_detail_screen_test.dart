@@ -23,7 +23,9 @@ void main() {
     ],
   );
 
-  testWidgets('ChallengeDetailScreen renders challenge details', (tester) async {
+  testWidgets('ChallengeDetailScreen renders challenge details', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(

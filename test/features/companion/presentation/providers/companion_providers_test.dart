@@ -15,9 +15,7 @@ void main() {
         greetingTemplate: "Let's go, {name}!",
       );
       final container = ProviderContainer(
-        overrides: [
-          companionPersonaProvider.overrideWithValue(persona),
-        ],
+        overrides: [companionPersonaProvider.overrideWithValue(persona)],
       );
       expect(container.read(companionPersonaProvider), persona);
       container.dispose();
@@ -25,9 +23,7 @@ void main() {
 
     test('returns null when persona not set', () {
       final container = ProviderContainer(
-        overrides: [
-          companionPersonaProvider.overrideWithValue(null),
-        ],
+        overrides: [companionPersonaProvider.overrideWithValue(null)],
       );
       expect(container.read(companionPersonaProvider), isNull);
       container.dispose();
@@ -51,9 +47,7 @@ void main() {
 
     test('returns null when not visible', () {
       final container = ProviderContainer(
-        overrides: [
-          companionVisibilityProvider.overrideWithValue(null),
-        ],
+        overrides: [companionVisibilityProvider.overrideWithValue(null)],
       );
       expect(container.read(companionVisibilityProvider), isNull);
       container.dispose();

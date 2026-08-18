@@ -35,21 +35,22 @@ NarratorOpenInput _input({
 
 void main() {
   group('NarratorOpenEvaluator', () {
-    test('returns longAbsence when daysSinceLastOpen >= 3 and not on cooldown',
-        () {
-      final now = DateTime(2026, 8, 1, 9, 0);
-      final result = NarratorOpenEvaluator.evaluate(
-        _input(
-          now: now,
-          installedAt: now.subtract(const Duration(days: 10)),
-          lastOpenAt: now.subtract(const Duration(days: 3)),
-        ),
-      );
-      expect(result, NarratorTrigger.longAbsence);
-    });
+    test(
+      'returns longAbsence when daysSinceLastOpen >= 3 and not on cooldown',
+      () {
+        final now = DateTime(2026, 8, 1, 9, 0);
+        final result = NarratorOpenEvaluator.evaluate(
+          _input(
+            now: now,
+            installedAt: now.subtract(const Duration(days: 10)),
+            lastOpenAt: now.subtract(const Duration(days: 3)),
+          ),
+        );
+        expect(result, NarratorTrigger.longAbsence);
+      },
+    );
 
-    test('nulls weeklyRecap even though the engine would fire it (day 7)',
-        () {
+    test('nulls weeklyRecap even though the engine would fire it (day 7)', () {
       final now = DateTime(2026, 8, 1, 9, 0);
       final installedAt = now.subtract(const Duration(days: 7));
       final input = _input(
@@ -90,48 +91,50 @@ void main() {
       expect(NarratorOpenEvaluator.evaluate(input), isNull);
     });
 
-    test('never returns eveningReflection at open (evening has its own surface)',
-        () {
-      final now = DateTime(2026, 8, 1, 20, 0); // 8 PM
-      final input = _input(
-        now: now,
-        installedAt: now.subtract(const Duration(days: 30)),
-        lastOpenAt: now.subtract(const Duration(days: 1)),
-      );
-
-      // Premise: the raw engine would fire eveningReflection here when the
-      // evening reflection is not yet completed.
-      final engineResult = NarratorTriggerEngine.shouldTrigger(
-        context: AppOpenContext(
-          currentRoute: '/timeline',
+    test(
+      'never returns eveningReflection at open (evening has its own surface)',
+      () {
+        final now = DateTime(2026, 8, 1, 20, 0); // 8 PM
+        final input = _input(
           now: now,
-          isFirstAppOpen: false,
-          daysSinceInstall: 30,
-          daysSinceLastOpen: 1,
-        ),
-        stats: const NarratorUserStats(
-          momentumScore: 0.5,
-          consecutiveActiveDays: 0,
-          totalHabitsToday: 0,
-          completedHabitsToday: 0,
-          currentLevel: 1,
-          previousLevel: 1,
-          hasStreakBreak: false,
-          currentStreak: 0,
-          longestStreak: 0,
-          consecutiveMisses: 0,
-          hasCompletedEveningReflectionToday: false,
-          hasCompletedOnboarding: true,
-          archetypeSelected: true,
-        ),
-        recentTriggers: const {},
-      );
-      expect(engineResult, NarratorTrigger.eveningReflection);
+          installedAt: now.subtract(const Duration(days: 30)),
+          lastOpenAt: now.subtract(const Duration(days: 1)),
+        );
 
-      // The open evaluator pins hasCompletedEveningReflectionToday: true
-      // (the evening check-in has its own surface) and filters the trigger.
-      expect(NarratorOpenEvaluator.evaluate(input), isNull);
-    });
+        // Premise: the raw engine would fire eveningReflection here when the
+        // evening reflection is not yet completed.
+        final engineResult = NarratorTriggerEngine.shouldTrigger(
+          context: AppOpenContext(
+            currentRoute: '/timeline',
+            now: now,
+            isFirstAppOpen: false,
+            daysSinceInstall: 30,
+            daysSinceLastOpen: 1,
+          ),
+          stats: const NarratorUserStats(
+            momentumScore: 0.5,
+            consecutiveActiveDays: 0,
+            totalHabitsToday: 0,
+            completedHabitsToday: 0,
+            currentLevel: 1,
+            previousLevel: 1,
+            hasStreakBreak: false,
+            currentStreak: 0,
+            longestStreak: 0,
+            consecutiveMisses: 0,
+            hasCompletedEveningReflectionToday: false,
+            hasCompletedOnboarding: true,
+            archetypeSelected: true,
+          ),
+          recentTriggers: const {},
+        );
+        expect(engineResult, NarratorTrigger.eveningReflection);
+
+        // The open evaluator pins hasCompletedEveningReflectionToday: true
+        // (the evening check-in has its own surface) and filters the trigger.
+        expect(NarratorOpenEvaluator.evaluate(input), isNull);
+      },
+    );
 
     test('returns morningBriefEarlyDays within the first 5 days when '
         'onboarding is complete and an archetype is selected', () {
@@ -146,20 +149,22 @@ void main() {
       expect(result, NarratorTrigger.morningBriefEarlyDays);
     });
 
-    test('does not return morningBriefEarlyDays when onboarding is incomplete',
-        () {
-      final now = DateTime(2026, 8, 1, 9, 0);
-      final result = NarratorOpenEvaluator.evaluate(
-        _input(
-          now: now,
-          installedAt: now.subtract(const Duration(days: 3)),
-          lastOpenAt: now.subtract(const Duration(days: 1)),
-          hasCompletedOnboarding: false,
-          archetypeSelected: false,
-        ),
-      );
-      expect(result, isNull);
-    });
+    test(
+      'does not return morningBriefEarlyDays when onboarding is incomplete',
+      () {
+        final now = DateTime(2026, 8, 1, 9, 0);
+        final result = NarratorOpenEvaluator.evaluate(
+          _input(
+            now: now,
+            installedAt: now.subtract(const Duration(days: 3)),
+            lastOpenAt: now.subtract(const Duration(days: 1)),
+            hasCompletedOnboarding: false,
+            archetypeSelected: false,
+          ),
+        );
+        expect(result, isNull);
+      },
+    );
 
     test('respects cooldown — longAbsence fired 1 hour ago suppresses it', () {
       final now = DateTime(2026, 8, 1, 9, 0);
@@ -194,9 +199,7 @@ void main() {
       // No installedAt/lastOpenAt: isFirstAppOpen => daysSinceInstall 0.
       // Day 0 is within the morning-brief window and cannot be weeklyRecap
       // (which requires daysSinceInstall > 0) or longAbsence.
-      final result = NarratorOpenEvaluator.evaluate(
-        _input(now: now),
-      );
+      final result = NarratorOpenEvaluator.evaluate(_input(now: now));
       expect(result, NarratorTrigger.morningBriefEarlyDays);
     });
   });

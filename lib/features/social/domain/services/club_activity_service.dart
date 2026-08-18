@@ -86,10 +86,7 @@ class SocialActivityService {
           },
         );
       } catch (e) {
-        AppLogger.w(
-          'Partner activity fan-out to $partnerId failed',
-          error: e,
-        );
+        AppLogger.w('Partner activity fan-out to $partnerId failed', error: e);
       }
     }
   }
@@ -221,7 +218,10 @@ class SocialActivityService {
       // Note: Tribe Aggregate Counters, Contributor Stats, Leaderboard, and User Stats
       // are handled by DriftHabitRepository.completeHabit in the offline-first flow.
     } catch (e) {
-      AppLogger.w('Error logging habit completion to social activity', error: e);
+      AppLogger.w(
+        'Error logging habit completion to social activity',
+        error: e,
+      );
     }
   }
 
@@ -247,10 +247,7 @@ class SocialActivityService {
   }) async {
     try {
       final resolvedClubId = clubId ?? _getClubIdForArchetype(archetype);
-      final row = await _activityDao.getLatestHabitCompletion(
-        userId,
-        habitId,
-      );
+      final row = await _activityDao.getLatestHabitCompletion(userId, habitId);
       final targetTribeId = row?.tribeId ?? resolvedClubId;
 
       if (row != null) {
@@ -440,10 +437,7 @@ class SocialActivityService {
         actorId: userId,
         actorName: userName,
         type: _kActivityTypeChallengeComplete,
-        data: {
-          'challengeId': challengeId,
-          'challengeTitle': challengeTitle,
-        },
+        data: {'challengeId': challengeId, 'challengeTitle': challengeTitle},
         timestamp: nowStr,
         eventId: id,
       );
@@ -462,7 +456,10 @@ class SocialActivityService {
         isIncrement: true,
       );
     } catch (e) {
-      AppLogger.w('Error logging challenge completion to social activity', error: e);
+      AppLogger.w(
+        'Error logging challenge completion to social activity',
+        error: e,
+      );
     }
   }
 
@@ -519,7 +516,10 @@ class SocialActivityService {
         eventId: id,
       );
     } catch (e) {
-      AppLogger.w('Error logging streak milestone to social activity', error: e);
+      AppLogger.w(
+        'Error logging streak milestone to social activity',
+        error: e,
+      );
     }
   }
 

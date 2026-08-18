@@ -71,7 +71,9 @@ class _FakeGoogleSignInPlatform extends GoogleSignInPlatform {
 /// free-form display name — simulates the native (non-web) signup flow.
 class _SignedInGoogleSignInPlatform extends _FakeGoogleSignInPlatform {
   @override
-  Future<AuthenticationResults> authenticate(AuthenticateParameters params) async {
+  Future<AuthenticationResults> authenticate(
+    AuthenticateParameters params,
+  ) async {
     return const AuthenticationResults(
       user: GoogleSignInUserData(
         displayName: 'Googler One',
@@ -133,52 +135,52 @@ void main() {
       ),
     ).thenAnswer((_) async => credential);
 
-    when(() => functions.httpsCallable('claimUsername'))
-        .thenReturn(claimCallable);
+    when(
+      () => functions.httpsCallable('claimUsername'),
+    ).thenReturn(claimCallable);
   });
 
   FirebaseAuthRepository buildRepo() =>
       FirebaseAuthRepository(auth, firestore, functions);
 
   group('signUpWithEmailAndPassword claim rollback', () {
-    test(
-      'claim failure deletes the fresh account, writes no docs, and '
-      'returns Left with the mapped message',
-      () async {
-        when(() => user.delete()).thenAnswer((_) async {});
-        when(() => claimCallable.call(any())).thenThrow(_alreadyTaken());
-
-        final repo = buildRepo();
-        final result = await repo.signUpWithEmailAndPassword(
-          email: 'a@b.com',
-          password: 'Str0ngP@sswd!',
-          username: 'Aria',
-        );
-
-        expect(result.isLeft(), isTrue);
-        result.fold(
-          (failure) => expect(failure.message, contains('already taken')),
-          (_) => fail('expected a failure'),
-        );
-        verify(() => user.delete()).called(1);
-        // Rollback happens before any Firestore profile write.
-        verifyNever(() => firestore.collection(any()));
-      },
-    );
-
-    test('claim success proceeds past the rollback branch without delete',
-        () async {
+    test('claim failure deletes the fresh account, writes no docs, and '
+        'returns Left with the mapped message', () async {
       when(() => user.delete()).thenAnswer((_) async {});
-      when(() => claimCallable.call(any())).thenAnswer(
-        (_) async => _MockHttpsCallableResult(),
-      );
+      when(() => claimCallable.call(any())).thenThrow(_alreadyTaken());
 
       final repo = buildRepo();
-      final result = await repo.claimUsername('Aria');
+      final result = await repo.signUpWithEmailAndPassword(
+        email: 'a@b.com',
+        password: 'Str0ngP@sswd!',
+        username: 'Aria',
+      );
 
-      expect(result.isRight(), isTrue);
-      verifyNever(() => user.delete());
+      expect(result.isLeft(), isTrue);
+      result.fold(
+        (failure) => expect(failure.message, contains('already taken')),
+        (_) => fail('expected a failure'),
+      );
+      verify(() => user.delete()).called(1);
+      // Rollback happens before any Firestore profile write.
+      verifyNever(() => firestore.collection(any()));
     });
+
+    test(
+      'claim success proceeds past the rollback branch without delete',
+      () async {
+        when(() => user.delete()).thenAnswer((_) async {});
+        when(
+          () => claimCallable.call(any()),
+        ).thenAnswer((_) async => _MockHttpsCallableResult());
+
+        final repo = buildRepo();
+        final result = await repo.claimUsername('Aria');
+
+        expect(result.isRight(), isTrue);
+        verifyNever(() => user.delete());
+      },
+    );
   });
 
   group('deriveUsernameCandidate', () {
@@ -191,8 +193,10 @@ void main() {
 
     test('falls back to the email prefix when the display name is empty', () {
       expect(deriveUsernameCandidate('', 'goo@gmail.com'), 'goo');
-      expect(deriveUsernameCandidate(null, 'mike.smith@example.com'),
-          'mike_smith');
+      expect(
+        deriveUsernameCandidate(null, 'mike.smith@example.com'),
+        'mike_smith',
+      );
     });
 
     test('returns null when nothing can form a 3+ char username', () {
@@ -202,12 +206,8 @@ void main() {
 
     test('caps length at 30 and strips leading/trailing separators', () {
       final long = 'a' * 40;
-      expect(deriveUsernameCandidate(long, 'x@example.com'),
-          'a' * 30);
-      expect(
-        deriveUsernameCandidate('_joe', 'x@example.com'),
-        'joe',
-      );
+      expect(deriveUsernameCandidate(long, 'x@example.com'), 'a' * 30);
+      expect(deriveUsernameCandidate('_joe', 'x@example.com'), 'joe');
     });
 
     test('normalizes a blocked reserved word but the claim guard rejects it '
@@ -236,9 +236,9 @@ void main() {
       when(() => user.emailVerified).thenReturn(false);
       when(() => user.getIdToken(any())).thenAnswer((_) async => 'token');
       when(() => auth.currentUser).thenReturn(user);
-      when(() => claimCallable.call(any())).thenAnswer(
-        (_) async => _MockHttpsCallableResult(),
-      );
+      when(
+        () => claimCallable.call(any()),
+      ).thenAnswer((_) async => _MockHttpsCallableResult());
 
       final usersCollection = _MockCollectionReference();
       final userDoc = _MockDocumentReference();
@@ -251,16 +251,19 @@ void main() {
 
       final statsCollection = _MockCollectionReference();
       final statsDoc = _MockDocumentReference();
-      when(() => firestore.collection('user_stats'))
-          .thenReturn(statsCollection);
+      when(
+        () => firestore.collection('user_stats'),
+      ).thenReturn(statsCollection);
       when(() => statsCollection.doc('u1')).thenReturn(statsDoc);
       when(() => statsDoc.set(any())).thenAnswer((_) async {});
 
       final roleCallable = _MockHttpsCallable();
-      when(() => functions.httpsCallable('setUserRole'))
-          .thenReturn(roleCallable);
-      when(() => roleCallable.call(any()))
-          .thenAnswer((_) async => _MockHttpsCallableResult());
+      when(
+        () => functions.httpsCallable('setUserRole'),
+      ).thenReturn(roleCallable);
+      when(
+        () => roleCallable.call(any()),
+      ).thenAnswer((_) async => _MockHttpsCallableResult());
 
       when(
         () => auth.signInWithCredential(any()),
@@ -294,16 +297,19 @@ void main() {
 
       final statsCollection = _MockCollectionReference();
       final statsDoc = _MockDocumentReference();
-      when(() => firestore.collection('user_stats'))
-          .thenReturn(statsCollection);
+      when(
+        () => firestore.collection('user_stats'),
+      ).thenReturn(statsCollection);
       when(() => statsCollection.doc('u1')).thenReturn(statsDoc);
       when(() => statsDoc.set(any())).thenAnswer((_) async {});
 
       final roleCallable = _MockHttpsCallable();
-      when(() => functions.httpsCallable('setUserRole'))
-          .thenReturn(roleCallable);
-      when(() => roleCallable.call(any()))
-          .thenAnswer((_) async => _MockHttpsCallableResult());
+      when(
+        () => functions.httpsCallable('setUserRole'),
+      ).thenReturn(roleCallable);
+      when(
+        () => roleCallable.call(any()),
+      ).thenAnswer((_) async => _MockHttpsCallableResult());
 
       when(
         () => auth.signInWithCredential(any()),
@@ -320,8 +326,7 @@ void main() {
   });
 
   group('sendVerificationEmail', () {
-    test('requests the verification email via the worker marker',
-        () async {
+    test('requests the verification email via the worker marker', () async {
       when(() => auth.currentUser).thenReturn(user);
       when(() => user.sendEmailVerification(any())).thenAnswer((_) async {});
       final usersCollection = _MockCollectionReference();
@@ -337,32 +342,34 @@ void main() {
       // The app never calls the Firebase-native email — it writes the
       // request marker that the GitHub Actions email worker polls.
       verifyNever(() => user.sendEmailVerification(any()));
-      final data = verify(() => userDoc.set(captureAny(), any()))
-          .captured
-          .single as Map<String, dynamic>;
+      final data =
+          verify(() => userDoc.set(captureAny(), any())).captured.single
+              as Map<String, dynamic>;
       expect(data.containsKey('verificationRequestedAt'), isTrue);
     });
 
-    test('does not set the grace anchor client-side (worker owns it)',
-        () async {
-      when(() => auth.currentUser).thenReturn(user);
-      final usersCollection = _MockCollectionReference();
-      final userDoc = _MockDocumentReference();
-      when(() => firestore.collection('users')).thenReturn(usersCollection);
-      when(() => usersCollection.doc('u1')).thenReturn(userDoc);
-      when(() => userDoc.set(any(), any())).thenAnswer((_) async {});
+    test(
+      'does not set the grace anchor client-side (worker owns it)',
+      () async {
+        when(() => auth.currentUser).thenReturn(user);
+        final usersCollection = _MockCollectionReference();
+        final userDoc = _MockDocumentReference();
+        when(() => firestore.collection('users')).thenReturn(usersCollection);
+        when(() => usersCollection.doc('u1')).thenReturn(userDoc);
+        when(() => userDoc.set(any(), any())).thenAnswer((_) async {});
 
-      final repo = buildRepo();
-      final result = await repo.sendVerificationEmail();
+        final repo = buildRepo();
+        final result = await repo.sendVerificationEmail();
 
-      expect(result.isRight(), isTrue);
-      final data = verify(() => userDoc.set(captureAny(), any()))
-          .captured
-          .single as Map<String, dynamic>;
-      // emailVerificationSentAt (the 7-day grace anchor) is written by the
-      // email worker on first send — never by the client.
-      expect(data.containsKey('emailVerificationSentAt'), isFalse);
-    });
+        expect(result.isRight(), isTrue);
+        final data =
+            verify(() => userDoc.set(captureAny(), any())).captured.single
+                as Map<String, dynamic>;
+        // emailVerificationSentAt (the 7-day grace anchor) is written by the
+        // email worker on first send — never by the client.
+        expect(data.containsKey('emailVerificationSentAt'), isFalse);
+      },
+    );
 
     test('returns Left when no user is signed in', () async {
       when(() => auth.currentUser).thenReturn(null);
@@ -379,28 +386,30 @@ void main() {
   });
 
   group('sendPasswordResetEmail', () {
-    test('enqueues a password_reset request for the email worker',
-        () async {
+    test('enqueues a password_reset request for the email worker', () async {
       final requestsCollection = _MockCollectionReference();
-      when(() => firestore.collection('email_requests'))
-          .thenReturn(requestsCollection);
-      when(() => requestsCollection.add(any())).thenAnswer(
-        (_) async => _MockDocumentReference(),
-      );
+      when(
+        () => firestore.collection('email_requests'),
+      ).thenReturn(requestsCollection);
+      when(
+        () => requestsCollection.add(any()),
+      ).thenAnswer((_) async => _MockDocumentReference());
 
       final repo = buildRepo();
       final result = await repo.sendPasswordResetEmail('a@b.com');
 
       expect(result.isRight(), isTrue);
-      final data = verify(() => requestsCollection.add(captureAny()))
-          .captured
-          .single as Map<String, dynamic>;
+      final data =
+          verify(() => requestsCollection.add(captureAny())).captured.single
+              as Map<String, dynamic>;
       expect(data['type'], 'password_reset');
       expect(data['email'], 'a@b.com');
       expect(data.containsKey('requestedAt'), isTrue);
       // Never calls the Firebase-native reset email — the branded one is
       // sent by the worker.
-      verifyNever(() => auth.sendPasswordResetEmail(email: any(named: 'email')));
+      verifyNever(
+        () => auth.sendPasswordResetEmail(email: any(named: 'email')),
+      );
     });
 
     test('rejects an invalid email before writing anything', () async {
@@ -413,12 +422,13 @@ void main() {
   });
 
   group('resetPasswordWithCode', () {
-    test('confirms the reset with the oobCode and new password',
-        () async {
-      when(() => auth.confirmPasswordReset(
-        code: any(named: 'code'),
-        newPassword: any(named: 'newPassword'),
-      )).thenAnswer((_) async {});
+    test('confirms the reset with the oobCode and new password', () async {
+      when(
+        () => auth.confirmPasswordReset(
+          code: any(named: 'code'),
+          newPassword: any(named: 'newPassword'),
+        ),
+      ).thenAnswer((_) async {});
 
       final repo = buildRepo();
       final result = await repo.resetPasswordWithCode(
@@ -427,20 +437,26 @@ void main() {
       );
 
       expect(result.isRight(), isTrue);
-      verify(() => auth.confirmPasswordReset(
-        code: 'oob123',
-        newPassword: 'Str0ngP@sswd!',
-      )).called(1);
+      verify(
+        () => auth.confirmPasswordReset(
+          code: 'oob123',
+          newPassword: 'Str0ngP@sswd!',
+        ),
+      ).called(1);
     });
 
     test('maps FirebaseAuthException to a Left failure', () async {
-      when(() => auth.confirmPasswordReset(
-        code: any(named: 'code'),
-        newPassword: any(named: 'newPassword'),
-      )).thenThrow(FirebaseAuthException(
-        code: 'expired-action-code',
-        message: 'The action code has expired.',
-      ));
+      when(
+        () => auth.confirmPasswordReset(
+          code: any(named: 'code'),
+          newPassword: any(named: 'newPassword'),
+        ),
+      ).thenThrow(
+        FirebaseAuthException(
+          code: 'expired-action-code',
+          message: 'The action code has expired.',
+        ),
+      );
 
       final repo = buildRepo();
       final result = await repo.resetPasswordWithCode(

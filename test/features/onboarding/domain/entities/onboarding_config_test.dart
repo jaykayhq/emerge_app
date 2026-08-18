@@ -13,7 +13,10 @@ void main() {
     test('constructor sets all fields', () {
       expect(testArchetype.id, 'athlete');
       expect(testArchetype.title, 'Athlete');
-      expect(testArchetype.description, 'You are driven by physical excellence.');
+      expect(
+        testArchetype.description,
+        'You are driven by physical excellence.',
+      );
       expect(testArchetype.imageUrl, 'https://example.com/athlete.png');
     });
 

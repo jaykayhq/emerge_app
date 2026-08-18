@@ -84,24 +84,12 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(userStatsTable);
       }
       if (from < 3) {
-        await m.addColumn(
-          userStatsTable,
-          userStatsTable.lastCelebratedLevel,
-        );
+        await m.addColumn(userStatsTable, userStatsTable.lastCelebratedLevel);
       }
       if (from < 4) {
-        await m.addColumn(
-          habitsTable,
-          habitsTable.timerDurationMinutes,
-        );
-        await m.addColumn(
-          habitsTable,
-          habitsTable.integrationType,
-        );
-        await m.addColumn(
-          habitsTable,
-          habitsTable.integrationTarget,
-        );
+        await m.addColumn(habitsTable, habitsTable.timerDurationMinutes);
+        await m.addColumn(habitsTable, habitsTable.integrationType);
+        await m.addColumn(habitsTable, habitsTable.integrationTarget);
       }
       if (from < 5) {
         await m.createTable(narratorNotesTable);
@@ -126,7 +114,10 @@ class AppDatabase extends _$AppDatabase {
         );
       }
       if (from < 10) {
-        await m.addColumn(mutationQueueTable, mutationQueueTable.idempotencyKey);
+        await m.addColumn(
+          mutationQueueTable,
+          mutationQueueTable.idempotencyKey,
+        );
         await m.addColumn(mutationQueueTable, mutationQueueTable.lastError);
         await m.addColumn(mutationQueueTable, mutationQueueTable.nextRetryAt);
         await m.addColumn(mutationQueueTable, mutationQueueTable.status);

@@ -363,11 +363,7 @@ void main() {
     testWidgets('unverified user sees the tile', (tester) async {
       await tester.pumpWidget(
         createTest(
-          authUser: AuthUser(
-            id: 'u1',
-            email: 'a@b.com',
-            emailVerified: false,
-          ),
+          authUser: AuthUser(id: 'u1', email: 'a@b.com', emailVerified: false),
         ),
       );
       await tester.pump();
@@ -379,11 +375,7 @@ void main() {
     testWidgets('verified user does not see the tile', (tester) async {
       await tester.pumpWidget(
         createTest(
-          authUser: AuthUser(
-            id: 'u1',
-            email: 'a@b.com',
-            emailVerified: true,
-          ),
+          authUser: AuthUser(id: 'u1', email: 'a@b.com', emailVerified: true),
         ),
       );
       await tester.pump();

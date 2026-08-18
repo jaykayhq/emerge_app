@@ -86,9 +86,7 @@ class PremiumThemePreview extends StatelessWidget {
       context: context,
       builder: (ctx) => Dialog(
         backgroundColor: const Color(0xFF1A1A2E),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -106,9 +104,7 @@ class PremiumThemePreview extends StatelessWidget {
               Text(
                 description,
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.7),
-                ),
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
               ),
               const SizedBox(height: 16),
               SizedBox(

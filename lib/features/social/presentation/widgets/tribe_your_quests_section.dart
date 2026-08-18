@@ -41,9 +41,9 @@ class TribeYourQuestsSection extends ConsumerWidget {
 
     final List<Challenge> active =
         challengesAsync.value
-                ?.where((c) => c.status == ChallengeStatus.active)
-                .toList() ??
-            <Challenge>[];
+            ?.where((c) => c.status == ChallengeStatus.active)
+            .toList() ??
+        <Challenge>[];
 
     active.sort((a, b) => b.currentDay.compareTo(a.currentDay));
     final top = active.take(3).toList();
@@ -172,10 +172,7 @@ class _QuestRow extends StatelessWidget {
                   const Gap(2),
                   Text(
                     'Day ${challenge.currentDay}/${challenge.totalDays}',
-                    style: const TextStyle(
-                      color: Colors.white60,
-                      fontSize: 11,
-                    ),
+                    style: const TextStyle(color: Colors.white60, fontSize: 11),
                   ),
                   const Gap(6),
                   ClipRRect(
@@ -193,11 +190,7 @@ class _QuestRow extends StatelessWidget {
               ),
             ),
             const Gap(8),
-            const Icon(
-              Icons.chevron_right,
-              color: Colors.white38,
-              size: 22,
-            ),
+            const Icon(Icons.chevron_right, color: Colors.white38, size: 22),
           ],
         ),
       ),

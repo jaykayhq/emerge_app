@@ -76,9 +76,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            userStatsStreamProvider.overrideWith(
-              (ref) => const Stream.empty(),
-            ),
+            userStatsStreamProvider.overrideWith((ref) => const Stream.empty()),
             worldThemeProvider.overrideWith(WorldThemeNotifier.new),
             worldHealthStreamProvider.overrideWith((ref) => Stream.value(0.5)),
             worldEntropyStreamProvider.overrideWith((ref) => Stream.value(0.0)),
@@ -95,8 +93,9 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('renders level circle with correct level number',
-        (tester) async {
+    testWidgets('renders level circle with correct level number', (
+      tester,
+    ) async {
       await tester.binding.setSurfaceSize(const Size(1200, 900));
       await pumpScreen(tester, level: 3);
 

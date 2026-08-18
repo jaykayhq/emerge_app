@@ -17,10 +17,13 @@ class FakeBackend extends Fake implements DeleteAccountBackend {
   String? lastId;
   FakeBackend(this.shouldSucceed);
   @override
-  Future<Either<Failure, Unit>> delete(
-      {required String deletionRequestId}) async {
+  Future<Either<Failure, Unit>> delete({
+    required String deletionRequestId,
+  }) async {
     lastId = deletionRequestId;
-    return shouldSucceed ? const Right(unit) : const Left(ServerFailure('boom'));
+    return shouldSucceed
+        ? const Right(unit)
+        : const Left(ServerFailure('boom'));
   }
 }
 
@@ -80,25 +83,27 @@ void main() {
     expect(idStore.stored, isNull); // id cleared after success
   });
 
-  test('failure: local data is NOT cleared, returns Left, id retained',
-      () async {
-    backend = FakeBackend(false);
-    await db.habitsDao.insertFromData(
-      id: 'h1',
-      userId: 'u1',
-      title: 'Read',
-      createdAt: DateTime(2026).toIso8601String(),
-      updatedAt: DateTime(2026).toIso8601String(),
-    );
-    final res = await service.deleteAccount(
-      userId: 'u1',
-      backend: backend,
-      idStore: idStore,
-      auth: auth,
-    );
-    expect(res.isLeft(), isTrue);
-    verifyNever(() => auth.signOut());
-    expect(await db.habitsDao.getHabit('h1'), isNotNull); // survives
-    expect(idStore.stored, isNotNull); // deletionRequestId retained for retry
-  });
+  test(
+    'failure: local data is NOT cleared, returns Left, id retained',
+    () async {
+      backend = FakeBackend(false);
+      await db.habitsDao.insertFromData(
+        id: 'h1',
+        userId: 'u1',
+        title: 'Read',
+        createdAt: DateTime(2026).toIso8601String(),
+        updatedAt: DateTime(2026).toIso8601String(),
+      );
+      final res = await service.deleteAccount(
+        userId: 'u1',
+        backend: backend,
+        idStore: idStore,
+        auth: auth,
+      );
+      expect(res.isLeft(), isTrue);
+      verifyNever(() => auth.signOut());
+      expect(await db.habitsDao.getHabit('h1'), isNotNull); // survives
+      expect(idStore.stored, isNotNull); // deletionRequestId retained for retry
+    },
+  );
 }

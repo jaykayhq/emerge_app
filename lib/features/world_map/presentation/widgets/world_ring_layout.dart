@@ -29,7 +29,7 @@ class WorldRingLayout extends StatelessWidget {
         final height = constraints.hasBoundedHeight
             ? constraints.maxHeight
             : MediaQuery.of(context).size.height;
-            
+
         final size = Size(width, height);
         final positions = calculateRingNodePositions(
           size: size,

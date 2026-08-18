@@ -42,10 +42,7 @@ class DashedCirclePainter extends CustomPainter {
 class HabitRuneIndicator extends StatefulWidget {
   final Habit habit;
 
-  const HabitRuneIndicator({
-    super.key,
-    required this.habit,
-  });
+  const HabitRuneIndicator({super.key, required this.habit});
 
   @override
   State<HabitRuneIndicator> createState() => _HabitRuneIndicatorState();
@@ -64,9 +61,10 @@ class _HabitRuneIndicatorState extends State<HabitRuneIndicator>
       vsync: this,
     );
 
-    _animation = Tween<double>(begin: 0.4, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _animation = Tween<double>(
+      begin: 0.4,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     if (!_isForged) {
       _controller.repeat(reverse: true);
@@ -132,9 +130,7 @@ class _HabitRuneIndicatorState extends State<HabitRuneIndicator>
             child: SizedBox(
               width: 14,
               height: 14,
-              child: CustomPaint(
-                painter: DashedCirclePainter(color: color),
-              ),
+              child: CustomPaint(painter: DashedCirclePainter(color: color)),
             ),
           );
         },

@@ -30,16 +30,15 @@ class _StubLocal extends ReflectionLocalDatasource {
     required DateTime localDate,
     required Mood mood,
     required String note,
-  }) async =>
-      DailyReflection(
-        id: 'r1',
-        userId: userId,
-        localDate: localDate,
-        mood: mood,
-        note: note,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
+  }) async => DailyReflection(
+    id: 'r1',
+    userId: userId,
+    localDate: localDate,
+    mood: mood,
+    note: note,
+    createdAt: DateTime.now(),
+    updatedAt: DateTime.now(),
+  );
 }
 
 class _StubRemote implements ReflectionRemoteDatasource {
@@ -64,8 +63,9 @@ void main() {
     remote = _StubRemote();
   });
 
-  testWidgets('empty state shows emoji row + note input + Save',
-      (tester) async {
+  testWidgets('empty state shows emoji row + note input + Save', (
+    tester,
+  ) async {
     local.setExisting(null);
     await tester.pumpWidget(
       ProviderScope(
@@ -89,8 +89,7 @@ void main() {
     expect(find.text('Save'), findsOneWidget);
   });
 
-  testWidgets('existing reflection renders collapsed summary',
-      (tester) async {
+  testWidgets('existing reflection renders collapsed summary', (tester) async {
     final existing = DailyReflection(
       id: 'r1',
       userId: 'u1',

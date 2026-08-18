@@ -22,11 +22,14 @@ void main() {
   }
 
   test('sums contributor fields', () {
-    final agg = aggregateTribeContributors(contributors: [
-      record(xp: 3000, habits: 40, challenges: 2),
-      record(xp: 2000, habits: 20, challenges: 1),
-      record(),
-    ], now: now);
+    final agg = aggregateTribeContributors(
+      contributors: [
+        record(xp: 3000, habits: 40, challenges: 2),
+        record(xp: 2000, habits: 20, challenges: 1),
+        record(),
+      ],
+      now: now,
+    );
 
     expect(agg.totalXp, 5000);
     expect(agg.totalHabitsCompleted, 60);
@@ -34,32 +37,41 @@ void main() {
   });
 
   test('counts new members from the 7-day window', () {
-    final agg = aggregateTribeContributors(contributors: [
-      record(joinedAt: now.subtract(const Duration(days: 1))),
-      record(joinedAt: now.subtract(const Duration(days: 8))),
-      record(joinedAt: null),
-    ], now: now);
+    final agg = aggregateTribeContributors(
+      contributors: [
+        record(joinedAt: now.subtract(const Duration(days: 1))),
+        record(joinedAt: now.subtract(const Duration(days: 8))),
+        record(joinedAt: null),
+      ],
+      now: now,
+    );
 
     expect(agg.newMembers, 1);
   });
 
   test('counts active members from the 7-day window', () {
-    final agg = aggregateTribeContributors(contributors: [
-      record(lastActivity: now.subtract(const Duration(hours: 1))),
-      record(lastActivity: now.subtract(const Duration(days: 8))),
-      record(lastActivity: null),
-    ], now: now);
+    final agg = aggregateTribeContributors(
+      contributors: [
+        record(lastActivity: now.subtract(const Duration(hours: 1))),
+        record(lastActivity: now.subtract(const Duration(days: 8))),
+        record(lastActivity: null),
+      ],
+      now: now,
+    );
 
     expect(agg.activeMembers, 1);
   });
 
   test('boundary: 7 days exactly belongs to the previous window', () {
-    final agg = aggregateTribeContributors(contributors: [
-      record(
-        joinedAt: now.subtract(const Duration(days: 7)),
-        lastActivity: now.subtract(const Duration(days: 7)),
-      ),
-    ], now: now);
+    final agg = aggregateTribeContributors(
+      contributors: [
+        record(
+          joinedAt: now.subtract(const Duration(days: 7)),
+          lastActivity: now.subtract(const Duration(days: 7)),
+        ),
+      ],
+      now: now,
+    );
 
     expect(agg.newMembers, 0);
     expect(agg.activeMembers, 0);

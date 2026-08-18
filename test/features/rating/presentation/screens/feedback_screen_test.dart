@@ -14,30 +14,34 @@ class _MockRepo extends Mock implements FeedbackRepository {}
 /// submit has a route to return to — mirroring production, where the route
 /// is pushed from the shell.
 GoRouter _buildRouter() => GoRouter(
-      initialLocation: '/home',
-      routes: [
-        GoRoute(path: '/home', builder: (_, _) => const Scaffold()),
-        GoRoute(
-          path: '/feedback',
-          builder: (_, _) => const FeedbackScreen(userId: 'u1', rating: 2),
-        ),
-      ],
-    );
+  initialLocation: '/home',
+  routes: [
+    GoRoute(path: '/home', builder: (_, _) => const Scaffold()),
+    GoRoute(
+      path: '/feedback',
+      builder: (_, _) => const FeedbackScreen(userId: 'u1', rating: 2),
+    ),
+  ],
+);
 
 void main() {
   testWidgets('submits feedback and pops', (tester) async {
     final repo = _MockRepo();
-    when(() => repo.submitFeedback(
-          userId: any(named: 'userId'),
-          rating: any(named: 'rating'),
-          message: any(named: 'message'),
-        )).thenAnswer((_) async => const Right<Failure, void>(null));
+    when(
+      () => repo.submitFeedback(
+        userId: any(named: 'userId'),
+        rating: any(named: 'rating'),
+        message: any(named: 'message'),
+      ),
+    ).thenAnswer((_) async => const Right<Failure, void>(null));
 
     final router = _buildRouter();
-    await tester.pumpWidget(ProviderScope(
-      overrides: [feedbackRepositoryProvider.overrideWithValue(repo)],
-      child: MaterialApp.router(routerConfig: router),
-    ));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [feedbackRepositoryProvider.overrideWithValue(repo)],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
     router.push('/feedback');
     await tester.pumpAndSettle();
 
@@ -48,25 +52,35 @@ void main() {
     await tester.tap(find.text('Submit'));
     await tester.pumpAndSettle();
 
-    verify(() => repo.submitFeedback(
-          userId: 'u1', rating: 2, message: 'Too hard to track',
-        )).called(1);
+    verify(
+      () => repo.submitFeedback(
+        userId: 'u1',
+        rating: 2,
+        message: 'Too hard to track',
+      ),
+    ).called(1);
     expect(find.byType(FeedbackScreen), findsNothing);
   });
 
-  testWidgets('shows the error and re-enables submit on failure', (tester) async {
+  testWidgets('shows the error and re-enables submit on failure', (
+    tester,
+  ) async {
     final repo = _MockRepo();
-    when(() => repo.submitFeedback(
-          userId: any(named: 'userId'),
-          rating: any(named: 'rating'),
-          message: any(named: 'message'),
-        )).thenAnswer((_) async => Left<Failure, void>(ServerFailure('offline')));
+    when(
+      () => repo.submitFeedback(
+        userId: any(named: 'userId'),
+        rating: any(named: 'rating'),
+        message: any(named: 'message'),
+      ),
+    ).thenAnswer((_) async => Left<Failure, void>(ServerFailure('offline')));
 
     final router = _buildRouter();
-    await tester.pumpWidget(ProviderScope(
-      overrides: [feedbackRepositoryProvider.overrideWithValue(repo)],
-      child: MaterialApp.router(routerConfig: router),
-    ));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [feedbackRepositoryProvider.overrideWithValue(repo)],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
     router.push('/feedback');
     await tester.pumpAndSettle();
 

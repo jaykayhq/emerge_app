@@ -33,8 +33,8 @@ PremiumState premiumStateFromRecord(
       'premiumEndsAt': endsAtRaw is Timestamp
           ? endsAtRaw.toDate()
           : endsAtRaw is DateTime
-              ? endsAtRaw
-              : DateTime.tryParse(endsAtRaw.toString()),
+          ? endsAtRaw
+          : DateTime.tryParse(endsAtRaw.toString()),
   };
   return computePremiumState(record: parsed, now: (now ?? DateTime.now)());
 }

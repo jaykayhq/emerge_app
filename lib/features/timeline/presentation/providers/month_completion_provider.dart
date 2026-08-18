@@ -47,8 +47,7 @@ Map<String, DayCompletion> computeMonthDayCompletion({
 
     final active = habits
         .where(
-          (h) =>
-              _isSameOrBeforeDay(h.createdAt, day) && h.isActiveOnDay(day),
+          (h) => _isSameOrBeforeDay(h.createdAt, day) && h.isActiveOnDay(day),
         )
         .toList();
 
@@ -68,10 +67,9 @@ Map<String, DayCompletion> computeMonthDayCompletion({
     final status = completedIds.isEmpty
         ? DayCompletionStatus.none
         : completedIds.length >= active.length
-            ? DayCompletionStatus.complete
-            : DayCompletionStatus.partial;
-    final percent =
-        (completedIds.length / active.length * 100).round();
+        ? DayCompletionStatus.complete
+        : DayCompletionStatus.partial;
+    final percent = (completedIds.length / active.length * 100).round();
 
     result[key] = DayCompletion(status: status, percent: percent);
   }
@@ -90,21 +88,25 @@ Stream<Map<String, DayCompletion>> monthCompletion(Ref ref) {
 
   final repository = ref.watch(habitRepositoryProvider);
   final habitsStream = repository.watchHabits(userId);
-  final completionsStream =
-      ref.watch(habitCompletionsDaoProvider).watchCompletions(userId);
+  final completionsStream = ref
+      .watch(habitCompletionsDaoProvider)
+      .watchCompletions(userId);
 
   return _combineLatest(
     habitsStream,
     completionsStream,
     (List<Habit> habits, List<HabitCompletionsTableData> rows) =>
         computeMonthDayCompletion(
-      habits: habits,
-      completions: [
-        for (final row in rows)
-          (habitId: row.habitId, completedAt: DateTime.parse(row.completedAt)),
-      ],
-      month: DateTime.now(),
-    ),
+          habits: habits,
+          completions: [
+            for (final row in rows)
+              (
+                habitId: row.habitId,
+                completedAt: DateTime.parse(row.completedAt),
+              ),
+          ],
+          month: DateTime.now(),
+        ),
   );
 }
 

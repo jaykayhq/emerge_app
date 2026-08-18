@@ -108,11 +108,12 @@ class CreatorProfile {
     if (heroImageUrl != null) map['heroImageUrl'] = heroImageUrl;
     if (blueprintId != null) map['blueprintId'] = blueprintId;
     if (tribeId != null) map['tribeId'] = tribeId;
-    
+
     if (creatorOnboardingCompletedAt != null) {
       // Firestore rule requires this field to be a timestamp, not a string
-      map['creatorOnboardingCompletedAt'] = 
-          Timestamp.fromDate(creatorOnboardingCompletedAt!);
+      map['creatorOnboardingCompletedAt'] = Timestamp.fromDate(
+        creatorOnboardingCompletedAt!,
+      );
     }
 
     return map;
@@ -123,7 +124,8 @@ class CreatorProfile {
     final role = (rawRole == 'user' || rawRole == 'creator') ? rawRole : null;
 
     final rawProgress = map['creatorOnboardingProgress'] as int?;
-    final progress = (rawProgress != null && rawProgress >= 0 && rawProgress <= 3)
+    final progress =
+        (rawProgress != null && rawProgress >= 0 && rawProgress <= 3)
         ? rawProgress
         : 0;
 

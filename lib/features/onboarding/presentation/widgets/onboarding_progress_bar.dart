@@ -30,10 +30,7 @@ class _AnimatedOnboardingProgressBarState
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
-    _animation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    );
+    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
     _controller.value = widget.targetProgress;
   }
 
@@ -58,8 +55,8 @@ class _AnimatedOnboardingProgressBarState
     final percentageText = isComplete
         ? '100%'
         : showRemaining
-            ? '${((1 - widget.targetProgress) * 100).round()}% to go'
-            : '${(widget.targetProgress * 100).round()}%';
+        ? '${((1 - widget.targetProgress) * 100).round()}% to go'
+        : '${(widget.targetProgress * 100).round()}%';
     final barColor = widget.accentColor ?? Colors.cyanAccent;
 
     return Padding(

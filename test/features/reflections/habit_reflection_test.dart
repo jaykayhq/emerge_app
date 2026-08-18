@@ -30,7 +30,11 @@ void main() {
         createdAt: DateTime(2026, 7, 10, 9),
         updatedAt: DateTime(2026, 7, 10, 9),
       );
-      final b = a.copyWith(mood: Mood.great, note: 'amazing', updatedAt: DateTime(2026, 7, 10, 10));
+      final b = a.copyWith(
+        mood: Mood.great,
+        note: 'amazing',
+        updatedAt: DateTime(2026, 7, 10, 10),
+      );
       expect(b.mood, Mood.great);
       expect(b.note, 'amazing');
       expect(b.updatedAt, DateTime(2026, 7, 10, 10));

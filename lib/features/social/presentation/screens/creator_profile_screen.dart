@@ -23,12 +23,15 @@ class CreatorProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(creatorProfileProvider(creatorId));
     final blueprintsAsync = ref.watch(allBlueprintsStreamProvider);
-    final creatorBlueprints = blueprintsAsync.value
+    final creatorBlueprints =
+        blueprintsAsync.value
             ?.where((b) => b.creatorUserId == creatorId)
             .toList() ??
         const <Blueprint>[];
-    final recruits =
-        creatorBlueprints.fold<int>(0, (sum, b) => sum + b.adoptionCount);
+    final recruits = creatorBlueprints.fold<int>(
+      0,
+      (sum, b) => sum + b.adoptionCount,
+    );
     final missions = creatorBlueprints.length;
 
     return Scaffold(
@@ -42,12 +45,16 @@ class CreatorProfileScreen extends ConsumerWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.person_search_rounded,
-                          size: 64, color: Colors.white38),
+                      Icon(
+                        Icons.person_search_rounded,
+                        size: 64,
+                        color: Colors.white38,
+                      ),
                       Gap(16),
-                      Text('Creator not found',
-                          style:
-                              TextStyle(color: Colors.white54, fontSize: 16)),
+                      Text(
+                        'Creator not found',
+                        style: TextStyle(color: Colors.white54, fontSize: 16),
+                      ),
                     ],
                   ),
                 ),
@@ -72,15 +79,19 @@ class CreatorProfileScreen extends ConsumerWidget {
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                               colors: [
-                                EmergeColors.nebulaSecondary
-                                    .withValues(alpha: 0.3),
+                                EmergeColors.nebulaSecondary.withValues(
+                                  alpha: 0.3,
+                                ),
                                 EmergeColors.nebulaBackground,
                               ],
                             ),
                           ),
                           child: const Center(
-                            child: Icon(Icons.person_rounded,
-                                size: 80, color: Colors.white12),
+                            child: Icon(
+                              Icons.person_rounded,
+                              size: 80,
+                              color: Colors.white12,
+                            ),
                           ),
                         ),
                         // Gradient overlay
@@ -91,8 +102,9 @@ class CreatorProfileScreen extends ConsumerWidget {
                               end: Alignment.bottomCenter,
                               colors: [
                                 Colors.transparent,
-                                EmergeColors.nebulaBackground
-                                    .withValues(alpha: 0.9),
+                                EmergeColors.nebulaBackground.withValues(
+                                  alpha: 0.9,
+                                ),
                               ],
                             ),
                           ),
@@ -127,28 +139,34 @@ class CreatorProfileScreen extends ConsumerWidget {
                               if (profile.isVerifiedCreator)
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 4),
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: EmergeColors.nebulaPrimary
                                         .withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(20),
                                     border: Border.all(
-                                        color: EmergeColors.nebulaPrimary
-                                            .withValues(alpha: 0.5)),
+                                      color: EmergeColors.nebulaPrimary
+                                          .withValues(alpha: 0.5),
+                                    ),
                                   ),
                                   child: const Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.verified_rounded,
-                                          size: 14,
-                                          color:
-                                              EmergeColors.nebulaPrimary),
+                                      Icon(
+                                        Icons.verified_rounded,
+                                        size: 14,
+                                        color: EmergeColors.nebulaPrimary,
+                                      ),
                                       Gap(4),
-                                      Text('Vanguard Elite',
-                                          style: TextStyle(
-                                              color:
-                                                  EmergeColors.nebulaPrimary,
-                                              fontSize: 12)),
+                                      Text(
+                                        'Vanguard Elite',
+                                        style: TextStyle(
+                                          color: EmergeColors.nebulaPrimary,
+                                          fontSize: 12,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -171,24 +189,29 @@ class CreatorProfileScreen extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           _StatColumn(
-                              label: 'RECRUITS',
-                              value: _formatCount(recruits)),
+                            label: 'RECRUITS',
+                            value: _formatCount(recruits),
+                          ),
                           Container(
-                              width: 1,
-                              height: 32,
-                              color: Colors.white.withValues(alpha: 0.1)),
+                            width: 1,
+                            height: 32,
+                            color: Colors.white.withValues(alpha: 0.1),
+                          ),
                           _StatColumn(
-                              label: 'MISSIONS',
-                              value: '$missions',
-                              color: EmergeColors.nebulaSecondary),
+                            label: 'MISSIONS',
+                            value: '$missions',
+                            color: EmergeColors.nebulaSecondary,
+                          ),
                           Container(
-                              width: 1,
-                              height: 32,
-                              color: Colors.white.withValues(alpha: 0.1)),
+                            width: 1,
+                            height: 32,
+                            color: Colors.white.withValues(alpha: 0.1),
+                          ),
                           const _StatColumn(
-                              label: 'RATING',
-                              value: '—',
-                              color: EmergeColors.nebulaPrimary),
+                            label: 'RATING',
+                            value: '—',
+                            color: EmergeColors.nebulaPrimary,
+                          ),
                         ],
                       ),
                     ),
@@ -196,8 +219,7 @@ class CreatorProfileScreen extends ConsumerWidget {
                 ),
 
                 // ── Bio + Speciality Tags ─────────────────────────────
-                if (profile.bio.isNotEmpty ||
-                    profile.specialityTags.isNotEmpty)
+                if (profile.bio.isNotEmpty || profile.specialityTags.isNotEmpty)
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
@@ -218,9 +240,10 @@ class CreatorProfileScreen extends ConsumerWidget {
                             Text(
                               profile.bio,
                               style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 14,
-                                  height: 1.6),
+                                color: Colors.white70,
+                                fontSize: 14,
+                                height: 1.6,
+                              ),
                             ),
                           if (profile.specialityTags.isNotEmpty) ...[
                             const Gap(16),
@@ -233,26 +256,23 @@ class CreatorProfileScreen extends ConsumerWidget {
                                       label: Text(
                                         tag,
                                         style: const TextStyle(
-                                          color:
-                                              EmergeColors.nebulaPrimary,
+                                          color: EmergeColors.nebulaPrimary,
                                           fontSize: 11,
                                           fontWeight: FontWeight.w600,
                                           letterSpacing: 0.5,
                                         ),
                                       ),
-                                      backgroundColor:
-                                          EmergeColors.nebulaPrimaryContainer
-                                              .withValues(alpha: 0.18),
+                                      backgroundColor: EmergeColors
+                                          .nebulaPrimaryContainer
+                                          .withValues(alpha: 0.18),
                                       side: BorderSide(
                                         color: EmergeColors
                                             .nebulaPrimaryContainer
                                             .withValues(alpha: 0.35),
                                       ),
-                                      visualDensity:
-                                          VisualDensity.compact,
+                                      visualDensity: VisualDensity.compact,
                                       materialTapTargetSize:
-                                          MaterialTapTargetSize
-                                              .shrinkWrap,
+                                          MaterialTapTargetSize.shrinkWrap,
                                     ),
                                   )
                                   .toList(),
@@ -288,13 +308,14 @@ class CreatorProfileScreen extends ConsumerWidget {
                       child: EmergeLoadingSkeleton(itemCount: 2),
                     ),
                   )
-                else if (blueprintsAsync.hasError &&
-                    creatorBlueprints.isEmpty)
+                else if (blueprintsAsync.hasError && creatorBlueprints.isEmpty)
                   const SliverToBoxAdapter(
                     child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20),
-                      child: Text('Could not load blueprints.',
-                          style: TextStyle(color: Colors.white38)),
+                      child: Text(
+                        'Could not load blueprints.',
+                        style: TextStyle(color: Colors.white38),
+                      ),
                     ),
                   )
                 else if (creatorBlueprints.isEmpty)
@@ -333,8 +354,7 @@ class CreatorProfileScreen extends ConsumerWidget {
                                 level: GlassLevel.level1,
                                 padding: const EdgeInsets.all(16),
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Icon(
                                       Icons.widgets_rounded,
@@ -378,8 +398,7 @@ class CreatorProfileScreen extends ConsumerWidget {
 
           // ── Loading State (shimmer) ──────────────────────────────────
           loading: () => Scaffold(
-            appBar:
-                AppBar(backgroundColor: Colors.transparent, elevation: 0),
+            appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
             backgroundColor: Colors.transparent,
             body: const Padding(
               padding: EdgeInsets.all(20),
@@ -426,12 +445,14 @@ class CreatorProfileScreen extends ConsumerWidget {
                         onPressed: () {
                           if (creatorBlueprints.isNotEmpty) {
                             context.push(
-                                '/blueprint/${creatorBlueprints.first.id}');
+                              '/blueprint/${creatorBlueprints.first.id}',
+                            );
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text(
-                                    "This creator hasn't published any blueprints yet."),
+                                  "This creator hasn't published any blueprints yet.",
+                                ),
                               ),
                             );
                           }
@@ -446,10 +467,8 @@ class CreatorProfileScreen extends ConsumerWidget {
                           label: const Text('Share Creator Profile'),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.white70,
-                            side:
-                                const BorderSide(color: Colors.white24),
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 12),
+                            side: const BorderSide(color: Colors.white24),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14),
                             ),

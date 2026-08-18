@@ -62,30 +62,32 @@ void main() {
     expect(attempts, greaterThanOrEqualTo(5));
   });
 
-  test('circuit breaker flips to degraded after consecutive failures',
-      () async {
-    engine = EnhancedSyncEngine(
-      db.mutationQueueDao,
-      FakeFirebaseFirestore(),
-      metrics: SyncMetrics(),
-      breakerThreshold: 2,
-      baseBackoff: Duration.zero,
-      applier: (_) async => false,
-    );
-    await engine.enqueueMutation(
-      collectionPath: 'habits',
-      documentId: 'h1',
-      operation: 'update',
-    );
-    await engine.processMutationQueue();
-    await engine.processMutationQueue();
-    final states = <SyncStatus>[];
-    final sub = engine.status.listen(states.add);
-    await engine.processMutationQueue();
-    await Future.delayed(Duration.zero);
-    expect(states, contains(SyncStatus.degraded));
-    await sub.cancel();
-  });
+  test(
+    'circuit breaker flips to degraded after consecutive failures',
+    () async {
+      engine = EnhancedSyncEngine(
+        db.mutationQueueDao,
+        FakeFirebaseFirestore(),
+        metrics: SyncMetrics(),
+        breakerThreshold: 2,
+        baseBackoff: Duration.zero,
+        applier: (_) async => false,
+      );
+      await engine.enqueueMutation(
+        collectionPath: 'habits',
+        documentId: 'h1',
+        operation: 'update',
+      );
+      await engine.processMutationQueue();
+      await engine.processMutationQueue();
+      final states = <SyncStatus>[];
+      final sub = engine.status.listen(states.add);
+      await engine.processMutationQueue();
+      await Future.delayed(Duration.zero);
+      expect(states, contains(SyncStatus.degraded));
+      await sub.cancel();
+    },
+  );
 
   test('backoff schedules nextRetryAt in the future', () async {
     engine = EnhancedSyncEngine(

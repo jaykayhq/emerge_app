@@ -37,8 +37,7 @@ void main() {
         data: any(named: 'data'),
       ),
     ).thenAnswer((_) async {});
-    when(() => mockActivityDao.insertActivity(any()))
-        .thenAnswer((_) async {});
+    when(() => mockActivityDao.insertActivity(any())).thenAnswer((_) async {});
     when(
       () => mockLeaderboardRepo.updateUserScore(
         any(),
@@ -54,67 +53,70 @@ void main() {
 
   group('SocialActivityService partner fan-out', () {
     test(
-        'logHabitCompletion fans out a partner_activity doc to each partner of the actor',
-        () async {
-      final partnerIds = <String>['p1', 'p2'];
-      final service = SocialActivityService(
-        syncEngine: mockSyncEngine,
-        activityDao: mockActivityDao,
-        leaderboardRepo: mockLeaderboardRepo,
-        getPartnerIds: (userId) async {
-          // Confirm the lookup was invoked with the actor's id.
-          expect(userId, 'me');
-          return partnerIds;
-        },
-      );
+      'logHabitCompletion fans out a partner_activity doc to each partner of the actor',
+      () async {
+        final partnerIds = <String>['p1', 'p2'];
+        final service = SocialActivityService(
+          syncEngine: mockSyncEngine,
+          activityDao: mockActivityDao,
+          leaderboardRepo: mockLeaderboardRepo,
+          getPartnerIds: (userId) async {
+            // Confirm the lookup was invoked with the actor's id.
+            expect(userId, 'me');
+            return partnerIds;
+          },
+        );
 
-      await service.logHabitCompletion(
-        userId: 'me',
-        userName: 'Me',
-        archetype: 'athlete',
-        habitId: 'h1',
-        habitTitle: 'Cold Plunge',
-        streakDay: 1,
-        attribute: 'body',
-      );
+        await service.logHabitCompletion(
+          userId: 'me',
+          userName: 'Me',
+          archetype: 'athlete',
+          habitId: 'h1',
+          habitTitle: 'Cold Plunge',
+          streakDay: 1,
+          attribute: 'body',
+        );
 
-      // Expect: 2 partner fan-out writes (one per partner).
-      // Capture all calls so we can inspect both partner writes.
-      final captured = verify(
-        () => mockSyncEngine.enqueueSet(
-          collectionPath: captureAny(named: 'collectionPath'),
-          documentId: captureAny(named: 'documentId'),
-          data: captureAny(named: 'data'),
-        ),
-      ).captured;
+        // Expect: 2 partner fan-out writes (one per partner).
+        // Capture all calls so we can inspect both partner writes.
+        final captured = verify(
+          () => mockSyncEngine.enqueueSet(
+            collectionPath: captureAny(named: 'collectionPath'),
+            documentId: captureAny(named: 'documentId'),
+            data: captureAny(named: 'data'),
+          ),
+        ).captured;
 
-      // captured is a flat list of args across all matching calls, in
-      // positional order: [collectionPath, documentId, data, ...] for
-      // each call. Group into triples.
-      final callCount = 3; // [collectionPath, documentId, data]
-      final calls = <List<dynamic>>[];
-      for (var i = 0; i + callCount <= captured.length; i += callCount) {
-        calls.add(captured.sublist(i, i + callCount));
-      }
+        // captured is a flat list of args across all matching calls, in
+        // positional order: [collectionPath, documentId, data, ...] for
+        // each call. Group into triples.
+        final callCount = 3; // [collectionPath, documentId, data]
+        final calls = <List<dynamic>>[];
+        for (var i = 0; i + callCount <= captured.length; i += callCount) {
+          calls.add(captured.sublist(i, i + callCount));
+        }
 
-      // Two partner fan-out writes — one for each partner.
-      final partnerWrites = calls
-          .where((call) =>
-              (call[0] as String).startsWith('users/') &&
-              (call[0] as String).endsWith('/partner_activity'))
-          .toList();
-      expect(partnerWrites.length, 2);
+        // Two partner fan-out writes — one for each partner.
+        final partnerWrites = calls
+            .where(
+              (call) =>
+                  (call[0] as String).startsWith('users/') &&
+                  (call[0] as String).endsWith('/partner_activity'),
+            )
+            .toList();
+        expect(partnerWrites.length, 2);
 
-      // Each write carries denormalized actor info.
-      for (final call in partnerWrites) {
-        final data = call[2] as Map<String, dynamic>;
-        expect(data['type'], 'habit_complete');
-        expect(data['userId'], 'me');
-        expect(data['userName'], 'Me');
-        expect((data['data'] as Map)['habitTitle'], 'Cold Plunge');
-        expect(data['timestamp'], isA<String>());
-      }
-    });
+        // Each write carries denormalized actor info.
+        for (final call in partnerWrites) {
+          final data = call[2] as Map<String, dynamic>;
+          expect(data['type'], 'habit_complete');
+          expect(data['userId'], 'me');
+          expect(data['userName'], 'Me');
+          expect((data['data'] as Map)['habitTitle'], 'Cold Plunge');
+          expect(data['timestamp'], isA<String>());
+        }
+      },
+    );
 
     test('users with no partners produce no partner fan-out writes', () async {
       final service = SocialActivityService(
@@ -169,26 +171,26 @@ void main() {
     });
 
     test(
-        'getPartnerIds is not invoked when the partner-lookup callback is null',
-        () async {
-      final service = SocialActivityService(
-        syncEngine: mockSyncEngine,
-        activityDao: mockActivityDao,
-        leaderboardRepo: mockLeaderboardRepo,
-      );
+      'getPartnerIds is not invoked when the partner-lookup callback is null',
+      () async {
+        final service = SocialActivityService(
+          syncEngine: mockSyncEngine,
+          activityDao: mockActivityDao,
+          leaderboardRepo: mockLeaderboardRepo,
+        );
 
-      await service.logStreakMilestone(
-        userId: 'me',
-        userName: 'Me',
-        archetype: 'athlete',
-        streakDays: 7,
-      );
-      // No assertion on getPartnerIds — it simply is never invoked.
-      // Just confirms the service completes without throwing.
-    });
+        await service.logStreakMilestone(
+          userId: 'me',
+          userName: 'Me',
+          archetype: 'athlete',
+          streakDays: 7,
+        );
+        // No assertion on getPartnerIds — it simply is never invoked.
+        // Just confirms the service completes without throwing.
+      },
+    );
 
-    test(
-        'a failing partner write is best-effort: the leaderboard still '
+    test('a failing partner write is best-effort: the leaderboard still '
         'updates and remaining partners still receive the write', () async {
       when(
         () => mockSyncEngine.enqueueSet(
@@ -256,8 +258,7 @@ void main() {
       ).called(1);
     });
 
-    test(
-        'a failing partner lookup is best-effort: the leaderboard still '
+    test('a failing partner lookup is best-effort: the leaderboard still '
         'updates and no exception escapes', () async {
       final service = SocialActivityService(
         syncEngine: mockSyncEngine,

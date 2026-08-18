@@ -58,37 +58,53 @@ class BodyPositions {
     final torsoWidth = 8 * p.torsoWidth * scale;
     final headRadius = 10 * p.headSize * scale;
 
-    final leftShoulder = Offset(centerX - (10 * p.torsoWidth * scale),
-                                chestCenter.dy - 2 * scale);
-    final rightShoulder = Offset(centerX + (10 * p.torsoWidth * scale),
-                                 chestCenter.dy - 2 * scale);
+    final leftShoulder = Offset(
+      centerX - (10 * p.torsoWidth * scale),
+      chestCenter.dy - 2 * scale,
+    );
+    final rightShoulder = Offset(
+      centerX + (10 * p.torsoWidth * scale),
+      chestCenter.dy - 2 * scale,
+    );
     final leftHip = Offset(pelvisCenter.dx - (5 * scale), pelvisCenter.dy);
     final rightHip = Offset(pelvisCenter.dx + (5 * scale), pelvisCenter.dy);
 
     final legLength = 25 * p.legLength * scale;
     final armLength = 20 * p.armLength * scale;
 
-    final leftKnee = Offset(leftHip.dx - (3 * scale) +
-                                data.pose.leftLegAngle * 10 * scale,
-                            leftHip.dy + legLength / 2);
-    final leftFoot = Offset(leftKnee.dx - (1 * scale),
-                            leftKnee.dy + legLength / 2);
-    final rightKnee = Offset(rightHip.dx + (3 * scale) +
-                                 data.pose.rightLegAngle * 10 * scale,
-                             rightHip.dy + legLength / 2);
-    final rightFoot = Offset(rightKnee.dx + (1 * scale),
-                             rightKnee.dy + legLength / 2);
+    final leftKnee = Offset(
+      leftHip.dx - (3 * scale) + data.pose.leftLegAngle * 10 * scale,
+      leftHip.dy + legLength / 2,
+    );
+    final leftFoot = Offset(
+      leftKnee.dx - (1 * scale),
+      leftKnee.dy + legLength / 2,
+    );
+    final rightKnee = Offset(
+      rightHip.dx + (3 * scale) + data.pose.rightLegAngle * 10 * scale,
+      rightHip.dy + legLength / 2,
+    );
+    final rightFoot = Offset(
+      rightKnee.dx + (1 * scale),
+      rightKnee.dy + legLength / 2,
+    );
 
-    final leftElbow = Offset(leftShoulder.dx - (5 * scale) +
-                                data.pose.leftArmAngle * 8 * scale,
-                            leftShoulder.dy + armLength / 2);
-    final leftHand = Offset(leftElbow.dx - (3 * scale),
-                            leftElbow.dy + armLength / 2);
-    final rightElbow = Offset(rightShoulder.dx + (5 * scale) +
-                                  data.pose.rightArmAngle * 8 * scale,
-                              rightShoulder.dy + armLength / 2);
-    final rightHand = Offset(rightElbow.dx + (3 * scale),
-                             rightElbow.dy + armLength / 2);
+    final leftElbow = Offset(
+      leftShoulder.dx - (5 * scale) + data.pose.leftArmAngle * 8 * scale,
+      leftShoulder.dy + armLength / 2,
+    );
+    final leftHand = Offset(
+      leftElbow.dx - (3 * scale),
+      leftElbow.dy + armLength / 2,
+    );
+    final rightElbow = Offset(
+      rightShoulder.dx + (5 * scale) + data.pose.rightArmAngle * 8 * scale,
+      rightShoulder.dy + armLength / 2,
+    );
+    final rightHand = Offset(
+      rightElbow.dx + (3 * scale),
+      rightElbow.dy + armLength / 2,
+    );
 
     return BodyPositions._(
       headCenter: headCenter,
@@ -132,19 +148,23 @@ class ProceduralAvatarPainter extends CustomPainter {
     final phase = data.phase;
     final pos = BodyPositions.compute(data, size);
 
-    void drawCapsule(Offset a, Offset b, double radius,
-        Color fill, Color outline) {
+    void drawCapsule(
+      Offset a,
+      Offset b,
+      double radius,
+      Color fill,
+      Color outline,
+    ) {
       final paint = Paint()
         ..color = fill
         ..style = PaintingStyle.fill;
       final path = Path()
-        ..addRRect(RRect.fromRectAndRadius(
-          Rect.fromLTRB(
-            a.dx - radius, a.dy,
-            b.dx + radius, b.dy,
+        ..addRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromLTRB(a.dx - radius, a.dy, b.dx + radius, b.dy),
+            Radius.circular(radius),
           ),
-          Radius.circular(radius),
-        ));
+        );
       canvas.drawPath(path, paint);
       final outlinePaint = Paint()
         ..color = outline
@@ -156,39 +176,52 @@ class ProceduralAvatarPainter extends CustomPainter {
     // Draw order: back → front
 
     // 1. Back limbs (darker, behind torso)
-    drawCapsule(pos.leftHip, pos.leftKnee, 4 * pos.scale,
-        colors.skin.withValues(alpha: phase.alpha * 0.7),
-        colors.outline.withValues(alpha: phase.alpha));
-    drawCapsule(pos.leftKnee, pos.leftFoot, 3.5 * pos.scale,
-        colors.skin.withValues(alpha: phase.alpha * 0.7),
-        colors.outline.withValues(alpha: phase.alpha));
+    drawCapsule(
+      pos.leftHip,
+      pos.leftKnee,
+      4 * pos.scale,
+      colors.skin.withValues(alpha: phase.alpha * 0.7),
+      colors.outline.withValues(alpha: phase.alpha),
+    );
+    drawCapsule(
+      pos.leftKnee,
+      pos.leftFoot,
+      3.5 * pos.scale,
+      colors.skin.withValues(alpha: phase.alpha * 0.7),
+      colors.outline.withValues(alpha: phase.alpha),
+    );
 
     // 2. Torso (tapered trapezoid with vertical gradient)
     final torsoPath = Path()
-      ..moveTo(pos.chestCenter.dx - pos.torsoWidth,
-               pos.chestCenter.dy - (8 * pos.scale))
-      ..lineTo(pos.chestCenter.dx + pos.torsoWidth,
-               pos.chestCenter.dy - (8 * pos.scale))
-      ..lineTo(pos.pelvisCenter.dx + pos.torsoWidth * 0.7,
-               pos.pelvisCenter.dy)
-      ..lineTo(pos.pelvisCenter.dx - pos.torsoWidth * 0.7,
-               pos.pelvisCenter.dy)
+      ..moveTo(
+        pos.chestCenter.dx - pos.torsoWidth,
+        pos.chestCenter.dy - (8 * pos.scale),
+      )
+      ..lineTo(
+        pos.chestCenter.dx + pos.torsoWidth,
+        pos.chestCenter.dy - (8 * pos.scale),
+      )
+      ..lineTo(pos.pelvisCenter.dx + pos.torsoWidth * 0.7, pos.pelvisCenter.dy)
+      ..lineTo(pos.pelvisCenter.dx - pos.torsoWidth * 0.7, pos.pelvisCenter.dy)
       ..close();
 
     final torsoFillPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          colors.skin.withValues(alpha: phase.alpha * 0.9),
-          colors.skin.withValues(alpha: phase.alpha * 0.6),
-        ],
-      ).createShader(Rect.fromLTRB(
-        pos.chestCenter.dx - pos.torsoWidth,
-        pos.chestCenter.dy - (8 * pos.scale),
-        pos.chestCenter.dx + pos.torsoWidth,
-        pos.pelvisCenter.dy,
-      ));
+      ..shader =
+          LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              colors.skin.withValues(alpha: phase.alpha * 0.9),
+              colors.skin.withValues(alpha: phase.alpha * 0.6),
+            ],
+          ).createShader(
+            Rect.fromLTRB(
+              pos.chestCenter.dx - pos.torsoWidth,
+              pos.chestCenter.dy - (8 * pos.scale),
+              pos.chestCenter.dx + pos.torsoWidth,
+              pos.pelvisCenter.dy,
+            ),
+          );
     canvas.drawPath(torsoPath, torsoFillPaint);
 
     final torsoOutlinePaint = Paint()
@@ -204,30 +237,40 @@ class ProceduralAvatarPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.0 * pos.scale;
       final crack = Path()
-        ..moveTo(pos.chestCenter.dx - 3 * pos.scale,
-                 pos.chestCenter.dy - 2 * pos.scale)
+        ..moveTo(
+          pos.chestCenter.dx - 3 * pos.scale,
+          pos.chestCenter.dy - 2 * pos.scale,
+        )
         ..lineTo(pos.chestCenter.dx, pos.chestCenter.dy + 3 * pos.scale)
-        ..lineTo(pos.chestCenter.dx + 4 * pos.scale,
-                 pos.chestCenter.dy + 1 * pos.scale);
+        ..lineTo(
+          pos.chestCenter.dx + 4 * pos.scale,
+          pos.chestCenter.dy + 1 * pos.scale,
+        );
       canvas.drawPath(crack, crackPaint);
     }
 
     // 3. Neck
-    drawCapsule(pos.neckBase, pos.chestCenter, 3 * pos.scale,
-        colors.skin.withValues(alpha: phase.alpha),
-        colors.outline.withValues(alpha: phase.alpha));
+    drawCapsule(
+      pos.neckBase,
+      pos.chestCenter,
+      3 * pos.scale,
+      colors.skin.withValues(alpha: phase.alpha),
+      colors.outline.withValues(alpha: phase.alpha),
+    );
 
     // 4. Head (circle with radial gradient for 3D lighting effect)
     final headPaint = Paint()
-      ..shader = RadialGradient(
-        center: const Alignment(-0.3, -0.3),
-        radius: 1.0,
-        colors: [
-          colors.skin.withValues(alpha: phase.alpha * 1.0),
-          colors.skin.withValues(alpha: phase.alpha * 0.7),
-        ],
-      ).createShader(Rect.fromCircle(
-        center: pos.headCenter, radius: pos.headRadius));
+      ..shader =
+          RadialGradient(
+            center: const Alignment(-0.3, -0.3),
+            radius: 1.0,
+            colors: [
+              colors.skin.withValues(alpha: phase.alpha * 1.0),
+              colors.skin.withValues(alpha: phase.alpha * 0.7),
+            ],
+          ).createShader(
+            Rect.fromCircle(center: pos.headCenter, radius: pos.headRadius),
+          );
     canvas.drawCircle(pos.headCenter, pos.headRadius, headPaint);
 
     final headOutlinePaint = Paint()
@@ -245,31 +288,51 @@ class ProceduralAvatarPainter extends CustomPainter {
     }
 
     // 6. Front arms
-    drawCapsule(pos.leftShoulder, pos.leftElbow, 3.5 * pos.scale,
-        colors.skin.withValues(alpha: phase.alpha),
-        colors.outline.withValues(alpha: phase.alpha));
-    drawCapsule(pos.leftElbow, pos.leftHand, 3 * pos.scale,
-        colors.skin.withValues(alpha: phase.alpha),
-        colors.outline.withValues(alpha: phase.alpha));
-    drawCapsule(pos.rightShoulder, pos.rightElbow, 3.5 * pos.scale,
-        colors.skin.withValues(alpha: phase.alpha),
-        colors.outline.withValues(alpha: phase.alpha));
-    drawCapsule(pos.rightElbow, pos.rightHand, 3 * pos.scale,
-        colors.skin.withValues(alpha: phase.alpha),
-        colors.outline.withValues(alpha: phase.alpha));
+    drawCapsule(
+      pos.leftShoulder,
+      pos.leftElbow,
+      3.5 * pos.scale,
+      colors.skin.withValues(alpha: phase.alpha),
+      colors.outline.withValues(alpha: phase.alpha),
+    );
+    drawCapsule(
+      pos.leftElbow,
+      pos.leftHand,
+      3 * pos.scale,
+      colors.skin.withValues(alpha: phase.alpha),
+      colors.outline.withValues(alpha: phase.alpha),
+    );
+    drawCapsule(
+      pos.rightShoulder,
+      pos.rightElbow,
+      3.5 * pos.scale,
+      colors.skin.withValues(alpha: phase.alpha),
+      colors.outline.withValues(alpha: phase.alpha),
+    );
+    drawCapsule(
+      pos.rightElbow,
+      pos.rightHand,
+      3 * pos.scale,
+      colors.skin.withValues(alpha: phase.alpha),
+      colors.outline.withValues(alpha: phase.alpha),
+    );
 
     // 7. Eyes
     final eyePaint = Paint()
       ..color = colors.accent.withValues(alpha: phase.alpha);
     canvas.drawCircle(
-      Offset(pos.headCenter.dx - (3 * pos.scale),
-             pos.headCenter.dy - (1 * pos.scale)),
+      Offset(
+        pos.headCenter.dx - (3 * pos.scale),
+        pos.headCenter.dy - (1 * pos.scale),
+      ),
       1.5 * pos.scale,
       eyePaint,
     );
     canvas.drawCircle(
-      Offset(pos.headCenter.dx + (3 * pos.scale),
-             pos.headCenter.dy - (1 * pos.scale)),
+      Offset(
+        pos.headCenter.dx + (3 * pos.scale),
+        pos.headCenter.dy - (1 * pos.scale),
+      ),
       1.5 * pos.scale,
       eyePaint,
     );
@@ -281,11 +344,12 @@ class ProceduralAvatarPainter extends CustomPainter {
 
     // 9. Sparkles (ascended+)
     if (phase.hasSparkles) {
-      final sparkPaint = Paint()
-        ..color = colors.glow.withValues(alpha: 0.8);
+      final sparkPaint = Paint()..color = colors.glow.withValues(alpha: 0.8);
       final sparkles = [
-        Offset(pos.headCenter.dx + pos.headRadius + 3,
-               pos.headCenter.dy - pos.headRadius),
+        Offset(
+          pos.headCenter.dx + pos.headRadius + 3,
+          pos.headCenter.dy - pos.headRadius,
+        ),
         Offset(pos.leftShoulder.dx - 5, pos.leftShoulder.dy - 3),
         Offset(pos.rightHand.dx + 4, pos.rightHand.dy),
       ];
@@ -295,8 +359,12 @@ class ProceduralAvatarPainter extends CustomPainter {
     }
   }
 
-  void _drawEquipment(Canvas canvas, ShopItem item, BodyPositions pos,
-      AvatarData data) {
+  void _drawEquipment(
+    Canvas canvas,
+    ShopItem item,
+    BodyPositions pos,
+    AvatarData data,
+  ) {
     final colors = data.colors;
     final paint = Paint()
       ..color = colors.outline.withValues(alpha: 0.8)
@@ -329,10 +397,14 @@ class ProceduralAvatarPainter extends CustomPainter {
         break;
       case EquipmentSlot.waist:
         canvas.drawLine(
-          Offset(pos.pelvisCenter.dx - pos.torsoWidth * 0.7,
-                 pos.pelvisCenter.dy),
-          Offset(pos.pelvisCenter.dx + pos.torsoWidth * 0.7,
-                 pos.pelvisCenter.dy),
+          Offset(
+            pos.pelvisCenter.dx - pos.torsoWidth * 0.7,
+            pos.pelvisCenter.dy,
+          ),
+          Offset(
+            pos.pelvisCenter.dx + pos.torsoWidth * 0.7,
+            pos.pelvisCenter.dy,
+          ),
           paint,
         );
         break;
@@ -342,12 +414,20 @@ class ProceduralAvatarPainter extends CustomPainter {
           ..style = PaintingStyle.fill;
         canvas.drawRect(
           Rect.fromCenter(
-            center: pos.leftFoot, width: 5 * pos.scale, height: 3 * pos.scale),
-          bootPaint);
+            center: pos.leftFoot,
+            width: 5 * pos.scale,
+            height: 3 * pos.scale,
+          ),
+          bootPaint,
+        );
         canvas.drawRect(
           Rect.fromCenter(
-            center: pos.rightFoot, width: 5 * pos.scale, height: 3 * pos.scale),
-          bootPaint);
+            center: pos.rightFoot,
+            width: 5 * pos.scale,
+            height: 3 * pos.scale,
+          ),
+          bootPaint,
+        );
         break;
       case EquipmentSlot.aura:
         final auraPaint = Paint()

@@ -190,7 +190,13 @@ class EnhancedOnboardingNotifier extends _$EnhancedOnboardingNotifier {
       final progress = profile.onboardingProgress;
       // Mirror exactly what _persistToBackend writes so a user killed
       // mid-flow resumes where they left off instead of repeating steps.
-      final stepNames = ['archetype', 'attributes', 'why', 'anchors', 'stacking'];
+      final stepNames = [
+        'archetype',
+        'attributes',
+        'why',
+        'anchors',
+        'stacking',
+      ];
       final skipped = List<bool>.filled(5, false);
       for (final name in profile.skippedOnboardingSteps) {
         final idx = stepNames.indexOf(name);
@@ -446,8 +452,6 @@ class EnhancedOnboardingNotifier extends _$EnhancedOnboardingNotifier {
         AppLogger.e('Failed to join tribe during onboarding', e, stack);
         rethrow;
       }
-
-
     } catch (e, s) {
       AppLogger.e('Failed to complete onboarding', e, s);
       state = state.copyWith(

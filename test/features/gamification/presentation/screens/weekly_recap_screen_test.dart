@@ -34,9 +34,7 @@ Widget createTestWidget({
       weeklyRecapServiceProvider.overrideWithValue(recapService),
       authStateChangesProvider.overrideWith((ref) => authStream),
     ],
-    child: const MaterialApp(
-      home: WeeklyRecapScreen(),
-    ),
+    child: const MaterialApp(home: WeeklyRecapScreen()),
   );
 }
 
@@ -53,17 +51,21 @@ void main() {
     ) async {
       final completer = Completer<UserWeeklyRecap?>();
 
-      when(() => mockService.generateRecap(
-        userId: any(named: 'userId'),
-        recapId: any(named: 'recapId'),
-        startDate: any(named: 'startDate'),
-        endDate: any(named: 'endDate'),
-      )).thenAnswer((_) => completer.future);
+      when(
+        () => mockService.generateRecap(
+          userId: any(named: 'userId'),
+          recapId: any(named: 'recapId'),
+          startDate: any(named: 'startDate'),
+          endDate: any(named: 'endDate'),
+        ),
+      ).thenAnswer((_) => completer.future);
 
-      await tester.pumpWidget(createTestWidget(
-        recapService: mockService,
-        authStream: Stream.value(testUser),
-      ));
+      await tester.pumpWidget(
+        createTestWidget(
+          recapService: mockService,
+          authStream: Stream.value(testUser),
+        ),
+      );
       await tester.pump();
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -72,17 +74,21 @@ void main() {
     });
 
     testWidgets('shows error state when generation fails', (tester) async {
-      when(() => mockService.generateRecap(
-        userId: any(named: 'userId'),
-        recapId: any(named: 'recapId'),
-        startDate: any(named: 'startDate'),
-        endDate: any(named: 'endDate'),
-      )).thenAnswer((_) async => Future.error(Exception('Generation failed')));
+      when(
+        () => mockService.generateRecap(
+          userId: any(named: 'userId'),
+          recapId: any(named: 'recapId'),
+          startDate: any(named: 'startDate'),
+          endDate: any(named: 'endDate'),
+        ),
+      ).thenAnswer((_) async => Future.error(Exception('Generation failed')));
 
-      await tester.pumpWidget(createTestWidget(
-        recapService: mockService,
-        authStream: Stream.value(testUser),
-      ));
+      await tester.pumpWidget(
+        createTestWidget(
+          recapService: mockService,
+          authStream: Stream.value(testUser),
+        ),
+      );
       await tester.pump();
       await tester.pump();
 
@@ -91,17 +97,21 @@ void main() {
     });
 
     testWidgets('loading disappears after future completes', (tester) async {
-      when(() => mockService.generateRecap(
-        userId: any(named: 'userId'),
-        recapId: any(named: 'recapId'),
-        startDate: any(named: 'startDate'),
-        endDate: any(named: 'endDate'),
-      )).thenAnswer((_) async => makeRecap());
+      when(
+        () => mockService.generateRecap(
+          userId: any(named: 'userId'),
+          recapId: any(named: 'recapId'),
+          startDate: any(named: 'startDate'),
+          endDate: any(named: 'endDate'),
+        ),
+      ).thenAnswer((_) async => makeRecap());
 
-      await tester.pumpWidget(createTestWidget(
-        recapService: mockService,
-        authStream: Stream.value(testUser),
-      ));
+      await tester.pumpWidget(
+        createTestWidget(
+          recapService: mockService,
+          authStream: Stream.value(testUser),
+        ),
+      );
       await tester.pump();
       await tester.pump();
 
@@ -111,13 +121,13 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
     });
 
-    testWidgets('shows loading when user auth stream is empty', (
-      tester,
-    ) async {
-      await tester.pumpWidget(createTestWidget(
-        recapService: mockService,
-        authStream: const Stream<AuthUser>.empty(),
-      ));
+    testWidgets('shows loading when user auth stream is empty', (tester) async {
+      await tester.pumpWidget(
+        createTestWidget(
+          recapService: mockService,
+          authStream: const Stream<AuthUser>.empty(),
+        ),
+      );
       await tester.pump();
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);

@@ -29,7 +29,9 @@ class FallbackInitialAvatar extends StatelessWidget {
     if (raw.isEmpty) return '';
     final parts = raw.split(RegExp(r'\s+'));
     if (parts.length == 1) {
-      return parts.first.substring(0, parts.first.characters.first.length).toUpperCase();
+      return parts.first
+          .substring(0, parts.first.characters.first.length)
+          .toUpperCase();
     }
     final first = parts.first.characters.first;
     final last = parts.last.characters.first;
@@ -37,7 +39,8 @@ class FallbackInitialAvatar extends StatelessWidget {
   }
 
   List<Color> _colorsFor(String? seed) {
-    final base = seedColor ??
+    final base =
+        seedColor ??
         HSLColor.fromAHSL(
           1.0,
           (seed?.codeUnits.fold<int>(0, (a, b) => a + b) ?? 0) % 360,

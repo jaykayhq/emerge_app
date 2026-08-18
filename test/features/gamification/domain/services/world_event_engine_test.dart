@@ -45,8 +45,9 @@ void main() {
       test('does NOT fire when on 24h cooldown', () {
         final stats = baseStats.copyWith(consecutiveActiveDays: 5);
         final recentEvents = {
-          WorldEventType.travelerVisit:
-              fixedNow.subtract(const Duration(hours: 12)),
+          WorldEventType.travelerVisit: fixedNow.subtract(
+            const Duration(hours: 12),
+          ),
         };
 
         final events = WorldEventEngine.evaluateAndFire(
@@ -64,8 +65,9 @@ void main() {
       test('fires when cooldown has expired (>= 24h)', () {
         final stats = baseStats.copyWith(consecutiveActiveDays: 5);
         final recentEvents = {
-          WorldEventType.travelerVisit:
-              fixedNow.subtract(const Duration(hours: 25)),
+          WorldEventType.travelerVisit: fixedNow.subtract(
+            const Duration(hours: 25),
+          ),
         };
 
         final events = WorldEventEngine.evaluateAndFire(
@@ -104,8 +106,16 @@ void main() {
       });
 
       test('produces different weather for different dates', () {
-        final date1 = DateTime(2026, 7, 2); // day=2, month=7 => seed=14 => 'rainy'
-        final date2 = DateTime(2026, 7, 3); // day=3, month=7 => seed=21 => 'foggy' (21%6=3 => 'foggy')
+        final date1 = DateTime(
+          2026,
+          7,
+          2,
+        ); // day=2, month=7 => seed=14 => 'rainy'
+        final date2 = DateTime(
+          2026,
+          7,
+          3,
+        ); // day=3, month=7 => seed=21 => 'foggy' (21%6=3 => 'foggy')
 
         final weather1 = WorldEventEngine.weatherForDate(date1);
         final weather2 = WorldEventEngine.weatherForDate(date2);
@@ -113,9 +123,7 @@ void main() {
       });
 
       test('does NOT fire twice on the same day', () {
-        final recentEvents = {
-          WorldEventType.weatherShift: fixedNow,
-        };
+        final recentEvents = {WorldEventType.weatherShift: fixedNow};
 
         final events = WorldEventEngine.evaluateAndFire(
           stats: baseStats,
@@ -177,10 +185,7 @@ void main() {
         expect(burst100.payload['xpBonus'], 100);
 
         // Level 20 => 75 XP
-        final stats75 = baseStats.copyWith(
-          currentMomentumScore: 95,
-          level: 20,
-        );
+        final stats75 = baseStats.copyWith(currentMomentumScore: 95, level: 20);
         final events75 = WorldEventEngine.evaluateAndFire(
           stats: stats75,
           now: fixedNow,
@@ -192,10 +197,7 @@ void main() {
         expect(burst75.payload['xpBonus'], 75);
 
         // Level 10 => 50 XP
-        final stats50 = baseStats.copyWith(
-          currentMomentumScore: 95,
-          level: 10,
-        );
+        final stats50 = baseStats.copyWith(currentMomentumScore: 95, level: 10);
         final events50 = WorldEventEngine.evaluateAndFire(
           stats: stats50,
           now: fixedNow,
@@ -286,8 +288,9 @@ void main() {
         // so no threshold is crossed and the event must not re-fire.
         final stats = baseStats.copyWith(previousLevel: 5, level: 5);
         final recentEvents = {
-          WorldEventType.biomeTransition:
-              fixedNow.subtract(const Duration(hours: 25)),
+          WorldEventType.biomeTransition: fixedNow.subtract(
+            const Duration(hours: 25),
+          ),
         };
 
         final events = WorldEventEngine.evaluateAndFire(
@@ -302,8 +305,7 @@ void main() {
         expect(biomeEvents, isEmpty);
       });
 
-      test('does NOT fire when previousLevel is omitted (no level change)',
-          () {
+      test('does NOT fire when previousLevel is omitted (no level change)', () {
         // Without previousLevel the engine assumes no level change.
         final stats = baseStats.copyWith(level: 5);
         final events = WorldEventEngine.evaluateAndFire(
@@ -371,9 +373,7 @@ void main() {
         );
 
         // Use a date where weather has already fired today
-        final recentEvents = {
-          WorldEventType.weatherShift: fixedNow,
-        };
+        final recentEvents = {WorldEventType.weatherShift: fixedNow};
 
         final events = WorldEventEngine.evaluateAndFire(
           stats: stats,
@@ -405,9 +405,7 @@ void main() {
 
       test('weather fires again on a different day', () {
         final yesterday = fixedNow.subtract(const Duration(days: 1));
-        final recentEvents = {
-          WorldEventType.weatherShift: yesterday,
-        };
+        final recentEvents = {WorldEventType.weatherShift: yesterday};
 
         final events = WorldEventEngine.evaluateAndFire(
           stats: baseStats,
@@ -444,10 +442,7 @@ void main() {
 
     group('biomeTransitionLevels', () {
       test('returns the correct levels', () {
-        expect(
-          WorldEventEngine.biomeTransitionLevels,
-          [5, 10, 20, 30],
-        );
+        expect(WorldEventEngine.biomeTransitionLevels, [5, 10, 20, 30]);
       });
     });
   });
@@ -462,7 +457,8 @@ extension _UserStatsCopy on UserStats {
     int? previousLevel,
   }) {
     return UserStats(
-      consecutiveActiveDays: consecutiveActiveDays ?? this.consecutiveActiveDays,
+      consecutiveActiveDays:
+          consecutiveActiveDays ?? this.consecutiveActiveDays,
       currentMomentumScore: currentMomentumScore ?? this.currentMomentumScore,
       level: level ?? this.level,
       previousLevel: previousLevel ?? this.previousLevel,

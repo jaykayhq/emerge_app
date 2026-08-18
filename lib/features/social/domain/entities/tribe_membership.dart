@@ -34,7 +34,7 @@ class TribeMembership {
         (e) => e.name == map['type'],
         orElse: () => MembershipType.archetype,
       ),
-      joinedAt: map['joinedAt'] != null 
+      joinedAt: map['joinedAt'] != null
           ? DateTime.tryParse(map['joinedAt']) ?? DateTime.now()
           : DateTime.now(),
       streak: map['streak']?.toInt() ?? 0,

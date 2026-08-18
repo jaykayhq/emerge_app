@@ -60,7 +60,9 @@ class _CreatorTribeShareCardState extends State<CreatorTribeShareCard> {
       );
       if (!mounted) return;
       // A dismissal isn't a failure — the user simply changed their mind.
-      if (ok == ShareDeliveryResult.failed) _toast('Could not share the tribe card.');
+      if (ok == ShareDeliveryResult.failed) {
+        _toast('Could not share the tribe card.');
+      }
     } catch (_) {
       if (mounted) _toast('Could not share the tribe card.');
     } finally {

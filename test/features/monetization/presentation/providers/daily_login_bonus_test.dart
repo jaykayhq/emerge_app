@@ -13,9 +13,7 @@ class _TestIsPremium extends IsPremium {
 
 ProviderContainer _container({required bool premium}) {
   final c = ProviderContainer(
-    overrides: [
-      isPremiumProvider.overrideWith(() => _TestIsPremium(premium)),
-    ],
+    overrides: [isPremiumProvider.overrideWith(() => _TestIsPremium(premium))],
   );
   addTearDown(c.dispose);
   return c;

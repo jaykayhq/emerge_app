@@ -19,6 +19,7 @@ class _FakeStore implements RatingPromptStore {
     askedAt = at;
     this.version = version;
   }
+
   @override
   Future<void> setDontAskAgain() async => dontAsk = true;
 }
@@ -33,22 +34,30 @@ class _FakeLauncher implements ReviewLauncher {
 }
 
 void main() {
-  test('notifyMilestone prompts (does not auto-review) on first milestone', () async {
-    final store = _FakeStore();
-    final launcher = _FakeLauncher();
-    final controller = RatingPromptController(store: store, launcher: launcher);
-    controller.currentVersion = '1.0.7+12';
-    var prompted = false;
-    controller.onPromptRequested = () async => prompted = true;
+  test(
+    'notifyMilestone prompts (does not auto-review) on first milestone',
+    () async {
+      final store = _FakeStore();
+      final launcher = _FakeLauncher();
+      final controller = RatingPromptController(
+        store: store,
+        launcher: launcher,
+      );
+      controller.currentVersion = '1.0.7+12';
+      var prompted = false;
+      controller.onPromptRequested = () async => prompted = true;
 
-    await controller.notifyMilestone(RatingPromptSignal.sevenDayStreak);
+      await controller.notifyMilestone(RatingPromptSignal.sevenDayStreak);
 
-    expect(prompted, isTrue);          // dialog asked
-    expect(launcher.launches, 0);      // NOT auto-reviewed
-  });
+      expect(prompted, isTrue); // dialog asked
+      expect(launcher.launches, 0); // NOT auto-reviewed
+    },
+  );
 
   test('notifyMilestone does not prompt twice in the same version', () async {
-    final store = _FakeStore()..askedAt = DateTime(2026, 1, 1)..version = '1.0.7+12';
+    final store = _FakeStore()
+      ..askedAt = DateTime(2026, 1, 1)
+      ..version = '1.0.7+12';
     final launcher = _FakeLauncher();
     final controller = RatingPromptController(store: store, launcher: launcher);
     controller.currentVersion = '1.0.7+12';

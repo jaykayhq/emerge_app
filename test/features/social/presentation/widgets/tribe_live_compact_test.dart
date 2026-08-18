@@ -32,7 +32,8 @@ Widget buildLiveCompact({
   final activityOverride =
       activityStream ?? const Stream<List<Map<String, dynamic>>>.empty();
   final lbOverride =
-      leaderboardStream ?? const Stream<List<({Tribe tribe, TribeStats stats})>>.empty();
+      leaderboardStream ??
+      const Stream<List<({Tribe tribe, TribeStats stats})>>.empty();
   return ProviderScope(
     overrides: [
       clubActivityProvider.overrideWith((ref, _) => activityOverride),
@@ -40,18 +41,16 @@ Widget buildLiveCompact({
     ],
     child: MaterialApp(
       home: Scaffold(
-        body: TribeLiveCompact(
-          clubId: 'tribe_athlete',
-          profile: _testProfile,
-        ),
+        body: TribeLiveCompact(clubId: 'tribe_athlete', profile: _testProfile),
       ),
     ),
   );
 }
 
 void main() {
-  testWidgets('renders header and segmented control with default LIVE FEED',
-      (tester) async {
+  testWidgets('renders header and segmented control with default LIVE FEED', (
+    tester,
+  ) async {
     await tester.pumpWidget(buildLiveCompact());
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
@@ -63,7 +62,9 @@ void main() {
 
   testWidgets('empty feed shows "No activity yet."', (tester) async {
     await tester.pumpWidget(
-      buildLiveCompact(activityStream: Stream.value(const <Map<String, dynamic>>[])),
+      buildLiveCompact(
+        activityStream: Stream.value(const <Map<String, dynamic>>[]),
+      ),
     );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
@@ -71,12 +72,14 @@ void main() {
     expect(find.text('No activity yet.'), findsOneWidget);
   });
 
-  testWidgets('empty leaderboard shows "Leaderboard is empty."',
-      (tester) async {
+  testWidgets('empty leaderboard shows "Leaderboard is empty."', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       buildLiveCompact(
-        leaderboardStream:
-            Stream.value(const <({Tribe tribe, TribeStats stats})>[]),
+        leaderboardStream: Stream.value(
+          const <({Tribe tribe, TribeStats stats})>[],
+        ),
       ),
     );
     await tester.pump();
@@ -89,8 +92,9 @@ void main() {
     expect(find.text('Leaderboard is empty.'), findsOneWidget);
   });
 
-  testWidgets('tapping LEADERBOARD tab swaps the visible content',
-      (tester) async {
+  testWidgets('tapping LEADERBOARD tab swaps the visible content', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       buildLiveCompact(
         activityStream: Stream.value(const <Map<String, dynamic>>[]),

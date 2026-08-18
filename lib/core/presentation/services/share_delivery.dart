@@ -9,8 +9,10 @@ import 'package:share_plus/share_plus.dart';
 enum ShareDeliveryResult {
   /// The share sheet/download was handed off successfully.
   success,
+
   /// The user cancelled/dismissed the share sheet.
   dismissed,
+
   /// Sharing itself failed.
   failed,
 }

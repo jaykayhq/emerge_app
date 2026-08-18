@@ -42,6 +42,7 @@ class GamificationConstants {
   static const int phasePhantomMaxLevel = 5;
   static const int phaseConstructMaxLevel = 15;
   static const int phaseIncarnateMaxLevel = 30;
+
   /// Radiant spans 31-50. At level 50, progressInPhase returns 1.0
   /// and phaseFromLevel transitions to Ascended at level 50.
   static const int phaseRadiantMaxLevel = 50;

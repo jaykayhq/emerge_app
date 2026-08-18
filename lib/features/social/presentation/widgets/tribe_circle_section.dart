@@ -116,10 +116,7 @@ class TribeCircleSection extends ConsumerWidget {
                   const Gap(6),
                   Text(
                     '${contracts.length} active contract${contracts.length == 1 ? '' : 's'}',
-                    style: const TextStyle(
-                      color: Colors.white60,
-                      fontSize: 11,
-                    ),
+                    style: const TextStyle(color: Colors.white60, fontSize: 11),
                   ),
                   const Spacer(),
                   const Icon(
@@ -152,9 +149,7 @@ class _PartnerAvatar extends StatelessWidget {
               radius: 18,
               backgroundColor: EmergeColors.glassWhite,
               child: Text(
-                partner.name.isNotEmpty
-                    ? partner.name[0].toUpperCase()
-                    : '?',
+                partner.name.isNotEmpty ? partner.name[0].toUpperCase() : '?',
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,

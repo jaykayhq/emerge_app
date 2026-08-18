@@ -11,11 +11,7 @@ class StickmanAvatar extends StatelessWidget {
   final AvatarData avatarData;
   final double size;
 
-  const StickmanAvatar({
-    super.key,
-    required this.avatarData,
-    this.size = 60,
-  });
+  const StickmanAvatar({super.key, required this.avatarData, this.size = 60});
 
   @override
   Widget build(BuildContext context) {

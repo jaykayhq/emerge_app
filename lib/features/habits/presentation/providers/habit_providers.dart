@@ -217,10 +217,7 @@ Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
     final userAsync = ref.read(authStateChangesProvider);
     final userId = userAsync.value?.id;
 
-    final result = await repository.completeHabit(
-      habitId,
-      DateTime.now(),
-    );
+    final result = await repository.completeHabit(habitId, DateTime.now());
 
     return await result.fold(
       (failure) async {
@@ -271,9 +268,9 @@ Future<HabitCompletionResult> completeHabit(Ref ref, String habitId) async {
               // Peak-satisfaction prompt: exactly streak 7 only, so the rating
               // dialog never re-pings on later milestones in this version.
               if (newStreak == 7 && ref.mounted) {
-                ref.read(ratingPromptControllerProvider).notifyMilestone(
-                      RatingPromptSignal.sevenDayStreak,
-                    );
+                ref
+                    .read(ratingPromptControllerProvider)
+                    .notifyMilestone(RatingPromptSignal.sevenDayStreak);
               }
 
               final momentumAfter = habit.momentumScore + 10 > 100
@@ -373,12 +370,14 @@ Future<void> _scheduleHabitNotifications(Ref ref, Habit habit) async {
   try {
     final profile = await ref.read(userStatsStreamProvider.future);
     if (profile.uid.isEmpty) return;
-    await ref.read(notificationRepositoryProvider).scheduleHabitNotifications(
-      habit,
-      profile.archetype,
-      notificationsEnabled: profile.settings.notificationsEnabled,
-      habitRemindersEnabled: profile.settings.habitReminders,
-    );
+    await ref
+        .read(notificationRepositoryProvider)
+        .scheduleHabitNotifications(
+          habit,
+          profile.archetype,
+          notificationsEnabled: profile.settings.notificationsEnabled,
+          habitRemindersEnabled: profile.settings.habitReminders,
+        );
   } catch (e, s) {
     AppLogger.e('Failed to schedule habit notifications', e, s);
   }

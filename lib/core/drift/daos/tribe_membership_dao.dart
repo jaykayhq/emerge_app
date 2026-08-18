@@ -11,13 +11,13 @@ class TribeMembershipDao extends DatabaseAccessor<AppDatabase>
 
   Future<UserTribeTableData?> getMembership(String userId, String tribeId) {
     return (select(userTribeTable)
-      ..where((t) => t.userId.equals(userId) & t.tribeId.equals(tribeId)))
+          ..where((t) => t.userId.equals(userId) & t.tribeId.equals(tribeId)))
         .getSingleOrNull();
   }
 
   Stream<UserTribeTableData?> watchActiveMembership(String userId) {
     return (select(userTribeTable)
-      ..where((t) => t.userId.equals(userId) & t.isActive.equals(true)))
+          ..where((t) => t.userId.equals(userId) & t.isActive.equals(true)))
         .watchSingleOrNull();
   }
 
@@ -26,14 +26,14 @@ class TribeMembershipDao extends DatabaseAccessor<AppDatabase>
   }
 
   Future<void> deactivateAll(String userId) async {
-    await (update(userTribeTable)
-      ..where((t) => t.userId.equals(userId)))
-        .write(const UserTribeTableCompanion(isActive: Value(false)));
+    await (update(userTribeTable)..where((t) => t.userId.equals(userId))).write(
+      const UserTribeTableCompanion(isActive: Value(false)),
+    );
   }
 
   Future<void> removeMembership(String userId, String tribeId) async {
-    await (delete(userTribeTable)
-      ..where((t) => t.userId.equals(userId) & t.tribeId.equals(tribeId)))
-        .go();
+    await (delete(
+      userTribeTable,
+    )..where((t) => t.userId.equals(userId) & t.tribeId.equals(tribeId))).go();
   }
 }

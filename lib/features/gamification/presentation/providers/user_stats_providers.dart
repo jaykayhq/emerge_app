@@ -128,8 +128,9 @@ class UserStatsController {
       EventBus().registerSubscription(_subscription!);
     }
 
-    _undoSubscription =
-        EventBus().on<HabitCompletionUndone>().listen((event) async {
+    _undoSubscription = EventBus().on<HabitCompletionUndone>().listen((
+      event,
+    ) async {
       await _handleHabitCompletionUndone(event);
     });
     if (_undoSubscription != null) {

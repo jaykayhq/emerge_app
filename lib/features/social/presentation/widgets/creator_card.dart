@@ -18,8 +18,7 @@ class CreatorCard extends StatelessWidget {
         ? creator.displayName!
         : 'Creator';
     final count = creator.blueprintCount;
-    final blueprintsLabel =
-        '$count ${count == 1 ? 'blueprint' : 'blueprints'}';
+    final blueprintsLabel = '$count ${count == 1 ? 'blueprint' : 'blueprints'}';
 
     return SizedBox(
       width: 96,
