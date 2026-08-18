@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:emerge_app/core/presentation/services/shareable_image_exporter.dart';
-import 'package:emerge_app/core/presentation/widgets/shareable/shareable_card_data.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/features/gamification/domain/entities/weekly_recap.dart';
 import 'package:emerge_app/features/gamification/presentation/services/recap_to_shareable_cards.dart';
