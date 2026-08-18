@@ -36,6 +36,15 @@ Three parallel reviewers → four parallel fix agents over the uncommitted fixes
 - **Playwright MCP** wants the `chrome` channel (`/opt/google/chrome`) which is absent; `npx playwright install` fails (no root TTY). Use the Nix Chromium directly (`/nix/store/*chromium-143*/bin/chromium --headless=new`) with puppeteer-core for browser checks. No fonts in the headless env → 0-width glyphs; verify overlap GEOMETRY via layout boxes, not text widths.
 - Repo serves `web-landing/landing.html` — a static server won't auto-serve it at `/` (no `index.html`).
 
+## Deploy record (2026-08-18)
+
+- **Firestore rules + indexes**: deployed to `tradeflash-l2966` via service account (`deploy --only firestore`) — rules compiled + released, all 3 `email_requests` composites deployed.
+- **Cloud Functions**: deployed (`deploy --only functions`) — every function updated successfully (region `us-central1` shown in logs; project default). Artifact cleanup policy already exists (1-day retention) — confirmed via `functions:artifacts:setpolicy`.
+- **GitHub Actions**: pushed main → origin (39 commits, `32ae04f9..4b23f5f4`).
+  - _Deploy to Firebase Hosting on merge_: SUCCESS on every push.
+  - _Emails (welcome/verify/reset, every 5 min)_: ran in production and PASSED — new `email_requests` rules + hardened `reset.js` live.
+  - _Flutter CI_: was chronically RED (failed on every run since ≥8/17). Fixed in this session: (1) synced `auth_providers.g.dart`/`router.g.dart` codegen hashes (parallel-fix-agent regeneration drift); (2) one-time repo-wide `dart format` tall-style sync (459 files, whitespace/reflow only, CRLF preserved); (3) 5 `curly_braces_in_flow_control_structures` analyzer fixes; (4) pinned `flutter-version: 3.47.0` in `ci.yml` so codegen/format gates are deterministic; (5) ROOT CAUSE of the never-green format gate: a stray UTF-16-LE `test_share.dart` at the repo root (July 4 share_plus scratch) that dart_style crashes decoding → removed. Final run on `4b23f5f4`: codegen ✅ format ✅ analyzer ✅ tests ✅ coverage ✅ (FULLY GREEN).
+
 ## Pending
 
-- None from this session; working tree clean after the landing-page doc+fix commit.
+- Test the deep-link flows once in prod: signed-in `/reset-password?oobCode=…` (new carve-out) at `tradeflash-l2966.web.app/reset-password`.
