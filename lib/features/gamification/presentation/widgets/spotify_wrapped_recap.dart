@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
+import 'package:emerge_app/features/gamification/presentation/widgets/recap_share_sheet.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 
 /// Spotify Wrapped-style weekly recap widget
@@ -75,7 +75,7 @@ class _SpotifyWrappedRecapState extends ConsumerState<SpotifyWrappedRecap>
     slides.add(_AiInsightSlide(recap: widget.recap));
 
     // 6. Outro
-    slides.add(_WrappedOutro(recap: widget.recap, onShare: _shareRecap));
+    slides.add(_WrappedOutro(recap: widget.recap, onShare: _openShareSheet));
 
     return slides;
   }
@@ -129,35 +129,15 @@ class _SpotifyWrappedRecapState extends ConsumerState<SpotifyWrappedRecap>
     _gradientController.forward(from: 0);
   }
 
-  Future<void> _shareRecap() async {
-    try {
-      // Create share text
-      final dateFormat = DateFormat('MMM dd');
-      final startDate = dateFormat.format(widget.recap.startDate);
-      final endDate = dateFormat.format(widget.recap.endDate);
-
-      final shareText =
-          '''
-🌟 My Emerge Weekly Recap! 🌟
-
-Week of $startDate - $endDate
-
-✅ ${widget.recap.totalHabitsCompleted} habits completed
-🔥 ${widget.recap.perfectDays} perfect days
-⭐ ${widget.recap.totalXpEarned} XP earned
-🏆 MVP: ${widget.recap.topHabitName}
-📈 Level ${widget.recap.currentLevel}
-
-Building my identity, one habit at a time. 💪
-
-#EmergeApp #HabitTracking
-''';
-
-      // ignore: deprecated_member_use
-      await Share.share(shareText);
-    } catch (e) {
-      debugPrint('Error sharing recap: $e');
-    }
+  /// Opens the branded 9:16 image export sheet (current slide or all slides).
+  void _openShareSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (_) => RecapShareSheet(
+        recap: widget.recap,
+        currentIndex: _currentPage,
+      ),
+    );
   }
 
   @override
