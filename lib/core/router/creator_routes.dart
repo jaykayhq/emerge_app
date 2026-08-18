@@ -8,6 +8,7 @@ import 'package:emerge_app/features/social/presentation/screens/creator/creator_
 import 'package:emerge_app/features/social/presentation/screens/creator/creator_blueprints_tab.dart';
 import 'package:emerge_app/features/social/presentation/screens/creator/blueprint_builder_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/creator/creator_tribe_management_tab.dart';
+import 'package:emerge_app/features/social/presentation/screens/creator/creator_analytics_tab.dart';
 import 'package:go_router/go_router.dart';
 
 List<RouteBase> get creatorRoutes => [
@@ -67,6 +68,14 @@ List<RouteBase> get creatorRoutes => [
                 path: '/creator/dashboard/tribe',
                 builder: (context, state) =>
                     const CreatorTribeManagementTab(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/creator/dashboard/analytics',
+                builder: (context, state) => const CreatorAnalyticsTab(),
               ),
             ],
           ),

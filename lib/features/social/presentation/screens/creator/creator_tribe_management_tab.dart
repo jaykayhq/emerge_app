@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
 import 'package:emerge_app/core/theme/emerge_colors.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
@@ -258,7 +259,7 @@ class _TribeManagementView extends ConsumerWidget {
               ),
             ),
             TextButton(
-              onPressed: () {},
+              onPressed: () => context.go('/creator/dashboard/analytics'),
               child: Text('See All →',
                   style: TextStyle(color: EmergeColors.neonTeal, fontSize: 12)),
             ),
@@ -273,7 +274,7 @@ class _TribeManagementView extends ConsumerWidget {
             border: Border.all(color: Colors.white10),
           ),
           child: const Text(
-            'Member list available in full analytics view.',
+            'Full member list and analytics — tap See All.',
             style: TextStyle(color: Colors.white38, fontSize: 13),
           ),
         ),

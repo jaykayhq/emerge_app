@@ -41,6 +41,10 @@ class CreatorDashboardScaffold extends ConsumerWidget {
         icon: Icon(Icons.groups),
         label: 'Tribe',
       ),
+      const NavigationDestination(
+        icon: Icon(Icons.analytics_rounded),
+        label: 'Analytics',
+      ),
     ];
 
     final railDestinations = items
