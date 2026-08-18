@@ -472,6 +472,27 @@ service cloud.firestore {
       }
     }
 
+    // Creator analytics snapshots — creator-owned tribe, validated shape.
+    // Daily docs accumulate per tribe; only the tribe's creator may write.
+    match /tribe_analytics/{tribeId} {
+      allow read: if isAuthenticated();
+      match /daily/{date} {
+        allow read: if isAuthenticated();
+        allow create, update: if isAuthenticated() &&
+          get(/databases/$(database)/documents/tribes/$(tribeId)).data.createdBy
+            == request.auth.uid &&
+          request.resource.data.tribeId == tribeId &&
+          request.resource.data.date == date &&
+          request.resource.data.memberCount is number &&
+          request.resource.data.totalXp is number &&
+          request.resource.data.totalHabitsCompleted is number &&
+          request.resource.data.totalChallengesCompleted is number &&
+          request.resource.data.activeMembers is number &&
+          request.resource.data.newMembersThisWeek is number;
+        allow delete: if false;
+      }
+    }
+
     // Partner Requests (Accountability Partner invitations)
     match /partner_requests/{requestId} {
       // Sender can create
