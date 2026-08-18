@@ -1,5 +1,4 @@
 // test/features/gamification/presentation/services/recap_to_shareable_cards_test.dart
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:emerge_app/features/gamification/domain/entities/weekly_recap.dart';
 import 'package:emerge_app/features/gamification/presentation/services/recap_to_shareable_cards.dart';

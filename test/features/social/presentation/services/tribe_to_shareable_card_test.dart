@@ -1,5 +1,4 @@
 // test/features/social/presentation/services/tribe_to_shareable_card_test.dart
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:emerge_app/features/social/presentation/services/tribe_to_shareable_card.dart';
 

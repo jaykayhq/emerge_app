@@ -124,7 +124,7 @@ class CreatorAnalyticsService {
         topMembers: topMembers,
         challengeStats: challengeStats,
       ));
-    } catch (e, st) {
+    } catch (e) {
       return Left(ServerFailure('Could not load analytics: $e'));
     }
   }
