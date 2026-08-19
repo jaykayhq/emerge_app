@@ -7,7 +7,7 @@ import 'package:emerge_app/core/utils/app_logger.dart';
 import 'web_update_helper.dart';
 
 // Current app version matching the pubspec.yaml
-const String kAppVersion = '1.0.8+13';
+const String kAppVersion = '1.0.9+14';
 
 /// The latest server version detected (stored for dismiss tracking)
 String? _latestServerVersion;
