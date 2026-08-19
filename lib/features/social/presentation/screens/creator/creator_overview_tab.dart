@@ -27,6 +27,14 @@ class CreatorOverviewTab extends ConsumerWidget {
         title: const Text('Creator Hub'),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Creator settings',
+            onPressed: () => context.push('/creator/dashboard/settings'),
+          ),
+          const Gap(4),
+        ],
       ),
       body: profileAsync.when(
         data: (userProfile) {
@@ -227,6 +235,17 @@ class CreatorOverviewTab extends ConsumerWidget {
                 subtitle: 'See how your tribe sees you',
                 color: Colors.white54,
                 onTap: () => context.push('/creators/$uid'),
+              ),
+
+              const Gap(10),
+
+              // Settings
+              _NavCard(
+                icon: Icons.settings_outlined,
+                title: 'Settings',
+                subtitle: 'Profile image, name, bio, blueprint covers',
+                color: EmergeColors.warmGold,
+                onTap: () => context.push('/creator/dashboard/settings'),
               ),
             ],
           );

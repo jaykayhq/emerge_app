@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.8+13
+version: 1.0.9+14
 
 environment:
   sdk: ^3.10.0
@@ -83,6 +83,8 @@ dependencies:
   video_player: ^2.8.0
   in_app_review: ^2.0.12
   app_links: ^7.2.1
+  firebase_storage: ^13.4.4
+  image_picker: ^1.2.3
 
 dev_dependencies:
   integration_test:
@@ -98,8 +100,8 @@ dev_dependencies:
   drift_dev: ^2.26.0
   mockito: ^5.6.4
   firebase_auth_mocks: ^0.15.2
-  fake_cloud_firestore: ^4.1.1
-  firebase_core_platform_interface: ^7.1.0
+  fake_cloud_firestore: ^4.2.0
+  firebase_core_platform_interface: ^8.1.0
   firebase_auth_platform_interface: ^9.0.3
   sqlite3: ^3.5.1
   path_provider_platform_interface: ^2.1.3

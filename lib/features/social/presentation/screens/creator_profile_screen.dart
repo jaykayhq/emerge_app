@@ -72,28 +72,17 @@ class CreatorProfileScreen extends ConsumerWidget {
                     background: Stack(
                       fit: StackFit.expand,
                       children: [
-                        // Hero image placeholder
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                EmergeColors.nebulaSecondary.withValues(
-                                  alpha: 0.3,
-                                ),
-                                EmergeColors.nebulaBackground,
-                              ],
-                            ),
-                          ),
-                          child: const Center(
-                            child: Icon(
-                              Icons.person_rounded,
-                              size: 80,
-                              color: Colors.white12,
-                            ),
-                          ),
-                        ),
+                        // Hero image — the creator's uploaded banner when set,
+                        // otherwise the branded gradient placeholder.
+                        if (profile.heroImageUrl != null &&
+                            profile.heroImageUrl!.isNotEmpty)
+                          Image.network(
+                            profile.heroImageUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => const _HeroPlaceholder(),
+                          )
+                        else
+                          const _HeroPlaceholder(),
                         // Gradient overlay
                         Container(
                           decoration: BoxDecoration(
@@ -511,6 +500,30 @@ class CreatorProfileScreen extends ConsumerWidget {
       buf.write(s[i]);
     }
     return buf.toString();
+  }
+}
+
+// ── Hero Placeholder ───────────────────────────────────────────────────────────
+class _HeroPlaceholder extends StatelessWidget {
+  const _HeroPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            EmergeColors.nebulaSecondary.withValues(alpha: 0.3),
+            EmergeColors.nebulaBackground,
+          ],
+        ),
+      ),
+      child: const Center(
+        child: Icon(Icons.person_rounded, size: 80, color: Colors.white12),
+      ),
+    );
   }
 }
 

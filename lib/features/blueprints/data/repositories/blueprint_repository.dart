@@ -62,6 +62,41 @@ class BlueprintRepository {
     await docRef.update({'adoptionCount': FieldValue.increment(1)});
   }
 
+  /// Sets the cover artwork URL on a creator-owned blueprint. The rules
+  /// whitelist `imageUrl` for verified-creator updates of their own docs, so
+  /// a targeted update passes without touching the rest of the doc.
+  Future<void> updateBlueprintImage(
+    String blueprintId,
+    String imageUrl,
+  ) async {
+    await _firestore
+        .collection('blueprints')
+        .doc(blueprintId)
+        .update({'imageUrl': imageUrl});
+  }
+
+  /// Renames the denormalized `creatorName` on every blueprint the given
+  /// creator owns. Blueprint cards render `creatorName` directly, so a rename
+  /// must reach every published stack — otherwise the old name lingers until
+  /// the doc is next edited. Scoped by `creatorUserId` equality so system
+  /// seeds and other creators' docs are never touched.
+  Future<void> updateCreatorNameOnBlueprints(
+    String creatorUserId,
+    String creatorName,
+  ) async {
+    final snap = await _firestore
+        .collection('blueprints')
+        .where('creatorUserId', isEqualTo: creatorUserId)
+        .get();
+    if (snap.docs.isEmpty) return;
+
+    final batch = _firestore.batch();
+    for (final doc in snap.docs) {
+      batch.update(doc.reference, {'creatorName': creatorName});
+    }
+    await batch.commit();
+  }
+
   Future<String> createBlueprint(Blueprint blueprint) async {
     try {
       final collectionRef = _firestore.collection('blueprints');

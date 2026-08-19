@@ -51,6 +51,8 @@
 		<string>ca-app-pub-5049162599848475~2869117515</string>
 		<key>NSUserTrackingUsageDescription</key>
 		<string>This identifier will be used to deliver personalized ads to you.</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Emerge lets you choose a profile or blueprint image from your photo library.</string>
 		<key>SKAdNetworkItems</key>
 		<array>
 			<dict>

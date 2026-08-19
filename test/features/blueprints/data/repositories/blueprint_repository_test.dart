@@ -334,6 +334,84 @@ void main() {
       },
     );
 
+    test('updateBlueprintImage updates imageUrl on an existing doc',
+        () async {
+      final firestore = FakeFirebaseFirestore();
+      await firestore.collection('blueprints').doc('bp_1').set({
+        'title': 'My Stack',
+        'creatorUserId': 'uid_1',
+        'imageUrl': 'assets/images/blueprints/morning_1.webp',
+      });
+
+      final repo = BlueprintRepository(firestore);
+      await repo.updateBlueprintImage(
+        'bp_1',
+        'https://example.com/cover.jpg',
+      );
+
+      final snap = await firestore.collection('blueprints').doc('bp_1').get();
+      expect(snap.data()?['imageUrl'], 'https://example.com/cover.jpg');
+      // Non-image fields are untouched.
+      expect(snap.data()?['title'], 'My Stack');
+    });
+
+    test(
+      'updateCreatorNameOnBlueprints renames only the creator-owned docs',
+      () async {
+        final firestore = FakeFirebaseFirestore();
+        await firestore.collection('blueprints').doc('bp_1').set({
+          'creatorUserId': 'uid_1',
+          'creatorName': 'Old Name',
+          'title': 'Stack A',
+        });
+        await firestore.collection('blueprints').doc('bp_2').set({
+          'creatorUserId': 'uid_1',
+          'creatorName': 'Old Name',
+          'title': 'Stack B',
+        });
+        // Someone else's blueprint must be left untouched.
+        await firestore.collection('blueprints').doc('bp_other').set({
+          'creatorUserId': 'uid_2',
+          'creatorName': 'Someone Else',
+          'title': 'Other Stack',
+        });
+
+        final repo = BlueprintRepository(firestore);
+        await repo.updateCreatorNameOnBlueprints('uid_1', 'New Name');
+
+        final bp1 = await firestore.collection('blueprints').doc('bp_1').get();
+        expect(bp1.data()?['creatorName'], 'New Name');
+        final bp2 = await firestore.collection('blueprints').doc('bp_2').get();
+        expect(bp2.data()?['creatorName'], 'New Name');
+        final other =
+            await firestore.collection('blueprints').doc('bp_other').get();
+        expect(other.data()?['creatorName'], 'Someone Else');
+        // Non-name fields survive the targeted update.
+        expect(bp1.data()?['title'], 'Stack A');
+      },
+    );
+
+    test(
+      'updateCreatorNameOnBlueprints is a no-op with no matching docs',
+      () async {
+        final firestore = FakeFirebaseFirestore();
+        final repo = BlueprintRepository(firestore);
+
+        // Must not throw when the creator has no published blueprints.
+        await repo.updateCreatorNameOnBlueprints('ghost', 'New Name');
+      },
+    );
+
+    test('updateBlueprintImage on a missing doc throws', () async {
+      final firestore = FakeFirebaseFirestore();
+      final repo = BlueprintRepository(firestore);
+
+      expect(
+        () => repo.updateBlueprintImage('ghost', 'https://example.com/x.jpg'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
     test(
       'getBlueprints skips a malformed doc instead of erroring the stream',
       () async {

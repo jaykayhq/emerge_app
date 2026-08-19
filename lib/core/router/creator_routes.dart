@@ -9,6 +9,7 @@ import 'package:emerge_app/features/social/presentation/screens/creator/creator_
 import 'package:emerge_app/features/social/presentation/screens/creator/blueprint_builder_screen.dart';
 import 'package:emerge_app/features/social/presentation/screens/creator/creator_tribe_management_tab.dart';
 import 'package:emerge_app/features/social/presentation/screens/creator/creator_analytics_tab.dart';
+import 'package:emerge_app/features/social/presentation/screens/creator/creator_settings_screen.dart';
 import 'package:go_router/go_router.dart';
 
 List<RouteBase> get creatorRoutes => [
@@ -44,6 +45,13 @@ List<RouteBase> get creatorRoutes => [
           GoRoute(
             path: '/creator/dashboard',
             builder: (context, state) => const CreatorOverviewTab(),
+            routes: [
+              // Pushed full-screen settings (gear on the Overview tab).
+              GoRoute(
+                path: 'settings',
+                builder: (context, state) => const CreatorSettingsScreen(),
+              ),
+            ],
           ),
         ],
       ),

@@ -1,10 +1,19 @@
 rules_version = '2';
 
-// Craft rules based on data in your Firestore database
-// allow write: if firestore.get(
-//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
 service firebase.storage {
   match /b/{bucket}/o {
+    // Creator-uploaded media (profile avatar/hero + blueprint covers).
+    // Public read so the app can render URLs via Image.network /
+    // CachedNetworkImage without auth; write is owner-only so a creator
+    // can never overwrite another user's files. Paths are built by
+    // creatorMediaStoragePath() in the app (lib/features/social/domain/
+    // services/creator_media_service.dart).
+    match /creator_media/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Everything else stays locked down.
     match /{allPaths=**} {
       allow read, write: if false;
     }
