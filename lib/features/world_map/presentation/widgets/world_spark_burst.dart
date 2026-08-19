@@ -103,21 +103,23 @@ class _WorldSparkBurstState extends State<WorldSparkBurst>
       return const SizedBox.shrink();
     }
 
-    return IgnorePointer(
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, child) {
-          return CustomPaint(
-            size: Size.infinite,
-            painter: _SparkBurstPainter(
-              progress: _controller.value,
-              startOffset: widget.startOffset,
-              targetOffset: widget.targetOffset,
-              sparkColor: widget.sparkColor,
-              sparks: _sparks,
-            ),
-          );
-        },
+    return RepaintBoundary(
+      child: IgnorePointer(
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return CustomPaint(
+              size: Size.infinite,
+              painter: _SparkBurstPainter(
+                progress: _controller.value,
+                startOffset: widget.startOffset,
+                targetOffset: widget.targetOffset,
+                sparkColor: widget.sparkColor,
+                sparks: _sparks,
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -145,6 +147,12 @@ class _SparkBurstPainter extends CustomPainter {
   final Offset targetOffset;
   final Color sparkColor;
   final List<_SparkData> sparks;
+
+  static const MaskFilter _glowMaskFilter =
+      MaskFilter.blur(BlurStyle.normal, 5.0);
+  final Paint _glowPaint = Paint()..maskFilter = _glowMaskFilter;
+  final Paint _tailPaint = Paint();
+  final Paint _corePaint = Paint();
 
   _SparkBurstPainter({
     required this.progress,
@@ -178,32 +186,34 @@ class _SparkBurstPainter extends CustomPainter {
             0.0,
             1.0,
           );
-      final currentSize = spark.size * (0.8 + (math.sin(sparkProgress * math.pi) * 0.4));
+      final currentSize =
+          spark.size * (0.8 + (math.sin(sparkProgress * math.pi) * 0.4));
 
       // Outer glow
-      final glowPaint = Paint()
-        ..color = sparkColor.withValues(alpha: opacity * 0.4)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5.0);
-      canvas.drawCircle(currentPos, currentSize * 2.2, glowPaint);
+      _glowPaint.color = sparkColor.withValues(alpha: opacity * 0.4);
+      canvas.drawCircle(currentPos, currentSize * 2.2, _glowPaint);
 
       // Trailing ember dot
       if (sparkProgress > 0.05) {
-        final prevEased =
-            Curves.easeInOutCubic.transform((sparkProgress - 0.04).clamp(0.0, 1.0));
+        final prevEased = Curves.easeInOutCubic.transform(
+          (sparkProgress - 0.04).clamp(0.0, 1.0),
+        );
         final prevBase = Offset.lerp(startOffset, targetOffset, prevEased)!;
         final prevArc = math.sin(prevEased * math.pi) * spark.arcOffset;
         final prevPos = prevBase + (normal * prevArc);
 
-        final tailPaint = Paint()
-          ..color = sparkColor.withValues(alpha: opacity * 0.35);
-        canvas.drawCircle(prevPos, currentSize * 0.6, tailPaint);
+        _tailPaint.color = sparkColor.withValues(alpha: opacity * 0.35);
+        canvas.drawCircle(prevPos, currentSize * 0.6, _tailPaint);
       }
 
       // Bright inner core
-      final coreColor =
-          Color.lerp(sparkColor, Colors.white, 0.65)!.withValues(alpha: opacity);
-      final corePaint = Paint()..color = coreColor;
-      canvas.drawCircle(currentPos, currentSize, corePaint);
+      final coreColor = Color.lerp(
+        sparkColor,
+        Colors.white,
+        0.65,
+      )!.withValues(alpha: opacity);
+      _corePaint.color = coreColor;
+      canvas.drawCircle(currentPos, currentSize, _corePaint);
     }
   }
 

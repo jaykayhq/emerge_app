@@ -118,5 +118,31 @@ void main() {
       expect(find.byIcon(Icons.check), findsNothing);
       expect(find.byIcon(Icons.warning_amber_rounded), findsNothing);
     });
+
+    testWidgets('renders accessible Semantics label and hint', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: WorldTypeNode(
+              attribute: HabitAttribute.vitality,
+              nodeState: const ArchetypeNodeState(
+                status: NodeHealthStatus.decaying,
+                pendingCount: 2,
+                hasDecay: true,
+              ),
+              onTap: () {},
+            ),
+          ),
+        ),
+      );
+
+      final semanticsFinder = find.byWidgetPredicate(
+        (w) =>
+            w is Semantics &&
+            w.properties.label == 'Vitality archetype: decaying, 2 pending' &&
+            w.properties.hint == 'Double tap to view Vitality details',
+      );
+      expect(semanticsFinder, findsOneWidget);
+    });
   });
 }

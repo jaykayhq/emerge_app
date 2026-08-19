@@ -118,7 +118,10 @@ class WorldStokingDock extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _TagPill(label: tagLabel, accentColor: accentColor),
+            Flexible(
+              child: _TagPill(label: tagLabel, accentColor: accentColor),
+            ),
+            const SizedBox(width: 8),
             _RewardBadge(
               label: rewardLabel,
               accentColor: vote.isRecovery
@@ -192,10 +195,13 @@ class WorldStokingDock extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _TagPill(
-              label: 'REALM HARMONIZED',
-              accentColor: EmergeColors.warmGold,
+            Flexible(
+              child: _TagPill(
+                label: 'REALM HARMONIZED',
+                accentColor: EmergeColors.warmGold,
+              ),
             ),
+            const SizedBox(width: 8),
             const _RewardBadge(
               label: '100% VITALITY',
               accentColor: EmergeColors.warmGold,
@@ -260,10 +266,13 @@ class WorldStokingDock extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _TagPill(
-              label: 'REALM DORMANT',
-              accentColor: EmergeColors.neonTeal,
+            Flexible(
+              child: _TagPill(
+                label: 'REALM DORMANT',
+                accentColor: EmergeColors.neonTeal,
+              ),
             ),
+            const SizedBox(width: 8),
             const _RewardBadge(
               label: 'FIRST SPARK',
               accentColor: EmergeColors.neonTeal,
@@ -354,13 +363,17 @@ class _TagPill extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              color: accentColor,
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.8,
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: accentColor,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.8,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

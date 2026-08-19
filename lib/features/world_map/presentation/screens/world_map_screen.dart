@@ -76,6 +76,7 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
   }
 
   void _handleCastVote(NextIdentityVote vote, Size size) {
+    if (_sparkBurst != null || _isFlaring) return;
     final habit = vote.habit;
     if (habit == null) return;
 
@@ -259,11 +260,15 @@ class _WorldMapScreenState extends ConsumerState<WorldMapScreen> {
                           top: false,
                           child: WorldStokingDock(
                             vote: nextVote,
-                            onCastVote: nextVote.habit != null
+                            onCastVote: (_sparkBurst == null &&
+                                    !_isFlaring &&
+                                    nextVote.habit != null)
                                 ? () => _handleCastVote(nextVote, size)
                                 : null,
-                            onOpenRecap: () => context.push('/recap-hub'),
-                            onNewHabit: () => context.push('/habits/new'),
+                            onOpenRecap: () =>
+                                context.push('/world-map/recap-hub'),
+                            onNewHabit: () =>
+                                context.push('/timeline/create-habit'),
                             onOpenHabit: () {
                               if (nextVote.attribute != null) {
                                 context.go(

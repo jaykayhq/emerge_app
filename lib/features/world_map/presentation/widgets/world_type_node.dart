@@ -24,16 +24,27 @@ class WorldTypeNode extends StatelessWidget {
     final config = WorldTypeConfig.forAttribute(attribute);
     final theme = Theme.of(context);
     final String labelName = attribute.name.capitalize();
+    final statusText = switch (nodeState?.status) {
+      NodeHealthStatus.complete => 'completed today',
+      NodeHealthStatus.pending => '${nodeState?.pendingCount ?? 0} pending',
+      NodeHealthStatus.decaying =>
+        'decaying, ${nodeState?.pendingCount ?? 0} pending',
+      _ => 'idle',
+    };
     final badge = _buildBadge(context);
 
-    return AnimatedScale(
-      duration: const Duration(milliseconds: 600),
-      curve: Curves.easeOutBack,
-      scale: isFocused ? 1.4 : 1.0,
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Column(
+    return Semantics(
+      button: true,
+      label: '$labelName archetype: $statusText',
+      hint: 'Double tap to view $labelName details',
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeOutBack,
+        scale: isFocused ? 1.4 : 1.0,
+        child: GestureDetector(
+          onTap: onTap,
+          behavior: HitTestBehavior.opaque,
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Stack(
@@ -93,8 +104,9 @@ class WorldTypeNode extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget? _buildBadge(BuildContext context) {
     if (nodeState == null || nodeState!.status == NodeHealthStatus.idle) {
