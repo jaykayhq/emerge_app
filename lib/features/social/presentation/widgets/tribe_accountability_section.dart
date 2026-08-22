@@ -53,7 +53,7 @@ class TribeAccountabilitySection extends ConsumerWidget {
                   value: '${contracts.length}',
                   icon: Icons.handshake,
                   color: EmergeColors.yellow,
-                  onTap: () => context.push('/tribes/contracts'),
+                  onTap: () => context.push('/social/contracts'),
                 ),
                 loading: () => const _LoadingCard(),
                 error: (err, stack) => const SizedBox.shrink(),
@@ -70,7 +70,7 @@ class TribeAccountabilitySection extends ConsumerWidget {
                       value: '0',
                       icon: Icons.person_add,
                       color: EmergeColors.teal,
-                      onTap: () => context.push('/tribes/accountability'),
+                      onTap: () => context.push('/social/accountability'),
                     );
                   }
                   return Row(
@@ -88,7 +88,7 @@ class TribeAccountabilitySection extends ConsumerWidget {
               // Add Partner Button
               const Gap(12),
               _AddPartnerButton(
-                onTap: () => context.push('/tribes/accountability'),
+                onTap: () => context.push('/social/accountability'),
               ),
             ],
           ),

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:emerge_app/core/services/notification_templates.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -228,11 +230,39 @@ void main() {
           UserArchetype.creator: 'icon_creator',
           UserArchetype.stoic: 'icon_stoic',
           UserArchetype.zealot: 'icon_zealot',
-          UserArchetype.none: 'icon_default',
+          // Splash-logo badge (blue circle + black flame) — 'icon_default'
+          // never existed as a drawable and made notifications silently fail.
+          UserArchetype.none: 'notification_logo',
         };
         cases.forEach((archetype, expectedIcon) {
           expect(NotificationIcons.archetypeIcons[archetype], expectedIcon);
         });
+      });
+
+      test('every mapped icon ships as an Android drawable', () async {
+        final densities = [
+          '',
+          '-mdpi',
+          '-hdpi',
+          '-xhdpi',
+          '-xxhdpi',
+          '-xxxhdpi',
+        ];
+        for (final name in NotificationIcons.archetypeIcons.values) {
+          var found = false;
+          for (final density in densities) {
+            for (final ext in ['.png', '.xml']) {
+              final file = File(
+                'android/app/src/main/res/drawable$density/$name$ext',
+              );
+              if (file.existsSync()) found = true;
+            }
+          }
+          expect(found, isTrue,
+              reason:
+                  '$name drawable missing — largeIcon load fails and the '
+                  'notification never renders');
+        }
       });
     });
   });

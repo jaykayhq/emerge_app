@@ -242,6 +242,15 @@ class NotificationChannels {
 class NotificationIcons {
   NotificationIcons._();
 
+  /// Large-icon shown on notifications without an archetype-specific mark:
+  /// the Emerge splash flame as a badge — blue outer circle, black inner
+  /// flame (drawable-{density}/notification_logo.png).
+  static const String defaultLargeIcon = 'notification_logo';
+
+  /// Status-bar silhouette of the splash flame, alpha-only so Android can
+  /// tint it (drawable-{density}/push_notification_icon.png).
+  static const String smallIcon = 'push_notification_icon';
+
   /// Maps each archetype to its corresponding icon asset name.
   static const Map<UserArchetype, String> archetypeIcons = {
     UserArchetype.athlete: 'icon_athlete',
@@ -249,6 +258,8 @@ class NotificationIcons {
     UserArchetype.creator: 'icon_creator',
     UserArchetype.stoic: 'icon_stoic',
     UserArchetype.zealot: 'icon_zealot',
-    UserArchetype.none: 'icon_default',
+    // 'icon_default' never existed as a drawable; largeIcon loading failed
+    // and habit notifications silently never rendered for these users.
+    UserArchetype.none: defaultLargeIcon,
   };
 }

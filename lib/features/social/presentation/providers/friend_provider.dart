@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:emerge_app/core/services/social_notification_service.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/social/data/repositories/friend_repository.dart';
 import 'package:emerge_app/features/social/domain/entities/social_entities.dart';
@@ -13,6 +14,7 @@ final friendRepositoryProvider = Provider<FriendRepository>((ref) {
   return FirestoreFriendRepository(
     FirebaseFirestore.instance,
     ref.watch(socialActivityServiceProvider),
+    ref.watch(socialNotificationServiceProvider),
   );
 });
 

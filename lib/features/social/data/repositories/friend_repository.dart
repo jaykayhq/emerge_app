@@ -1,15 +1,28 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:emerge_app/core/domain/entities/app_notification.dart';
+import 'package:emerge_app/core/services/social_notification_service.dart';
 import 'package:emerge_app/features/social/domain/entities/social_entities.dart';
 import 'package:emerge_app/features/social/domain/repositories/friend_repository.dart';
 
 import 'package:emerge_app/features/social/domain/services/club_activity_service.dart';
+import 'package:emerge_app/features/social/domain/services/friend_presence.dart';
 
 class FirestoreFriendRepository implements FriendRepository {
   final FirebaseFirestore _firestore;
   final SocialActivityService? _socialActivityService;
 
-  FirestoreFriendRepository(this._firestore, [this._socialActivityService]);
+  /// Optional in-app notification sender. When provided, partner requests
+  /// and acceptances surface on the other end immediately instead of only
+  /// being discoverable by opening the friends screen.
+  final SocialNotificationService? _notifications;
+
+  FirestoreFriendRepository(
+    this._firestore, [
+    this._socialActivityService,
+    this._notifications,
+  ]);
 
   @override
   Future<List<Friend>> getFriends(String userId) async {
@@ -152,6 +165,15 @@ class FirestoreFriendRepository implements FriendRepository {
       'status': 'pending',
       'createdAt': FieldValue.serverTimestamp(),
     });
+
+    await _notify(
+      toId,
+      () => _notifications!.createFriendRequestNotification(
+        senderName: senderName,
+        senderId: fromId,
+        senderArchetype: senderArchetype,
+      ),
+    );
   }
 
   @override
@@ -183,6 +205,24 @@ class FirestoreFriendRepository implements FriendRepository {
         partnerName: data['senderName'] ?? 'a partner',
       );
     }
+
+    // Tell the original sender who accepted them.
+    final recipientDoc = await _firestore
+        .collection('users')
+        .doc(recipientId)
+        .get();
+    final recipientData = recipientDoc.data() ?? {};
+
+    await _notify(
+      senderId,
+      () => _notifications!.createFriendRequestAcceptedNotification(
+        friendName:
+            recipientData['displayName'] as String? ??
+            recipientData['name'] as String? ??
+            'Someone',
+        friendId: recipientId,
+      ),
+    );
   }
 
   @override
@@ -213,13 +253,13 @@ class FirestoreFriendRepository implements FriendRepository {
   Future<List<Friend>> getOnlinePartners(String userId) async {
     try {
       final friends = await getFriends(userId);
-      // Return friends sorted by most recently active first
-      friends.sort((a, b) {
-        if (a.isOnline && !b.isOnline) return -1;
-        if (!a.isOnline && b.isOnline) return 1;
-        return 0;
-      });
-      return friends.take(5).toList();
+      final presence = <String, PresenceInfo>{};
+      for (final friend in friends) {
+        final doc = await _presenceDoc(friend.id).get();
+        if (!doc.exists) continue;
+        presence[friend.id] = _parsePresence(doc.data()!);
+      }
+      return FriendPresence.markOnline(friends, presence);
     } catch (e) {
       return [];
     }
@@ -241,19 +281,99 @@ class FirestoreFriendRepository implements FriendRepository {
 
   @override
   Stream<List<Friend>> watchOnlinePartners(String userId) {
+    // Presence lives in each user's `presence/status` doc, not in the cached
+    // friend record, so derive online state by combining both streams.
+    late StreamController<List<Friend>> controller;
+    StreamSubscription<List<Friend>>? friendsSub;
+    final presenceSubs =
+        <String, StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>>{};
+    final friendsById = <String, Friend>{};
+    final presence = <String, PresenceInfo>{};
+
+    /// Friend ids whose presence doc has not delivered its first snapshot.
+    /// Emissions wait until this is empty so listeners never see a
+    /// partially-resolved online set.
+    final pendingPresence = <String>{};
+
+    void emit() {
+      if (!controller.hasListener) return;
+      if (pendingPresence.isNotEmpty) return;
+      final resolved = FriendPresence.markOnline(
+        friendsById.values.toList(),
+        presence,
+      );
+      controller.add(resolved);
+    }
+
+    void syncPresenceSubs() {
+      for (final id in friendsById.keys) {
+        if (presenceSubs.containsKey(id)) continue;
+        pendingPresence.add(id);
+        presenceSubs[id] = _presenceDoc(id).snapshots().listen((snapshot) {
+          final data = snapshot.data();
+          if (data != null) presence[id] = _parsePresence(data);
+          pendingPresence.remove(id);
+          emit();
+        });
+      }
+      for (final id in List<String>.of(presenceSubs.keys)) {
+        if (friendsById.containsKey(id)) continue;
+        presenceSubs.remove(id)?.cancel();
+        presence.remove(id);
+        pendingPresence.remove(id);
+      }
+      emit();
+    }
+    controller = StreamController<List<Friend>>(
+      onListen: () {
+        friendsSub = watchFriends(userId).listen((friends) {
+          friendsById
+            ..clear()
+            ..addEntries(friends.map((f) => MapEntry(f.id, f)));
+          syncPresenceSubs();
+          emit();
+        });
+      },
+      onPause: () => friendsSub?.pause(),
+      onResume: () => friendsSub?.resume(),
+      onCancel: () async {
+        await friendsSub?.cancel();
+        for (final sub in presenceSubs.values) {
+          await sub.cancel();
+        }
+        presenceSubs.clear();
+      },
+    );
+    return controller.stream;
+  }
+
+  DocumentReference<Map<String, dynamic>> _presenceDoc(String userId) {
     return _firestore
         .collection('users')
         .doc(userId)
-        .collection('friends')
-        .where('isOnline', isEqualTo: true)
-        .snapshots()
-        .map((snapshot) {
-          return snapshot.docs.map((doc) {
-            final data = doc.data();
-            data['id'] = doc.id;
-            return Friend.fromMap(data);
-          }).toList();
-        });
+        .collection('presence')
+        .doc('status');
+  }
+
+  PresenceInfo _parsePresence(Map<String, dynamic> data) {
+    final lastSeenRaw = data['lastSeen'];
+    final lastSeen = lastSeenRaw is Timestamp ? lastSeenRaw.toDate() : null;
+    return (onlineFlag: data['online'] as bool? ?? false, lastSeen: lastSeen);
+  }
+
+  /// Sends an in-app notification without ever failing the surrounding
+  /// operation — a missed notification must not break the friend action.
+  Future<void> _notify(
+    String userId,
+    AppNotification Function() build,
+  ) async {
+    final service = _notifications;
+    if (service == null) return;
+    try {
+      await service.sendNotification(userId, build());
+    } catch (_) {
+      // Non-blocking: the request/acceptance itself already succeeded.
+    }
   }
 
   @override

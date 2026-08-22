@@ -286,8 +286,21 @@ class NotificationSettingsScreen extends ConsumerWidget {
     UserSettings settings,
   ) async {
     if (profile == null || profile.uid.isEmpty) return;
+    final oldMaster = profile.settings.notificationsEnabled;
+    final newMaster = settings.notificationsEnabled;
     final updatedProfile = profile.copyWith(settings: settings);
     await ref.read(userStatsRepositoryProvider).saveUserStats(updatedProfile);
+
+    // Master toggle transitions need FCM token teardown / re-registration.
+    if (oldMaster && !newMaster) {
+      unawaited(
+        ref.read(notificationServiceProvider).disableAll(profile.uid),
+      );
+      return;
+    }
+    if (!oldMaster && newMaster) {
+      unawaited(ref.read(notificationServiceProvider).enableAll(profile.uid));
+    }
 
     // Apply client-managed notification side effects immediately so toggles
     // take effect without waiting for the next login resync.
@@ -302,8 +315,13 @@ class NotificationSettingsScreen extends ConsumerWidget {
     final notificationService = ref.read(notificationServiceProvider);
     final settings = profile.settings;
 
+    if (!settings.notificationsEnabled) {
+      await notificationService.disableAll(profile.uid);
+      return;
+    }
+
     // Daily AI insight: schedule when enabled, cancel otherwise.
-    if (settings.notificationsEnabled && settings.aiInsights) {
+    if (settings.aiInsights) {
       final insight = generateDailyInsight(
         level: profile.avatarStats.level,
         streak: profile.avatarStats.streak,

@@ -12,6 +12,8 @@
     <uses-permission android:name="android.permission.health.CONNECT_HEALTH_DATA" />
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
     <uses-permission android:name="com.android.vending.BILLING" />
+    <!-- Contacts for SocialContactsScreen (fast_contacts) -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
 
     <application
         android:label="Emerge"
@@ -57,6 +59,14 @@
         <meta-data
             android:name="firebase_app_check_debug_token"
             android:value="YOUR_DEBUG_TOKEN_FROM_FIREBASE_CONSOLE"/>
+        <!-- Emerge splash-flame silhouette + blue accent for FCM notifications
+             that don't set an explicit android icon/color. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/push_notification_icon" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/notification_accent" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

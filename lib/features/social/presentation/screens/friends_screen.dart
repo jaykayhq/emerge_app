@@ -1,5 +1,6 @@
 import 'package:emerge_app/core/presentation/widgets/app_error_widget.dart';
 import 'package:emerge_app/core/presentation/widgets/emerge_loading_skeleton.dart';
+import 'package:emerge_app/core/services/social_notification_service.dart';
 import 'package:emerge_app/core/theme/app_theme.dart';
 import 'package:emerge_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:emerge_app/features/social/domain/entities/social_entities.dart';
@@ -878,10 +879,41 @@ class _ContractCard extends StatelessWidget {
 
 // ============ PARTNER CARD ============
 
-class _PartnerCard extends StatelessWidget {
+class _PartnerCard extends ConsumerWidget {
   final Friend friend;
 
   const _PartnerCard({required this.friend});
+
+  Future<void> _nudge(BuildContext context, WidgetRef ref) async {
+    final user = ref.read(authStateChangesProvider).value;
+    if (user == null) return;
+    try {
+      final service = ref.read(socialNotificationServiceProvider);
+      await service.sendNotification(
+        friend.id,
+        service.createNudgeNotification(
+          senderName: user.displayName ?? 'Your partner',
+          senderId: user.id,
+        ),
+      );
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Nudged ${friend.name.split(' ').first}'),
+          backgroundColor: EmergeColors.teal,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not send nudge'),
+          backgroundColor: EmergeColors.coral,
+        ),
+      );
+    }
+  }
 
   String _archetypeDisplay() {
     switch (friend.archetype) {
@@ -899,7 +931,7 @@ class _PartnerCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       padding: const EdgeInsets.all(16),
@@ -1053,7 +1085,7 @@ class _PartnerCard extends StatelessWidget {
             children: [
               Expanded(
                 child: GestureDetector(
-                  onTap: () {},
+                  onTap: () => _nudge(context, ref),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
@@ -1081,7 +1113,7 @@ class _PartnerCard extends StatelessWidget {
               const Gap(10),
               Expanded(
                 child: GestureDetector(
-                  onTap: () {},
+                  onTap: () => context.push('/social/contracts'),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 enum AppNotificationType {
   friendRequest,
   friendRequestAccepted,
+  nudge,
   challengeInvite,
   challengeCompleted,
   achievement,
@@ -115,7 +116,11 @@ extension AppNotificationExt on AppNotification {
     return DateTime.now().isAfter(expiresAt!);
   }
 
-  /// Get route path from data payload for navigation
+  /// Get route path from data payload for navigation.
+  ///
+  /// Every route here must exist in the go_router table
+  /// (see lib/core/router/router.dart) — verified by
+  /// test/core/domain/entities/app_notification_route_test.dart.
   String? get routePath {
     if (data.containsKey('route')) return data['route'] as String?;
 
@@ -123,20 +128,21 @@ extension AppNotificationExt on AppNotification {
     switch (type) {
       case AppNotificationType.friendRequest:
       case AppNotificationType.friendRequestAccepted:
-        return '/tribes';
+      case AppNotificationType.nudge:
+        return '/social/accountability';
       case AppNotificationType.challengeInvite:
       case AppNotificationType.challengeCompleted:
         return data['challengeId'] != null
-            ? '/tribes/challenges/${data['challengeId']}'
-            : '/tribes/challenges';
+            ? '/challenges/${data['challengeId']}'
+            : '/challenges';
       case AppNotificationType.achievement:
       case AppNotificationType.levelUp:
         return '/profile';
       case AppNotificationType.tribeJoined:
       case AppNotificationType.tribeActivity:
         return data['tribeId'] != null
-            ? '/tribes/${data['tribeId']}'
-            : '/tribes';
+            ? '/social/tribe/${data['tribeId']}'
+            : '/social';
       default:
         return null;
     }

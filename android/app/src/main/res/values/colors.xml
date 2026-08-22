@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#0A0A1A</color>
+    <!-- Splash-logo blue sampled from assets/icons/splash_logo.png gradient;
+         tints the notification small icon and FCM default accent. -->
+    <color name="notification_accent">#4850AE</color>
 </resources>

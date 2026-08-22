@@ -1,0 +1,17 @@
+{
+  "name": "emerge-notification-push",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Scheduled GitHub Action that bridges in-app social notifications (users/{uid}/notifications) to FCM pushes when the app is not active. Respects UserSettings (master, community, DND) and marks pushSent so each notification is sent at most once.",
+  "type": "module",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "node --test test/push.test.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^14.2.0"
+  }
+}

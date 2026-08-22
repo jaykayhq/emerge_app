@@ -1,0 +1,70 @@
+# Emerge Notification Push (scheduled)
+#
+# Bridges in-app social notifications to FCM pushes when the mobile app is
+# not active. Every ~5 minutes it scans `users/{uid}/notifications` docs
+# with `pushSent == false`, checks the recipient's UserSettings
+# (master/community/DND) and `fcmToken`, and sends an FCM message via the
+# Admin SDK. Each doc is marked `pushSent: true` after the first attempt
+# so the job is idempotent — at-most-once delivery.
+#
+# This is the server-side backstop for `SocialNotificationService` and
+# `FirestoreFriendRepository._notify`: the client writes the in-app doc
+# immediately (works offline via Firestore cache), and this job guarantees
+# the push arrives even when the recipient's app is killed/backgrounded.
+#
+# Required repo secret:
+#   FIREBASE_SERVICE_ACCOUNT_TRADEFLASH_L2966  service-account JSON (same as
+#                                              the hosting + email workflows)
+name: Notification push
+
+on:
+  schedule:
+    - cron: "*/5 * * * *" # every 5 minutes
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (no writes / no sends)"
+        required: false
+        default: "false"
+        type: choice
+        options: ["false", "true"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: notification-push
+  cancel-in-progress: false
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: scripts/notification-push/package-lock.json
+
+      - name: Install dependencies
+        working-directory: scripts/notification-push
+        run: npm ci
+
+      - name: Run tests
+        working-directory: scripts/notification-push
+        run: npm test
+
+      - name: Push notifications
+        working-directory: scripts/notification-push
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TRADEFLASH_L2966 }}
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            node index.js --dry-run
+          else
+            node index.js
+          fi

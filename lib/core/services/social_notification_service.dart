@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:emerge_app/core/domain/entities/app_notification.dart';
+import 'package:emerge_app/core/services/notification_gate.dart';
 import 'package:emerge_app/core/utils/app_logger.dart';
 
 part 'social_notification_service.g.dart';
@@ -27,15 +28,46 @@ class SocialNotificationService {
         .collection('notifications');
   }
 
+  Future<bool> _isRecipientAllowed(String userId) async {
+    try {
+      final doc = await _firestore.collection('users').doc(userId).get();
+      final data = doc.data();
+      if (data == null) return true;
+      final settingsMap = data['settings'] as Map<String, dynamic>?;
+      if (settingsMap == null) {
+        if (data['notificationsEnabled'] == false) return false;
+        return true;
+      }
+      final master = settingsMap['notificationsEnabled'] as bool? ?? true;
+      if (!master) return false;
+      // All social notifications are community kind.
+      final community = settingsMap['communityUpdates'] as bool? ?? true;
+      if (!community) return false;
+      final dnd = settingsMap['doNotDisturb'] as bool? ?? false;
+      if (dnd) {
+        final h = DateTime.now().hour;
+        if (h >= 22 || h < 7) return false;
+      }
+      return true;
+    } catch (_) {
+      return true;
+    }
+  }
+
   /// Sends a notification to a specific user.
   /// Automatically creates a new document with a unique ID.
+  /// Respects the recipient's [NotificationGate] (master, community, DND)
+  /// so disabling in settings actually silences social pings.
   Future<DocumentReference<Map<String, dynamic>>> sendNotification(
     String userId,
     AppNotification notification,
   ) async {
-    final docRef = await _notificationsCollection(
-      userId,
-    ).add(notification.toFirestore());
+    if (!await _isRecipientAllowed(userId)) {
+      AppLogger.d('Social notification suppressed by recipient settings: $userId');
+      return _notificationsCollection(userId).doc();
+    }
+    final payload = notification.toFirestore()..['pushSent'] = false;
+    final docRef = await _notificationsCollection(userId).add(payload);
 
     // Increment unread count in user document
     await _firestore.collection('users').doc(userId).set({
@@ -48,22 +80,33 @@ class SocialNotificationService {
 
   /// Sends notifications to multiple users (batch operation).
   /// Useful for tribe-wide announcements or challenge broadcasts.
+  /// Each recipient is checked against their community/DND settings.
   Future<void> sendNotificationToMultiple(
     List<String> userIds,
     AppNotification notification,
   ) async {
+    final allowed = <String>[];
+    for (final id in userIds) {
+      if (await _isRecipientAllowed(id)) allowed.add(id);
+    }
+    if (allowed.isEmpty) return;
     final batch = _firestore.batch();
 
-    for (final userId in userIds) {
+    for (final userId in allowed) {
       final docRef = _notificationsCollection(userId).doc();
-      batch.set(docRef, notification.toFirestore());
+      final payload = notification.toFirestore()..['pushSent'] = false;
+      batch.set(docRef, payload);
 
       // Increment unread count
       final userRef = _firestore.collection('users').doc(userId);
-      batch.update(userRef, {
-        'unreadNotificationCount': FieldValue.increment(1),
-        'lastNotificationAt': FieldValue.serverTimestamp(),
-      });
+      batch.set(
+        userRef,
+        {
+          'unreadNotificationCount': FieldValue.increment(1),
+          'lastNotificationAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
     }
 
     await batch.commit();
@@ -256,7 +299,7 @@ class SocialNotificationService {
         'senderId': senderId,
         'senderName': senderName,
         'senderArchetype': senderArchetype,
-        'route': '/social/friends',
+        'route': '/social/accountability',
       },
       expiration: const Duration(days: 30),
     );
@@ -274,8 +317,26 @@ class SocialNotificationService {
       data: {
         'friendId': friendId,
         'friendName': friendName,
-        'route': '/social/friends',
+        'route': '/social/accountability',
       },
+    );
+  }
+
+  /// Notification helper for accountability nudges.
+  AppNotification createNudgeNotification({
+    required String senderName,
+    required String senderId,
+  }) {
+    return createNotification(
+      type: AppNotificationType.nudge,
+      title: 'Accountability Nudge',
+      body: '$senderName is nudging you — keep your streak alive!',
+      data: {
+        'senderId': senderId,
+        'senderName': senderName,
+        'route': '/social/accountability',
+      },
+      expiration: const Duration(days: 3),
     );
   }
 

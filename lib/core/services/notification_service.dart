@@ -12,11 +12,13 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
+import 'package:emerge_app/core/services/notification_gate.dart';
 import 'package:emerge_app/core/services/notification_templates.dart';
 import 'package:emerge_app/core/services/notification_action_handler.dart';
 import 'package:emerge_app/core/theme/archetype_theme.dart';
 import 'package:emerge_app/features/habits/domain/entities/habit.dart';
 import 'package:emerge_app/features/auth/domain/entities/user_extension.dart';
+import 'package:emerge_app/features/gamification/presentation/providers/user_stats_providers.dart';
 
 @pragma('vm:entry-point')
 Future<void> notificationTapBackground(NotificationResponse details) async {
@@ -60,6 +62,28 @@ class NotificationService {
     _ref = ref;
   }
 
+  bool _isAllowed(NotificationChannelKind kind, {DateTime? at}) {
+    try {
+      final profile = _ref?.read(userStatsStreamProvider).value;
+      return NotificationGate.shouldShow(
+        profile?.settings,
+        kind,
+        now: at ?? DateTime.now(),
+      );
+    } catch (_) {
+      return true;
+    }
+  }
+
+  bool _isScheduledAllowed(NotificationChannelKind kind, DateTime scheduled) {
+    try {
+      final profile = _ref?.read(userStatsStreamProvider).value;
+      return NotificationGate.shouldShow(profile?.settings, kind, now: scheduled);
+    } catch (_) {
+      return true;
+    }
+  }
+
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
@@ -96,9 +120,7 @@ class NotificationService {
 
     await _localNotifications.initialize(
       settings: const InitializationSettings(
-        android: AndroidInitializationSettings(
-          '@drawable/push_notification_icon',
-        ),
+        android: AndroidInitializationSettings(NotificationIcons.smallIcon),
         iOS: DarwinInitializationSettings(),
       ),
       onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
@@ -216,8 +238,55 @@ class NotificationService {
     }
   }
 
+  /// Disables all notifications for [userId]: cancels pending local alarms,
+  /// deletes the FCM token (so server pushes stop), and clears the stored
+  /// `fcmToken` field. Call when the master toggle is turned off.
+  Future<void> disableAll(String userId) async {
+    if (kIsWeb) return;
+    try {
+      await _localNotifications.cancelAll();
+    } catch (_) {}
+    try {
+      await _firebaseMessaging.deleteToken();
+    } catch (_) {}
+    if (userId.isNotEmpty) {
+      try {
+        await FirebaseFirestore.instance.collection('users').doc(userId).set(
+          {'fcmToken': FieldValue.delete()},
+          SetOptions(merge: true),
+        );
+      } catch (_) {}
+    }
+  }
+
+  /// Re-enables notifications: re-requests permission and re-registers the
+  /// FCM token. Call when the master toggle is turned back on.
+  Future<void> enableAll(String userId) async {
+    if (kIsWeb) return;
+    try {
+      final settings = await _firebaseMessaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+      if (settings.authorizationStatus != AuthorizationStatus.authorized &&
+          settings.authorizationStatus != AuthorizationStatus.provisional) {
+        return;
+      }
+      final token = await _firebaseMessaging.getToken();
+      if (token != null && userId.isNotEmpty) {
+        await FirebaseFirestore.instance.collection('users').doc(userId).set(
+          {'fcmToken': token},
+          SetOptions(merge: true),
+        );
+      }
+    } catch (_) {}
+  }
+
   Future<void> scheduleWeeklyRecap() async {
     if (kIsWeb) return;
+    final scheduled = _nextSundayNineAM();
+    if (!_isScheduledAllowed(NotificationChannelKind.community, scheduled)) return;
     try {
       // Schedule for next Monday at 9:00 AM
 
@@ -225,16 +294,14 @@ class NotificationService {
         id: 0,
         title: 'Weekly Recap Ready',
         body: 'Check out how your world evolved this week!',
-        scheduledDate: _nextSundayNineAM(),
-        notificationDetails: const NotificationDetails(
-          android: AndroidNotificationDetails(
+        scheduledDate: scheduled,
+        notificationDetails: NotificationDetails(
+          android: _androidChannel(
             'weekly_recap',
             'Weekly Recap',
-            channelDescription: 'Weekly progress updates',
-            importance: Importance.high,
-            priority: Priority.high,
+            'Weekly progress updates',
           ),
-          iOS: DarwinNotificationDetails(),
+          iOS: const DarwinNotificationDetails(),
         ),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
@@ -277,20 +344,19 @@ class NotificationService {
     String challengeName,
   ) async {
     if (kIsWeb) return;
+    if (!_isAllowed(NotificationChannelKind.community)) return;
     try {
       await _localNotifications.show(
         id: challengeId.hashCode,
         title: '🔥 New Weekly Challenge!',
         body: challengeName,
-        notificationDetails: const NotificationDetails(
-          android: AndroidNotificationDetails(
+        notificationDetails: NotificationDetails(
+          android: _androidChannel(
             'weekly_challenges',
             'Weekly Challenges',
-            channelDescription: 'New weekly challenge notifications',
-            importance: Importance.high,
-            priority: Priority.high,
+            'New weekly challenge notifications',
           ),
-          iOS: DarwinNotificationDetails(),
+          iOS: const DarwinNotificationDetails(),
         ),
         payload: '/challenges/$challengeId',
       );
@@ -303,6 +369,7 @@ class NotificationService {
   /// Sends notification when challenge is ending soon
   Future<void> notifyChallengeEnding(String challengeId, int hoursLeft) async {
     if (kIsWeb) return;
+    if (!_isAllowed(NotificationChannelKind.community)) return;
     try {
       final timeText = hoursLeft == 24
           ? '1 day'
@@ -314,15 +381,13 @@ class NotificationService {
         id: challengeId.hashCode,
         title: '⏰ Challenge Ending Soon!',
         body: 'Only $timeText left to complete your challenge!',
-        notificationDetails: const NotificationDetails(
-          android: AndroidNotificationDetails(
+        notificationDetails: NotificationDetails(
+          android: _androidChannel(
             'challenge_reminders',
             'Challenge Reminders',
-            channelDescription: 'Challenge deadline notifications',
-            importance: Importance.high,
-            priority: Priority.high,
+            'Challenge deadline notifications',
           ),
-          iOS: DarwinNotificationDetails(),
+          iOS: const DarwinNotificationDetails(),
         ),
         payload: '/challenges/$challengeId',
       );
@@ -338,20 +403,19 @@ class NotificationService {
     String rewardDescription,
   ) async {
     if (kIsWeb) return;
+    if (!_isAllowed(NotificationChannelKind.rewards)) return;
     try {
       await _localNotifications.show(
         id: challengeId.hashCode,
         title: '🎁 Reward Available!',
         body: rewardDescription,
-        notificationDetails: const NotificationDetails(
-          android: AndroidNotificationDetails(
+        notificationDetails: NotificationDetails(
+          android: _androidChannel(
             'rewards',
             'Rewards',
-            channelDescription: 'Reward redemption notifications',
-            importance: Importance.high,
-            priority: Priority.high,
+            'Reward redemption notifications',
           ),
-          iOS: DarwinNotificationDetails(),
+          iOS: const DarwinNotificationDetails(),
         ),
         payload: '/challenges/$challengeId',
       );
@@ -359,6 +423,44 @@ class NotificationService {
     } catch (e) {
       debugPrint('Error sending reward notification: $e');
     }
+  }
+
+  // ============ CHANNEL DETAILS ============
+
+  /// Splash-logo blue sampled from assets/icons/splash_logo.png; tints the
+  /// small status-bar icon and the notification shade accent on Android.
+  static const Color notificationAccent = Color(0xFF4850AE);
+
+  /// Shared Android channel details. Every notification shows the Emerge
+  /// splash-flame treatment: alpha-only flame silhouette in the status bar
+  /// (tinted [notificationAccent]) and the blue-circle/black-flame badge as
+  /// the large icon, unless an archetype-specific mark overrides it.
+  AndroidNotificationDetails _androidChannel(
+    String channelId,
+    String name,
+    String description, {
+    Importance importance = Importance.high,
+    Priority priority = Priority.high,
+    StyleInformation? styleInformation,
+    List<AndroidNotificationAction> actions = const [],
+    String? largeIconName,
+    Color? color,
+  }) {
+    return AndroidNotificationDetails(
+      channelId,
+      name,
+      channelDescription: description,
+      importance: importance,
+      priority: priority,
+      color: color ?? notificationAccent,
+      ledColor: color ?? notificationAccent,
+      largeIcon: DrawableResourceAndroidBitmap(
+        largeIconName ?? NotificationIcons.defaultLargeIcon,
+      ),
+      styleInformation:
+          styleInformation ?? const BigTextStyleInformation(''),
+      actions: actions,
+    );
   }
 
   // ============ ARCHETYPE-THEMED NOTIFICATIONS ============
@@ -372,18 +474,15 @@ class NotificationService {
     final primaryColor = theme.primaryColor;
     // Map to specific archetype drawable icons
     final iconName =
-        NotificationIcons.archetypeIcons[archetype] ?? 'push_notification_icon';
+        NotificationIcons.archetypeIcons[archetype] ??
+        NotificationIcons.defaultLargeIcon;
 
-    return AndroidNotificationDetails(
+    return _androidChannel(
       channelId,
       '${archetype.name.toUpperCase()} Habits',
-      channelDescription: 'Archetype-styled habit reminders',
-      importance: Importance.high,
-      priority: Priority.high,
+      'Archetype-styled habit reminders',
       color: primaryColor,
-      ledColor: primaryColor,
-      largeIcon: DrawableResourceAndroidBitmap(iconName),
-      styleInformation: const BigTextStyleInformation(''),
+      largeIconName: iconName,
       actions: <AndroidNotificationAction>[
         AndroidNotificationAction(
           NotificationActionIds.complete,
@@ -406,6 +505,10 @@ class NotificationService {
     bool archetypeNudges = true,
   }) async {
     if (kIsWeb) return;
+    final repoKind = archetypeNudges
+        ? NotificationChannelKind.archetypeNudge
+        : NotificationChannelKind.habitReminder;
+    if (!_isAllowed(repoKind)) return;
     try {
       final channelId = NotificationChannels.channelForArchetype(archetype);
       final message = archetypeNudges
@@ -444,6 +547,22 @@ class NotificationService {
     bool archetypeNudges = true,
   }) async {
     if (kIsWeb) return;
+    final repoKind = archetypeNudges
+        ? NotificationChannelKind.archetypeNudge
+        : NotificationChannelKind.habitReminder;
+    // Parse reminder hour early so DND can be evaluated at the fire time.
+    int preHour = NotificationTemplates.getDefaultHour(archetype);
+    int preMinute = 0;
+    try {
+      final p = reminderTime.split(':');
+      preHour = int.parse(p[0]);
+      preMinute = int.parse(p[1]);
+    } catch (_) {}
+    final preScheduled = DateTime(2000, 1, 1, preHour, preMinute);
+    if (!_isScheduledAllowed(repoKind, preScheduled)) {
+      await cancelHabitNotifications(habitId);
+      return;
+    }
     try {
       final channelId = NotificationChannels.channelForArchetype(archetype);
       final message = archetypeNudges
@@ -571,12 +690,12 @@ class NotificationService {
   /// and scheduling a new one ~1 hour later.
   Future<void> snoozeHabit(String habitId) async {
     if (kIsWeb) return;
+    final snoozedAt = DateTime.now().add(const Duration(hours: 1));
+    if (!_isScheduledAllowed(NotificationChannelKind.habitReminder, snoozedAt)) return;
     try {
       // Cancel the existing notification for this habit.
       await _localNotifications.cancel(id: habitId.hashCode);
 
-      // Schedule a generic follow-up 1 hour from now.
-      final snoozedAt = DateTime.now().add(const Duration(hours: 1));
       final tzSnoozed = tz.TZDateTime.from(snoozedAt, tz.local);
 
       await _localNotifications.zonedSchedule(
@@ -584,15 +703,13 @@ class NotificationService {
         title: '⏰ Reminder (Snoozed)',
         body: 'Time to complete your habit!',
         scheduledDate: tzSnoozed,
-        notificationDetails: const NotificationDetails(
-          android: AndroidNotificationDetails(
+        notificationDetails: NotificationDetails(
+          android: _androidChannel(
             'habit_reminders',
             'Habit Reminders',
-            channelDescription: 'Habit reminder notifications',
-            importance: Importance.high,
-            priority: Priority.high,
+            'Habit reminder notifications',
           ),
-          iOS: DarwinNotificationDetails(),
+          iOS: const DarwinNotificationDetails(),
         ),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         payload: habitId,
@@ -644,6 +761,7 @@ class NotificationService {
     int currentStreak,
   ) async {
     if (kIsWeb) return;
+    if (!_isAllowed(NotificationChannelKind.streakWarning)) return;
     try {
       final channelId = NotificationChannels.channelForArchetype(archetype);
       final message = NotificationTemplates.streakWarning(
@@ -674,6 +792,14 @@ class NotificationService {
         hour,
         minute,
       ).add(const Duration(hours: 1));
+      if (!_isScheduledAllowed(
+        NotificationChannelKind.streakWarning,
+        DateTime(scheduledTime.year, scheduledTime.month, scheduledTime.day,
+            scheduledTime.hour, scheduledTime.minute),
+      )) {
+        await _localNotifications.cancel(id: '${habitId}_streak'.hashCode);
+        return;
+      }
 
       await _localNotifications.zonedSchedule(
         id: '${habitId}_streak'.hashCode,
@@ -703,6 +829,11 @@ class NotificationService {
     UserArchetype archetype,
   ) async {
     if (kIsWeb) return;
+    final insightAt = _nextInsightTime();
+    if (!_isScheduledAllowed(NotificationChannelKind.aiInsight, DateTime(insightAt.year, insightAt.month, insightAt.day, insightAt.hour, insightAt.minute))) {
+      await cancelDailyInsight(userId);
+      return;
+    }
     try {
       final greeting = NotificationTemplates.aiInsightGreeting(archetype);
 
@@ -710,17 +841,16 @@ class NotificationService {
         id: 'insight_$userId'.hashCode,
         title: 'Daily Insight',
         body: '$greeting\n\n$insight',
-        scheduledDate: _nextInsightTime(),
-        notificationDetails: const NotificationDetails(
-          android: AndroidNotificationDetails(
+        scheduledDate: insightAt,
+        notificationDetails: NotificationDetails(
+          android: _androidChannel(
             NotificationChannels.aiInsights,
             'AI Insights',
-            channelDescription: 'Personalized insights and recommendations',
+            'Personalized insights and recommendations',
             importance: Importance.low,
             priority: Priority.low,
-            styleInformation: BigTextStyleInformation(''),
           ),
-          iOS: DarwinNotificationDetails(),
+          iOS: const DarwinNotificationDetails(),
         ),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         matchDateTimeComponents: DateTimeComponents.time,
@@ -766,6 +896,7 @@ class NotificationService {
     UserArchetype archetype,
   ) async {
     if (kIsWeb) return;
+    if (!_isAllowed(NotificationChannelKind.rewards)) return;
     try {
       final message = NotificationTemplates.levelUp(archetype, newLevel);
 
@@ -773,16 +904,13 @@ class NotificationService {
         id: 'levelup_$userId'.hashCode,
         title: '🏆 Level Up!',
         body: message,
-        notificationDetails: const NotificationDetails(
-          android: AndroidNotificationDetails(
+        notificationDetails: NotificationDetails(
+          android: _androidChannel(
             NotificationChannels.rewards,
             'Rewards',
-            channelDescription: 'Achievements and level-ups',
-            importance: Importance.high,
-            priority: Priority.high,
-            styleInformation: BigTextStyleInformation(''),
+            'Achievements and level-ups',
           ),
-          iOS: DarwinNotificationDetails(),
+          iOS: const DarwinNotificationDetails(),
         ),
         payload: '/profile',
       );
@@ -799,6 +927,7 @@ class NotificationService {
     UserArchetype archetype,
   ) async {
     if (kIsWeb) return;
+    if (!_isAllowed(NotificationChannelKind.rewards)) return;
     try {
       final message = NotificationTemplates.achievement(
         archetype,
@@ -809,16 +938,13 @@ class NotificationService {
         id: 'achievement_${achievementName}_$userId'.hashCode,
         title: '🏅 Achievement Unlocked!',
         body: message,
-        notificationDetails: const NotificationDetails(
-          android: AndroidNotificationDetails(
+        notificationDetails: NotificationDetails(
+          android: _androidChannel(
             NotificationChannels.rewards,
             'Rewards',
-            channelDescription: 'Achievements and level-ups',
-            importance: Importance.high,
-            priority: Priority.high,
-            styleInformation: BigTextStyleInformation(''),
+            'Achievements and level-ups',
           ),
-          iOS: DarwinNotificationDetails(),
+          iOS: const DarwinNotificationDetails(),
         ),
         payload: '/profile',
       );

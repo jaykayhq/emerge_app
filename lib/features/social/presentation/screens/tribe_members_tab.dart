@@ -188,7 +188,7 @@ class _WorldLeaderboardSection extends ConsumerWidget {
               ],
             ),
             GestureDetector(
-              onTap: () => context.push('/tribes/leaderboard?tab=world'),
+              onTap: () => context.push('/social/leaderboard?tab=world'),
               child: const Text(
                 'View All >',
                 style: TextStyle(fontSize: 12, color: EmergeColors.teal),
@@ -274,7 +274,7 @@ class TribeLeaderboardSection extends ConsumerWidget {
               ],
             ),
             GestureDetector(
-              onTap: () => context.push('/tribes/leaderboard?tab=tribe'),
+              onTap: () => context.push('/social/leaderboard?tab=tribe'),
               child: const Text(
                 'View All >',
                 style: TextStyle(fontSize: 12, color: EmergeColors.teal),
@@ -403,7 +403,7 @@ class _TribeMembersTabState extends ConsumerState<TribeMembersTab> {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: () => context.push('/tribes/all'),
+              onPressed: () => context.push('/social/all'),
               icon: const Icon(Icons.explore_outlined, size: 20),
               label: const Text('SEE ALL TRIBES'),
               style: OutlinedButton.styleFrom(
