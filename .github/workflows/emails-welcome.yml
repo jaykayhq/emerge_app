@@ -1,20 +1,16 @@
 # Emerge Email Worker (near-real-time)
 #
-# Verification and password-reset emails are sent HERE via SMTP with fully
-# branded templates (see email-worker/src/tasks/verify.js and reset.js) —
-# NOT by Firebase Auth's default email. Welcome is also delivered here.
+# Welcome emails are delivered here via SMTP. Verification and password-reset
+# emails are sent natively by Firebase Auth from the app (see
+# FirebaseAuthRepository) — those worker tasks were removed from this
+# schedule. The 5-minute cadence is kept for welcome delivery.
 #
-# The app writes users/{uid}.verificationRequestedAt (verify) and
-# email_requests/{id} docs of type password_reset; the 5-minute schedule
-# picks them up, so delivery is ≤5 minutes after the request. Both tasks
-# are command-driven: verify sends at most ONE email per request (only when
-# verificationRequestedAt is newer than verificationEmailSentAt) and reset
-# sends once per request doc (sentAt marker) — so the schedule never
-# re-sends or spams.
+# EMAIL_FROM must equal SMTP_USER (Gmail only DKIM-signs its own domain;
+# any other From lands in spam). If unset, sender.js falls back to SMTP_USER.
 #
 # The repository_dispatch webhook trigger was removed with the
 # github_dispatch.ts bridge (deleted 2026-08-16).
-name: Emails (welcome / verify / reset — every 5 min)
+name: Emails (welcome — every 5 min)
 
 on:
   schedule:
@@ -41,7 +37,7 @@ jobs:
         working-directory: email-worker
         run: npm ci
 
-      - name: Run welcome + verify + reset tasks
+      - name: Run welcome task
         working-directory: email-worker
         env:
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TRADEFLASH_L2966 }}
@@ -50,4 +46,4 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
-        run: node src/index.js --task welcome --task verify --task reset
+        run: node src/index.js --task welcome

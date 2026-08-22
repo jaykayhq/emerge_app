@@ -370,18 +370,10 @@ class FirebaseAuthRepository implements AuthRepository {
     }
 
     try {
-      // The branded reset email is sent by the email worker (GitHub Actions,
-      // SMTP) — the app never calls Firebase's built-in email. Writing a
-      // request doc triggers the worker's reset task, which emails a branded
-      // link back to the app's /reset-password route with the oobCode.
-      await _firestore.collection('email_requests').add({
-        'type': 'password_reset',
-        'email': email.trim(),
-        // Attribution only: '' for the signed-out login-screen flow, the uid
-        // for the authenticated settings-screen flow. The rules permit both.
-        'userId': _firebaseAuth.currentUser?.uid ?? '',
-        'requestedAt': FieldValue.serverTimestamp(),
-      });
+      // Firebase Auth's native reset email — the hosted action page handles
+      // the oobCode end-to-end (no branded worker email, no DNS records
+      // needed, and delivery is DKIM-signed by Google's infrastructure).
+      await _firebaseAuth.sendPasswordResetEmail(email: email.trim());
       return const Right(null);
     } catch (e) {
       AppLogger.e('Password reset request failed', e);
@@ -493,17 +485,19 @@ class FirebaseAuthRepository implements AuthRepository {
       return const Left(AuthFailure('User not logged in'));
     }
     try {
-      // Verification emails are sent by the email worker (GitHub Actions,
-      // SMTP) — the app never calls Firebase's built-in email. Writing the
-      // request marker triggers the worker's verify task, which emails a
-      // branded link back to the app's /verify-email route with the oobCode.
-      // The worker owns emailVerificationSentAt (the 7-day grace anchor).
+      // Firebase Auth's native verification email — the hosted action page
+      // applies the oobCode (no branded worker email, no DNS records needed,
+      // delivery DKIM-signed by Google). The markers keep the 7-day grace
+      // lock's clock anchored: emailVerificationSentAt is what the worker's
+      // grace task reads to start the countdown.
+      await user.sendEmailVerification();
       await _firestore.collection('users').doc(user.uid).set({
         'verificationRequestedAt': FieldValue.serverTimestamp(),
+        'emailVerificationSentAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
       return const Right(null);
     } catch (e) {
-      AppLogger.w('sendVerificationEmail (request marker) failed', error: e);
+      AppLogger.w('sendVerificationEmail failed', error: e);
       return Left(ServerFailure('Could not request the verification email.'));
     }
   }

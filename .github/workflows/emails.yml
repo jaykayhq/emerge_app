@@ -1,9 +1,10 @@
 # Emerge Email Worker (cron)
 #
-# Sends the branded emails (welcome, verification, password reset,
-# re-engagement drip, verification grace lock) via SMTP — Firebase Auth's
-# default emails are not used anywhere. All tasks are idempotent via their
-# markers, so this daily run is a safety net on top of the 5-minute
+# Sends the branded emails (welcome, re-engagement drip, verification grace
+# lock) via SMTP. Verification and password-reset emails are sent natively by
+# Firebase Auth from the app (see FirebaseAuthRepository) — the worker's
+# verify/reset tasks are no longer scheduled. All tasks are idempotent via
+# their markers, so this daily run is a safety net on top of the 5-minute
 # emails-welcome.yml workflow.
 #
 # Required repo secrets:
@@ -11,7 +12,9 @@
 #                                              used by the hosting workflow)
 #   SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS  SMTP credentials
 # Optional secrets:
-#   EMAIL_FROM          sender address (default "Emerge <no-reply@emerge.app>")
+#   EMAIL_FROM          sender address — MUST equal SMTP_USER (Gmail only
+#                       DKIM-signs its own domain; any other From ends up in
+#                       spam). If unset, sender.js falls back to SMTP_USER.
 #   EMAIL_OVERRIDE_TO   NOT wired in this workflow — emails go to real
 #                       recipients. (sender.js still supports it for local
 #                       testing; it was removed from CI after the owner kept
@@ -54,4 +57,4 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
-        run: node src/index.js --task all
+        run: node src/index.js --task welcome --task drip --task grace

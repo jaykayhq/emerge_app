@@ -46,11 +46,13 @@ EMAIL_OVERRIDE_TO=you@example.com node src/index.js --task all
 
 ## GitHub Actions
 
-`.github/workflows/emails.yml` runs ALL tasks (welcome/verify/reset/drip/
-grace) daily at 04:00 UTC as a safety net (`workflow_dispatch` available for
-manual runs). `.github/workflows/emails-welcome.yml` runs welcome/verify/
-reset every 5 minutes for near-real-time delivery (all tasks are idempotent
-via their markers, so the overlapping runs never double-send).
+`.github/workflows/emails.yml` runs the welcome/drip/grace tasks daily at
+04:00 UTC as a safety net (`workflow_dispatch` available for manual runs).
+`.github/workflows/emails-welcome.yml` runs the welcome task every 5 minutes
+for near-real-time delivery (all tasks are idempotent via their markers, so
+the overlapping runs never double-send). Verification and password-reset
+emails are sent natively by Firebase Auth from the app — those worker tasks
+are no longer scheduled.
 
 Required repo secrets:
 
@@ -58,6 +60,22 @@ Required repo secrets:
   one the hosting workflow uses)
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` — SMTP credentials
 - Optional: `EMAIL_FROM`, `EMAIL_OVERRIDE_TO`
+
+### Sender domain (spam prevention)
+
+`EMAIL_FROM` MUST be the same account that authenticates via `SMTP_USER`
+(e.g. `Emerge <joeukpai55@gmail.com>` when sending through Gmail SMTP). Gmail
+only DKIM-signs its own domains, so sending from an unverified address like
+`no-reply@emerge.app` (parked, zero DNS) fails SPF/DKIM/DMARC and lands
+every email in spam. If `EMAIL_FROM` is unset (or the secret is empty), the
+worker falls back to the authenticated SMTP user, then to
+`Emerge <joeukpai55@gmail.com>`.
+
+Verification and password-reset emails are NOT sent by this worker — they go
+out natively via Firebase Auth from the app, so their sender is
+`no-reply@tradeflash-l2966.firebaseapp.com` and their links are Firebase's
+hosted action pages. The sender name/reply-to for those can only be edited
+in the Firebase console (Authentication → Templates).
 
 ## Tests
 

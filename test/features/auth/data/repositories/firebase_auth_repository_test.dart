@@ -326,50 +326,29 @@ void main() {
   });
 
   group('sendVerificationEmail', () {
-    test('requests the verification email via the worker marker', () async {
-      when(() => auth.currentUser).thenReturn(user);
-      when(() => user.sendEmailVerification(any())).thenAnswer((_) async {});
-      final usersCollection = _MockCollectionReference();
-      final userDoc = _MockDocumentReference();
-      when(() => firestore.collection('users')).thenReturn(usersCollection);
-      when(() => usersCollection.doc('u1')).thenReturn(userDoc);
-      when(() => userDoc.set(any(), any())).thenAnswer((_) async {});
+    test('sends the Firebase-native email and writes the request + grace anchor',
+        () async {
+          when(() => auth.currentUser).thenReturn(user);
+          when(() => user.sendEmailVerification(any())).thenAnswer((_) async {});
+          final usersCollection = _MockCollectionReference();
+          final userDoc = _MockDocumentReference();
+          when(() => firestore.collection('users')).thenReturn(usersCollection);
+          when(() => usersCollection.doc('u1')).thenReturn(userDoc);
+          when(() => userDoc.set(any(), any())).thenAnswer((_) async {});
 
-      final repo = buildRepo();
-      final result = await repo.sendVerificationEmail();
+          final repo = buildRepo();
+          final result = await repo.sendVerificationEmail();
 
-      expect(result.isRight(), isTrue);
-      // The app never calls the Firebase-native email — it writes the
-      // request marker that the GitHub Actions email worker polls.
-      verifyNever(() => user.sendEmailVerification(any()));
-      final data =
-          verify(() => userDoc.set(captureAny(), any())).captured.single
-              as Map<String, dynamic>;
-      expect(data.containsKey('verificationRequestedAt'), isTrue);
-    });
-
-    test(
-      'does not set the grace anchor client-side (worker owns it)',
-      () async {
-        when(() => auth.currentUser).thenReturn(user);
-        final usersCollection = _MockCollectionReference();
-        final userDoc = _MockDocumentReference();
-        when(() => firestore.collection('users')).thenReturn(usersCollection);
-        when(() => usersCollection.doc('u1')).thenReturn(userDoc);
-        when(() => userDoc.set(any(), any())).thenAnswer((_) async {});
-
-        final repo = buildRepo();
-        final result = await repo.sendVerificationEmail();
-
-        expect(result.isRight(), isTrue);
-        final data =
-            verify(() => userDoc.set(captureAny(), any())).captured.single
-                as Map<String, dynamic>;
-        // emailVerificationSentAt (the 7-day grace anchor) is written by the
-        // email worker on first send — never by the client.
-        expect(data.containsKey('emailVerificationSentAt'), isFalse);
-      },
-    );
+          expect(result.isRight(), isTrue);
+          // Firebase Auth's native email (hosted action link) is the sender;
+          // the markers keep the 7-day grace-lock clock anchored client-side.
+          verify(() => user.sendEmailVerification(any())).called(1);
+          final data =
+              verify(() => userDoc.set(captureAny(), any())).captured.single
+                  as Map<String, dynamic>;
+          expect(data.containsKey('verificationRequestedAt'), isTrue);
+          expect(data.containsKey('emailVerificationSentAt'), isTrue);
+        });
 
     test('returns Left when no user is signed in', () async {
       when(() => auth.currentUser).thenReturn(null);
@@ -386,37 +365,29 @@ void main() {
   });
 
   group('sendPasswordResetEmail', () {
-    test('enqueues a password_reset request for the email worker', () async {
-      final requestsCollection = _MockCollectionReference();
+    test('sends the Firebase-native password reset email', () async {
       when(
-        () => firestore.collection('email_requests'),
-      ).thenReturn(requestsCollection);
-      when(
-        () => requestsCollection.add(any()),
-      ).thenAnswer((_) async => _MockDocumentReference());
+        () => auth.sendPasswordResetEmail(email: any(named: 'email')),
+      ).thenAnswer((_) async {});
 
       final repo = buildRepo();
       final result = await repo.sendPasswordResetEmail('a@b.com');
 
       expect(result.isRight(), isTrue);
-      final data =
-          verify(() => requestsCollection.add(captureAny())).captured.single
-              as Map<String, dynamic>;
-      expect(data['type'], 'password_reset');
-      expect(data['email'], 'a@b.com');
-      expect(data.containsKey('requestedAt'), isTrue);
-      // Never calls the Firebase-native reset email — the branded one is
-      // sent by the worker.
-      verifyNever(
-        () => auth.sendPasswordResetEmail(email: any(named: 'email')),
-      );
+      // The native email carries the hosted action link — no worker request
+      // doc is enqueued.
+      verify(
+        () => auth.sendPasswordResetEmail(email: 'a@b.com'),
+      ).called(1);
+      verifyNever(() => firestore.collection('email_requests'));
     });
 
-    test('rejects an invalid email before writing anything', () async {
+    test('rejects an invalid email before sending anything', () async {
       final repo = buildRepo();
       final result = await repo.sendPasswordResetEmail('not-an-email');
 
       expect(result.isLeft(), isTrue);
+      verifyNever(() => auth.sendPasswordResetEmail(email: any(named: 'email')));
       verifyNever(() => firestore.collection(any()));
     });
   });
